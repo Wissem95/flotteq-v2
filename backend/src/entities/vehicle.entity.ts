@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Driver } from './driver.entity';
 
 export enum VehicleStatus {
   AVAILABLE = 'available',
@@ -57,6 +60,10 @@ export class Vehicle {
 
   @Column({ type: String, name: 'assigned_driver_id', nullable: true })
   assignedDriverId: string | null;
+
+  @ManyToOne(() => Driver, driver => driver.vehicles, { nullable: true })
+  @JoinColumn({ name: 'assigned_driver_id' })
+  assignedDriver: Driver;
 
   @Column({ name: 'tenant_id' })
   tenantId: number;
