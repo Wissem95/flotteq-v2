@@ -13,6 +13,8 @@ import { TenantInterceptor } from './core/tenant/tenant.interceptor';
 import { AuthModule } from './core/auth/auth.module';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
+import { DriversModule } from './modules/drivers.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -30,7 +32,10 @@ import { VehiclesModule } from './modules/vehicles/vehicles.module';
         password: configService.get('DB_PASSWORD', 'flotteq123'),
         database: configService.get('DB_NAME', 'flotteq_dev'),
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: configService.get('NODE_ENV') === 'development',
+        synchronize: configService.get('NODE_ENV') !== 'production',
+        autoLoadEntities: true,
+        migrations: ['dist/migrations/*.js'],
+        migrationsRun: configService.get('NODE_ENV') === 'production',
         logging: configService.get('NODE_ENV') === 'development',
       }),
       inject: [ConfigService],
@@ -45,6 +50,8 @@ import { VehiclesModule } from './modules/vehicles/vehicles.module';
     AuthModule,
     MaintenanceModule,
     VehiclesModule,
+    DriversModule,
+    DashboardModule,
   ],
   controllers: [AppController, TestController],
   providers: [
