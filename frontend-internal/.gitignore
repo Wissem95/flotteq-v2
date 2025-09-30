@@ -1,0 +1,42 @@
+# dépendances
+/node_modules
+/.pnp
+.pnp.js
+
+# production
+/dist
+/build
+
+# fichiers système
+.DS_Store
+Thumbs.db
+
+# environnement
+.env
+.env.local
+.env.*.local
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# éditeurs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# test coverage
+coverage/
+
+# fichiers de build spécifiques à Vite
+.vite
+
+# TypeScript
+*.tsbuildinfo
+
+# macOS / Linux swap files
+*.swp
+.vercel

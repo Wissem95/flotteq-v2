@@ -1,0 +1,89 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 50% 98%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 211 100% 40%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 196 94% 37%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 47% 11%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 210 38% 15%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 196 94% 37%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 211 100% 20%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 211 30% 25%;
+    --sidebar-ring: 196 94% 43%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
+  
+  .flotteq-gradient {
+    @apply bg-gradient-to-r from-flotteq-navy via-flotteq-blue to-flotteq-teal;
+  }
+  
+  .flotteq-gradient-text {
+    @apply flotteq-gradient bg-clip-text text-transparent;
+  }
+
+  .flotteq-card {
+    @apply bg-white rounded-lg shadow-sm border border-slate-100 p-5 transition-all hover:shadow-md;
+  }
+  
+  .flotteq-card-highlight {
+    @apply flotteq-card border-l-4 border-l-flotteq-teal;
+  }
+  
+  .flotteq-button {
+    @apply rounded-md px-4 py-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-flotteq-teal focus:ring-opacity-50;
+  }
+  
+  .flotteq-button-primary {
+    @apply flotteq-button bg-flotteq-blue text-white hover:bg-flotteq-navy;
+  }
+  
+  .flotteq-button-secondary {
+    @apply flotteq-button bg-slate-100 text-slate-700 hover:bg-slate-200;
+  }
+  
+  .flotteq-input {
+    @apply w-full rounded-md border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-flotteq-teal focus:border-transparent;
+  }
+}
