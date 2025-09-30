@@ -1,14 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { AppModule } from './app.module';
-import { getAppConfig } from './core/config/app.config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const config = getAppConfig();
+  const configService = app.get(ConfigService);
+
+  const port = configService.get('PORT', 3000);
+  const corsOrigin = configService.get('CORS_ORIGIN', 'http://localhost:5173,http://localhost:5174');
 
   // Security
   app.use(helmet());
@@ -16,7 +19,7 @@ async function bootstrap() {
 
   // CORS
   app.enableCors({
-    origin: config.corsOrigin.split(','),
+    origin: corsOrigin.split(','),
     credentials: true,
   });
 
@@ -43,8 +46,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('api/docs', app, document);
 
-  await app.listen(config.port);
-  console.log(`🚀 FlotteQ API is running on: http://localhost:${config.port}`);
-  console.log(`📚 Swagger docs: http://localhost:${config.port}/api/docs`);
+  await app.listen(port);
+  console.log(`🚀 FlotteQ API is running on: http://localhost:${port}`);
+  console.log(`📚 Swagger docs: http://localhost:${port}/api/docs`);
 }
 bootstrap();
