@@ -1,6 +1,6 @@
 import { IsNotEmpty, IsString, IsInt, IsEnum, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { VehicleStatus } from '../entities/vehicle.entity';
+import { VehicleStatus } from '../../../entities/vehicle.entity';
 
 export class CreateVehicleDto {
   @ApiProperty({ description: 'Vehicle registration number' })

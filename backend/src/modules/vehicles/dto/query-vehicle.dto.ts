@@ -1,6 +1,6 @@
 import { IsOptional, IsEnum, IsString, IsInt, Min } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { VehicleStatus } from '../entities/vehicle.entity';
+import { VehicleStatus } from '../../../entities/vehicle.entity';
 import { Type } from 'class-transformer';
 
 export class QueryVehicleDto {
