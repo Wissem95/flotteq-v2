@@ -8,6 +8,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Driver } from './driver.entity';
+import { Tenant } from './tenant.entity';
 
 export enum VehicleStatus {
   AVAILABLE = 'available',
@@ -67,6 +68,10 @@ export class Vehicle {
 
   @Column({ name: 'tenant_id' })
   tenantId: number;
+
+  @ManyToOne(() => Tenant, (tenant) => tenant.vehicles)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant: Tenant;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

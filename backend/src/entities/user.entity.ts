@@ -4,7 +4,10 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
+import { Tenant } from './tenant.entity';
 
 @Entity('users')
 export class User {
@@ -25,6 +28,10 @@ export class User {
 
   @Column({ name: 'tenant_id', type: 'integer' })
   tenantId: number;
+
+  @ManyToOne(() => Tenant, (tenant) => tenant.users)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant: Tenant;
 
   @Column({ nullable: true, name: 'refresh_token', select: false, type: 'text' })
   refreshToken: string | null;

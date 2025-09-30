@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Vehicle } from './vehicle.entity';
+import { Tenant } from './tenant.entity';
 
 export enum DriverStatus {
   ACTIVE = 'active',
@@ -64,6 +65,10 @@ export class Driver {
 
   @Column({ name: 'tenant_id' })
   tenantId: number;
+
+  @ManyToOne(() => Tenant, (tenant) => tenant.drivers)
+  @JoinColumn({ name: 'tenant_id' })
+  tenant: Tenant;
 
   // Un driver peut avoir plusieurs véhicules assignés
   @OneToMany(() => Vehicle, vehicle => vehicle.assignedDriver)

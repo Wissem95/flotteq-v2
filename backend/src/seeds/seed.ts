@@ -6,6 +6,7 @@ import { User } from '../entities/user.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { Maintenance, MaintenanceType, MaintenanceStatus } from '../modules/maintenance/entities/maintenance.entity';
+import { Tenant, TenantStatus } from '../entities/tenant.entity';
 
 async function seed() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +19,11 @@ async function seed() {
   await dataSource.query('TRUNCATE TABLE vehicles CASCADE');
   await dataSource.query('TRUNCATE TABLE drivers CASCADE');
   await dataSource.query('TRUNCATE TABLE users CASCADE');
+  await dataSource.query('TRUNCATE TABLE tenants CASCADE');
+
+  // Create tenants first (required for foreign keys)
+  const tenants = await createTenants(dataSource);
+  console.log(`✅ Created ${tenants.length} tenants`);
 
   // Create users for different tenants
   const users = await createUsers(dataSource);
@@ -503,6 +509,49 @@ async function createMaintenances(dataSource: DataSource, vehicles: Vehicle[]) {
   ];
 
   return maintenanceRepo.save(maintenancesData);
+}
+
+async function createTenants(dataSource: DataSource) {
+  const tenantRepo = dataSource.getRepository(Tenant);
+
+  const tenantsData = [
+    // Tenant 1 - FlotteQ (entreprise principale)
+    {
+      name: 'FlotteQ',
+      email: 'contact@flotteq.com',
+      phone: '+33 1 23 45 67 89',
+      address: '123 Avenue de la Flotte',
+      city: 'Paris',
+      postalCode: '75001',
+      country: 'France',
+      status: TenantStatus.ACTIVE,
+    },
+    // Tenant 2 - Transport Express Paris
+    {
+      name: 'Transport Express Paris',
+      email: 'contact@transport-express.com',
+      phone: '+33 1 98 76 54 32',
+      address: '45 Rue de la Logistique',
+      city: 'Lyon',
+      postalCode: '69001',
+      country: 'France',
+      status: TenantStatus.ACTIVE,
+    },
+    // Tenant 3 - Logistique Rapide
+    {
+      name: 'Logistique Rapide',
+      email: 'info@logistique-rapide.com',
+      phone: '+33 4 56 78 90 12',
+      address: '78 Boulevard du Commerce',
+      city: 'Marseille',
+      postalCode: '13001',
+      country: 'France',
+      status: TenantStatus.TRIAL,
+      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 jours
+    },
+  ];
+
+  return tenantRepo.save(tenantsData);
 }
 
 seed().catch(console.error);
