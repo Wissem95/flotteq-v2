@@ -11,6 +11,8 @@ import { TenantMiddleware } from './core/tenant/tenant.middleware';
 import { TenantGuard } from './core/tenant/tenant.guard';
 import { TenantInterceptor } from './core/tenant/tenant.interceptor';
 import { AuthModule } from './core/auth/auth.module';
+import { MaintenanceModule } from './modules/maintenance/maintenance.module';
+import { VehiclesModule } from './modules/vehicles/vehicles.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { AuthModule } from './core/auth/auth.module';
     ]),
     TenantModule,
     AuthModule,
+    MaintenanceModule,
+    VehiclesModule,
   ],
   controllers: [AppController, TestController],
   providers: [
@@ -63,7 +67,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(TenantMiddleware)
-      .exclude('/auth/(.*)', '/health', '/api/docs(.*)')
+      .exclude('/api/auth/(.*)', '/auth/(.*)', '/health', '/api/docs(.*)')
       .forRoutes('*');
   }
 }

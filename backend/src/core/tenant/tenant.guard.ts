@@ -14,7 +14,7 @@ export class TenantGuard implements CanActivate {
     const request = context.switchToHttp().getRequest<Request>();
 
     // Skip tenant validation for certain routes
-    const skipRoutes = ['/auth', '/health', '/api/docs'];
+    const skipRoutes = ['/api/auth', '/auth', '/health', '/api/docs'];
     const isSkippedRoute = skipRoutes.some(route => request.path.startsWith(route));
 
     if (isSkippedRoute) {
