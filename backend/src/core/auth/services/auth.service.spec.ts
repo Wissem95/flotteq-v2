@@ -92,7 +92,7 @@ describe('AuthService', () => {
       userRepository.findOne.mockResolvedValue(null);
 
       // Mock: save user
-      const savedUser = { ...mockUser, ...registerDto, id: 'new-uuid' };
+      const savedUser = { ...mockUser, ...registerDto, id: 'new-uuid', tenantId: parseInt(registerDto.tenantId || '1') };
       userRepository.save.mockResolvedValue(savedUser);
 
       // Mock: JWT tokens
