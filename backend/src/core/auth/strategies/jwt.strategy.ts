@@ -2,13 +2,13 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
-import { LocalAuthService } from '../services/local-auth.service';
+import { AuthService } from '../services/auth.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private authService: LocalAuthService,
+    private authService: AuthService,
   ) {
     const secret = configService.get<string>('JWT_ACCESS_SECRET');
     if (!secret) {

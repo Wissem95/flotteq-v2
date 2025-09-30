@@ -2,7 +2,7 @@ import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common'
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { Throttle } from '@nestjs/throttler';
-import { LocalAuthService } from './services/local-auth.service';
+import { AuthService } from './services/auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -12,7 +12,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 @ApiTags('auth')
 export class AuthController {
   constructor(
-    private readonly authService: LocalAuthService,
+    private readonly authService: AuthService,
     private readonly jwtService: JwtService,
   ) {}
 

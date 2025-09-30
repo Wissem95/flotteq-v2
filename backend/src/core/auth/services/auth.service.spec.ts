@@ -5,13 +5,13 @@ import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { LocalAuthService } from './local-auth.service';
+import { AuthService } from './auth.service';
 import { User } from '../../../entities/user.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 
-describe('LocalAuthService', () => {
-  let service: LocalAuthService;
+describe('AuthService', () => {
+  let service: AuthService;
   let userRepository: jest.Mocked<Repository<User>>;
   let jwtService: jest.Mocked<JwtService>;
   let configService: jest.Mocked<ConfigService>;
@@ -36,7 +36,7 @@ describe('LocalAuthService', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        LocalAuthService,
+        AuthService,
         {
           provide: getRepositoryToken(User),
           useValue: {
@@ -68,7 +68,7 @@ describe('LocalAuthService', () => {
       ],
     }).compile();
 
-    service = module.get<LocalAuthService>(LocalAuthService);
+    service = module.get<AuthService>(AuthService);
     userRepository = module.get(getRepositoryToken(User));
     jwtService = module.get(JwtService);
     configService = module.get(ConfigService);

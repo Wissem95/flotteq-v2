@@ -13,7 +13,7 @@ import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 
 @Injectable()
-export class LocalAuthService {
+export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
