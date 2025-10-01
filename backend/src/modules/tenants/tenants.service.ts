@@ -88,11 +88,49 @@ export class TenantsService {
     return savedTenant;
   }
 
-  async findAll(): Promise<Tenant[]> {
-    return await this.tenantsRepository.find({
-      relations: ['users'],
-      order: { createdAt: 'DESC' },
-    });
+  async findAll(query?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+  }) {
+    const page = query?.page || 1;
+    const limit = query?.limit || 10;
+    const search = query?.search || '';
+    const status = query?.status;
+
+    // Construire la requête avec QueryBuilder pour plus de flexibilité
+    const queryBuilder = this.tenantsRepository
+      .createQueryBuilder('tenant')
+      .leftJoinAndSelect('tenant.users', 'users')
+      .orderBy('tenant.createdAt', 'DESC');
+
+    // Recherche par nom, email ou ville
+    if (search && search.trim() !== '') {
+      queryBuilder.where(
+        '(LOWER(tenant.name) LIKE LOWER(:search) OR LOWER(tenant.email) LIKE LOWER(:search) OR LOWER(tenant.city) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
+    }
+
+    // Filtrer par status si fourni
+    if (status) {
+      queryBuilder.andWhere('tenant.status = :status', { status });
+    }
+
+    // Pagination
+    const skip = (page - 1) * limit;
+    queryBuilder.skip(skip).take(limit);
+
+    // Exécuter la requête
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: number): Promise<Tenant> {

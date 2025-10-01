@@ -2,7 +2,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './pages/auth/LoginPage';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
+import { TenantsListPage } from './pages/tenants/TenantsListPage';
+import { TenantDetailPage } from './pages/tenants/TenantDetailPage';
+import { TenantFormPage } from './pages/tenants/TenantFormPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { MainLayout } from './components/layout/MainLayout';
+import { Toaster } from './components/ui/toaster';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,17 +26,22 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
-            path="/dashboard"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <MainLayout />
               </ProtectedRoute>
             }
-          />
+          >
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/tenants" element={<TenantsListPage />} />
+            <Route path="/tenants/:id" element={<TenantDetailPage />} />
+            <Route path="/tenants/:id/edit" element={<TenantFormPage />} />
+          </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
+      <Toaster />
     </QueryClientProvider>
   );
 }

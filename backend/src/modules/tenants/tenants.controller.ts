@@ -10,10 +10,12 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  Query,
 } from '@nestjs/common';
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { QueryTenantsDto } from './dto/query-tenants.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 
 @Controller('tenants')
@@ -28,8 +30,8 @@ export class TenantsController {
   }
 
   @Get()
-  findAll() {
-    return this.tenantsService.findAll();
+  findAll(@Query() query: QueryTenantsDto) {
+    return this.tenantsService.findAll(query);
   }
 
   @Get(':id')
