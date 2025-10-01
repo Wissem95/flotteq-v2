@@ -1,5 +1,5 @@
 import { DataSource } from 'typeorm';
-import { Tenant, TenantStatus } from '../../entities/tenant.entity';
+import { Tenant, TenantStatus } from '../entities/tenant.entity';
 
 /**
  * Seed pour créer le tenant FlotteQ par défaut

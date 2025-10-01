@@ -17,15 +17,26 @@ import { UpdateDriverDto } from './dto/update-driver.dto';
 import { AssignVehicleDto } from './dto/assign-vehicle.dto';
 import { JwtAuthGuard } from '../core/auth/guards/jwt-auth.guard';
 import { DriverStatus } from '../entities/driver.entity';
+import { SubscriptionLimitGuard, CheckLimit } from '../common/guards/subscription-limit.guard';
+import { SubscriptionsService } from './subscriptions/subscriptions.service';
+import { TenantId } from '../core/tenant/tenant.decorator';
 
 @Controller('drivers')
 @UseGuards(JwtAuthGuard)
 export class DriversController {
-  constructor(private readonly driversService: DriversService) {}
+  constructor(
+    private readonly driversService: DriversService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
   @Post()
-  create(@Body() createDriverDto: CreateDriverDto) {
-    return this.driversService.create(createDriverDto);
+  @UseGuards(SubscriptionLimitGuard)
+  @CheckLimit('drivers')
+  async create(@Body() createDriverDto: CreateDriverDto, @TenantId() tenantId: number) {
+    const driver = await this.driversService.create(createDriverDto);
+    // Incrémenter l'usage après création réussie
+    await this.subscriptionsService.updateUsage(tenantId, 'drivers', 1);
+    return driver;
   }
 
   @Get()
@@ -66,8 +77,11 @@ export class DriversController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.driversService.remove(id);
+  async remove(@Param('id', ParseUUIDPipe) id: string, @TenantId() tenantId: number) {
+    const result = await this.driversService.remove(id);
+    // Décrémenter l'usage après suppression réussie
+    await this.subscriptionsService.updateUsage(tenantId, 'drivers', -1);
+    return result;
   }
 
   @Post(':id/assign-vehicle')

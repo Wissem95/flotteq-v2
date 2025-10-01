@@ -63,6 +63,8 @@ export class AuthService {
         'firstName',
         'lastName',
         'tenantId',
+        'role',
+        'isActive',
         'createdAt',
         'updatedAt',
       ],
@@ -122,6 +124,7 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       tenantId: user.tenantId,
+      role: user.role,
     };
 
     const [access_token, refresh_token] = await Promise.all([
@@ -148,7 +151,7 @@ export class AuthService {
   async validateUser(userId: string) {
     return this.userRepository.findOne({
       where: { id: userId },
-      select: ['id', 'email', 'tenantId', 'firstName', 'lastName'],
+      select: ['id', 'email', 'tenantId', 'role', 'isActive', 'firstName', 'lastName'],
     });
   }
 }

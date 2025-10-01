@@ -26,9 +26,11 @@ describe('VehiclesService', () => {
     purchasePrice: 15000.5,
     tenantId: 1,
     assignedDriverId: null,
+    assignedDriver: null,
+    tenant: null,
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  } as any;
 
   const mockRepository = {
     create: jest.fn(),

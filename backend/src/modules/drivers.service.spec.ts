@@ -21,7 +21,7 @@ describe('DriversService', () => {
     phone: '+33612345678',
     licenseNumber: 'FR123456789',
     licenseExpiryDate: new Date('2026-12-31'),
-    medicalCertificateExpiryDate: null,
+    medicalCertificateExpiryDate: new Date('2026-06-30'),
     birthDate: new Date('1985-03-15'),
     status: DriverStatus.ACTIVE,
     address: '123 Rue Test',
@@ -34,7 +34,7 @@ describe('DriversService', () => {
     vehicles: [],
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  } as any;
 
   const mockVehicle: Vehicle = {
     id: 'a624b50e-b25c-4cbb-b100-5cb744d74b42',
@@ -51,10 +51,11 @@ describe('DriversService', () => {
     purchasePrice: 25000,
     assignedDriverId: null,
     assignedDriver: null,
+    tenant: null,
     tenantId: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+  } as any;
 
   beforeEach(async () => {
     mockRequest = { tenantId: 1 };
@@ -223,8 +224,9 @@ describe('DriversService', () => {
     });
 
     it('should throw error if vehicle not assigned to driver', async () => {
+      const unassignedVehicle = { ...mockVehicle, assignedDriverId: null };
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
-      jest.spyOn(vehicleRepository, 'findOne').mockResolvedValue(mockVehicle);
+      jest.spyOn(vehicleRepository, 'findOne').mockResolvedValue(unassignedVehicle as any);
 
       await expect(service.unassignVehicle(mockDriver.id, mockVehicle.id)).rejects.toThrow(BadRequestException);
     });

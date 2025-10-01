@@ -6,7 +6,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
-import { User } from '../../../entities/user.entity';
+import { User, UserRole } from '../../../entities/user.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 
@@ -23,10 +23,23 @@ describe('AuthService', () => {
     firstName: 'John',
     lastName: 'Doe',
     tenantId: 1,
+    role: UserRole.VIEWER,
+    isActive: true,
+    phone: null,
+    lastLoginAt: null,
     refreshToken: null,
+    resetPasswordToken: null,
+    resetPasswordExpires: null,
     createdAt: new Date(),
     updatedAt: new Date(),
-  };
+    tenant: null,
+    hashPassword: jest.fn(),
+    validatePassword: jest.fn().mockResolvedValue(true),
+    get fullName() { return 'John Doe'; },
+    isFlotteQUser: jest.fn().mockReturnValue(false),
+    canManageUsers: jest.fn().mockReturnValue(false),
+    canViewAllData: jest.fn().mockReturnValue(false),
+  } as any;
 
   const mockTokens = {
     access_token: 'mock_access_token',
@@ -93,7 +106,7 @@ describe('AuthService', () => {
 
       // Mock: save user
       const savedUser = { ...mockUser, ...registerDto, id: 'new-uuid', tenantId: parseInt(registerDto.tenantId || '1') };
-      userRepository.save.mockResolvedValue(savedUser);
+      userRepository.save.mockResolvedValue(savedUser as any);
 
       // Mock: JWT tokens
       jwtService.signAsync
@@ -151,7 +164,7 @@ describe('AuthService', () => {
 
     it('should successfully login with valid credentials', async () => {
       const userWithPassword = { ...mockUser, password: 'hashedPassword' };
-      userRepository.findOne.mockResolvedValue(userWithPassword);
+      userRepository.findOne.mockResolvedValue(userWithPassword as any);
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
 
@@ -172,6 +185,8 @@ describe('AuthService', () => {
           'firstName',
           'lastName',
           'tenantId',
+          'role',
+          'isActive',
           'createdAt',
           'updatedAt',
         ],
@@ -228,7 +243,7 @@ describe('AuthService', () => {
         ...mockUser,
         refreshToken: 'hashedRefreshToken',
       };
-      userRepository.findOne.mockResolvedValue(userWithRefreshToken);
+      userRepository.findOne.mockResolvedValue(userWithRefreshToken as any);
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(true as never);
 
@@ -257,7 +272,7 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if refresh token is null', async () => {
       const userWithoutRefreshToken = { ...mockUser, refreshToken: null };
-      userRepository.findOne.mockResolvedValue(userWithoutRefreshToken);
+      userRepository.findOne.mockResolvedValue(userWithoutRefreshToken as any);
 
       await expect(service.refreshTokens(userId, refreshToken)).rejects.toThrow(
         UnauthorizedException,
@@ -269,7 +284,7 @@ describe('AuthService', () => {
         ...mockUser,
         refreshToken: 'hashedRefreshToken',
       };
-      userRepository.findOne.mockResolvedValue(userWithRefreshToken);
+      userRepository.findOne.mockResolvedValue(userWithRefreshToken as any);
 
       jest.spyOn(bcrypt, 'compare').mockResolvedValue(false as never);
 
@@ -294,7 +309,7 @@ describe('AuthService', () => {
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'uuid-123' },
-        select: ['id', 'email', 'tenantId', 'firstName', 'lastName'],
+        select: ['id', 'email', 'tenantId', 'role', 'isActive', 'firstName', 'lastName'],
       });
       expect(result).toEqual(userWithoutPassword);
       expect(result).not.toHaveProperty('password');
@@ -329,6 +344,7 @@ describe('AuthService', () => {
           sub: mockUser.id,
           email: mockUser.email,
           tenantId: mockUser.tenantId,
+          role: mockUser.role,
         }),
         expect.objectContaining({
           secret: 'test_access_secret',

@@ -23,26 +23,37 @@ import { QueryVehicleDto } from './dto/query-vehicle.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../../core/tenant/tenant.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
+import { SubscriptionLimitGuard, CheckLimit } from '../../common/guards/subscription-limit.guard';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @ApiTags('vehicles')
 @ApiBearerAuth()
 @Controller('vehicles')
 @UseGuards(JwtAuthGuard, TenantGuard)
 export class VehiclesController {
-  constructor(private readonly vehiclesService: VehiclesService) {}
+  constructor(
+    private readonly vehiclesService: VehiclesService,
+    private readonly subscriptionsService: SubscriptionsService,
+  ) {}
 
   @Post()
+  @UseGuards(SubscriptionLimitGuard)
+  @CheckLimit('vehicles')
   @ApiOperation({ summary: 'Créer un nouveau véhicule' })
   @ApiResponse({
     status: 201,
     description: 'Le véhicule a été créé avec succès.',
   })
   @ApiResponse({ status: 409, description: 'Véhicule déjà existant.' })
-  create(
+  @ApiResponse({ status: 403, description: 'Limite de véhicules atteinte pour votre plan.' })
+  async create(
     @Body() createVehicleDto: CreateVehicleDto,
     @TenantId() tenantId: number,
   ) {
-    return this.vehiclesService.create(createVehicleDto, tenantId);
+    const vehicle = await this.vehiclesService.create(createVehicleDto, tenantId);
+    // Incrémenter l'usage après création réussie
+    await this.subscriptionsService.updateUsage(tenantId, 'vehicles', 1);
+    return vehicle;
   }
 
   @Get()
@@ -99,10 +110,13 @@ export class VehiclesController {
     description: 'Le véhicule a été supprimé avec succès.',
   })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
-  remove(
+  async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: number,
   ) {
-    return this.vehiclesService.remove(id, tenantId);
+    const result = await this.vehiclesService.remove(id, tenantId);
+    // Décrémenter l'usage après suppression réussie
+    await this.subscriptionsService.updateUsage(tenantId, 'vehicles', -1);
+    return result;
   }
 }

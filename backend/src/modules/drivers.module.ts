@@ -6,9 +6,11 @@ import { Driver } from '../entities/driver.entity';
 import { Vehicle } from '../entities/vehicle.entity';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { TenantsModule } from './tenants/tenants.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Driver, Vehicle]), DashboardModule, TenantsModule],
+  imports: [TypeOrmModule.forFeature([Driver, Vehicle]), DashboardModule, TenantsModule, SubscriptionsModule, UsersModule],
   controllers: [DriversController],
   providers: [DriversService],
   exports: [DriversService],

@@ -15,6 +15,8 @@ import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { DriversModule } from './modules/drivers.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -48,6 +50,8 @@ import { DashboardModule } from './modules/dashboard/dashboard.module';
     ]),
     TenantModule,
     AuthModule,
+    SubscriptionsModule,
+    UsersModule,
     MaintenanceModule,
     VehiclesModule,
     DriversModule,

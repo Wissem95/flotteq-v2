@@ -2,11 +2,13 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
 import { DataSource } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../entities/user.entity';
+import { User, UserRole } from '../entities/user.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../entities/driver.entity';
 import { Maintenance, MaintenanceType, MaintenanceStatus } from '../modules/maintenance/entities/maintenance.entity';
 import { Tenant, TenantStatus } from '../entities/tenant.entity';
+import { SubscriptionPlan } from '../entities/subscription-plan.entity';
+import { Subscription, SubscriptionStatus } from '../entities/subscription.entity';
 
 async function seed() {
   const app = await NestFactory.create(AppModule);
@@ -18,6 +20,8 @@ async function seed() {
   await dataSource.query('TRUNCATE TABLE maintenances CASCADE');
   await dataSource.query('TRUNCATE TABLE vehicles CASCADE');
   await dataSource.query('TRUNCATE TABLE drivers CASCADE');
+  await dataSource.query('TRUNCATE TABLE subscriptions CASCADE');
+  await dataSource.query('TRUNCATE TABLE subscription_plans CASCADE');
   await dataSource.query('TRUNCATE TABLE users CASCADE');
   await dataSource.query('TRUNCATE TABLE tenants CASCADE');
 
@@ -25,9 +29,15 @@ async function seed() {
   const tenants = await createTenants(dataSource);
   console.log(`✅ Created ${tenants.length} tenants`);
 
+  // Create subscription plans and subscriptions
+  await createSubscriptionPlans(dataSource, tenants);
+
   // Create users for different tenants
-  const users = await createUsers(dataSource);
+  const users = await createUsers(dataSource, tenants);
   console.log(`✅ Created ${users.length} users`);
+
+  // Update users with roles
+  await updateUsersWithRoles(dataSource, tenants);
 
   // Create drivers
   const drivers = await createDrivers(dataSource);
@@ -45,22 +55,22 @@ async function seed() {
   await app.close();
 }
 
-async function createUsers(dataSource: DataSource) {
+async function createUsers(dataSource: DataSource, tenants: Tenant[]) {
   const userRepo = dataSource.getRepository(User);
   const password = await bcrypt.hash('Test12345', 12);
 
   const usersData = [
     // Tenant 1 - FlotteQ Demo
-    { email: 'admin@flotteq.com', firstName: 'Admin', lastName: 'FlotteQ', tenantId: 1, password },
-    { email: 'manager@flotteq.com', firstName: 'Manager', lastName: 'FlotteQ', tenantId: 1, password },
-    { email: 'user@flotteq.com', firstName: 'User', lastName: 'FlotteQ', tenantId: 1, password },
+    { email: 'admin@flotteq.com', firstName: 'Admin', lastName: 'FlotteQ', tenantId: tenants[0].id, password },
+    { email: 'manager@flotteq.com', firstName: 'Manager', lastName: 'FlotteQ', tenantId: tenants[0].id, password },
+    { email: 'user@flotteq.com', firstName: 'User', lastName: 'FlotteQ', tenantId: tenants[0].id, password },
 
     // Tenant 2 - Transport Express
-    { email: 'admin@transport.com', firstName: 'Admin', lastName: 'Transport', tenantId: 2, password },
-    { email: 'fleet@transport.com', firstName: 'Fleet', lastName: 'Manager', tenantId: 2, password },
+    { email: 'admin@transport.com', firstName: 'Admin', lastName: 'Transport', tenantId: tenants[1].id, password },
+    { email: 'fleet@transport.com', firstName: 'Fleet', lastName: 'Manager', tenantId: tenants[1].id, password },
 
     // Tenant 3 - Livraison Rapide
-    { email: 'admin@livraison.com', firstName: 'Admin', lastName: 'Livraison', tenantId: 3, password },
+    { email: 'admin@livraison.com', firstName: 'Admin', lastName: 'Livraison', tenantId: tenants[2].id, password },
   ];
 
   return userRepo.save(usersData);
@@ -552,6 +562,138 @@ async function createTenants(dataSource: DataSource) {
   ];
 
   return tenantRepo.save(tenantsData);
+}
+
+async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]) {
+  const planRepo = dataSource.getRepository(SubscriptionPlan);
+  const subscriptionRepo = dataSource.getRepository(Subscription);
+
+  console.log('🌱 Creating subscription plans...');
+
+  const plans = [
+    {
+      name: 'Freemium',
+      price: 0,
+      maxVehicles: 2,
+      maxUsers: 1,
+      maxDrivers: 2,
+      trialDays: 0, // Pas d'essai car c'est gratuit
+      features: ['basic_dashboard', 'email_notifications'],
+      isActive: true,
+    },
+    {
+      name: 'Starter',
+      price: 29,
+      maxVehicles: 10,
+      maxUsers: 5,
+      maxDrivers: 10,
+      trialDays: 14, // 14 jours d'essai
+      features: ['support_email', 'basic_reports', 'api_access', 'export_pdf'],
+      isActive: true,
+    },
+    {
+      name: 'Business',
+      price: 99,
+      maxVehicles: 50,
+      maxUsers: 20,
+      maxDrivers: 50,
+      trialDays: 14, // 14 jours d'essai
+      features: ['support_priority', 'advanced_reports', 'api_access', 'export_excel', 'custom_fields'],
+      isActive: true,
+    },
+    {
+      name: 'Enterprise',
+      price: 299,
+      maxVehicles: -1, // Illimité
+      maxUsers: -1,
+      maxDrivers: -1,
+      trialDays: 30, // 30 jours d'essai pour Enterprise
+      features: ['support_24_7', 'custom_reports', 'api_access', 'dedicated_manager', 'sla', 'white_label'],
+      isActive: true,
+    },
+  ];
+
+  const createdPlans = await planRepo.save(plans);
+  console.log(`✅ Created ${createdPlans.length} subscription plans`);
+
+  // Créer des abonnements pour les tenants existants
+  for (const tenant of tenants) {
+    // FlotteQ (tenant 1) = Enterprise
+    // Transport Express (tenant 2) = Business
+    // Logistique Rapide (tenant 3) = Starter (en trial)
+    let plan: SubscriptionPlan;
+    let status: SubscriptionStatus;
+
+    if (tenant.id === 1) {
+      plan = createdPlans.find(p => p.name === 'Enterprise')!;
+      status = SubscriptionStatus.ACTIVE;
+    } else if (tenant.id === 2) {
+      plan = createdPlans.find(p => p.name === 'Business')!;
+      status = SubscriptionStatus.ACTIVE;
+    } else {
+      plan = createdPlans.find(p => p.name === 'Starter')!;
+      status = SubscriptionStatus.TRIALING;
+    }
+
+    const subscriptionData: any = {
+      tenantId: tenant.id,
+      planId: plan.id,
+      status,
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      usage: {
+        vehicles: 0,
+        users: 0,
+        drivers: 0,
+      },
+    };
+
+    if (plan.trialDays > 0 && status === SubscriptionStatus.TRIALING) {
+      subscriptionData.trialEnd = new Date(Date.now() + plan.trialDays * 24 * 60 * 60 * 1000);
+    }
+
+    const subscription = subscriptionRepo.create(subscriptionData);
+    await subscriptionRepo.save(subscription);
+  }
+
+  console.log(`✅ Created subscriptions for ${tenants.length} tenants`);
+}
+
+async function updateUsersWithRoles(dataSource: DataSource, tenants: Tenant[]) {
+  const userRepo = dataSource.getRepository(User);
+
+  // Mettre à jour les rôles des users existants
+  await userRepo.update(
+    { email: 'admin@flotteq.com', tenantId: tenants[0].id },
+    { role: UserRole.SUPER_ADMIN, isActive: true }
+  );
+
+  await userRepo.update(
+    { email: 'manager@flotteq.com', tenantId: tenants[0].id },
+    { role: UserRole.SUPPORT, isActive: true }
+  );
+
+  await userRepo.update(
+    { email: 'user@flotteq.com', tenantId: tenants[0].id },
+    { role: UserRole.VIEWER, isActive: true }
+  );
+
+  await userRepo.update(
+    { email: 'admin@transport.com', tenantId: tenants[1].id },
+    { role: UserRole.TENANT_ADMIN, isActive: true }
+  );
+
+  await userRepo.update(
+    { email: 'fleet@transport.com', tenantId: tenants[1].id },
+    { role: UserRole.MANAGER, isActive: true }
+  );
+
+  await userRepo.update(
+    { email: 'admin@livraison.com', tenantId: tenants[2].id },
+    { role: UserRole.TENANT_ADMIN, isActive: true }
+  );
+
+  console.log('✅ Updated user roles');
 }
 
 seed().catch(console.error);
