@@ -1,74 +1,164 @@
-# Welcome to your Lovable project
+# FlotteQ Frontend Internal - Admin Dashboard
 
-## Project info
+Frontend moderne pour l'administration de FlotteQ v2.0 (Architecture Multi-Tenant)
 
-**URL**: https://lovable.dev/projects/a81d6e9e-badc-4701-8d91-d7948fe208ef
+## 🚀 Technologies
 
-## How can I edit this code?
+- **React 18** - Framework UI
+- **TypeScript** - Type safety
+- **Vite** - Build tool & dev server
+- **TailwindCSS** - Styling
+- **Shadcn UI** - Component library
+- **React Router v6** - Routing
+- **React Query (TanStack Query)** - Data fetching & caching
+- **Zustand** - State management
+- **Axios** - HTTP client
+- **React Hook Form** - Forms
+- **Zod** - Schema validation
 
-There are several ways of editing your application.
+## 📁 Structure du projet
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/a81d6e9e-badc-4701-8d91-d7948fe208ef) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+frontend-internal/
+├── src/
+│   ├── api/               # API client & endpoints
+│   │   ├── client.ts      # Axios instance
+│   │   ├── endpoints/     # API endpoints
+│   │   └── types/         # TypeScript types
+│   ├── components/
+│   │   ├── ui/            # Shadcn UI components
+│   │   ├── auth/          # Auth components (ProtectedRoute)
+│   │   └── layout/        # Layout components
+│   ├── pages/             # Pages
+│   │   ├── auth/          # Login, etc.
+│   │   ├── dashboard/     # Dashboard
+│   │   ├── tenants/       # Gestion tenants
+│   │   └── users/         # Gestion utilisateurs
+│   ├── hooks/             # Custom hooks
+│   ├── store/             # Zustand stores
+│   ├── lib/               # Utilities
+│   ├── App.tsx
+│   ├── main.tsx
+│   └── index.css
+├── public/
+├── .env
+├── vite.config.ts
+├── tailwind.config.ts
+└── tsconfig.json
 ```
 
-**Edit a file directly in GitHub**
+## 🔧 Installation
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+# Installer les dépendances
+npm install
 
-**Use GitHub Codespaces**
+# Lancer le dev server
+npm run dev
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+# Build de production
+npm run build
 
-## What technologies are used for this project?
+# Prévisualiser le build
+npm run preview
+```
 
-This project is built with:
+## 🌐 Configuration
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Variables d'environnement (.env)
 
-## How can I deploy this project?
+```env
+VITE_API_URL=http://localhost:3000
+```
 
-Simply open [Lovable](https://lovable.dev/projects/a81d6e9e-badc-4701-8d91-d7948fe208ef) and click on Share -> Publish.
+### Ports
 
-## Can I connect a custom domain to my Lovable project?
+- **Frontend Internal**: http://localhost:3001
+- **Backend API**: http://localhost:3000
 
-Yes, you can!
+## 🔐 Authentification
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+Le système d'authentification utilise :
+- JWT tokens stockés dans localStorage
+- Intercepteurs Axios pour gérer les tokens
+- React Query pour la gestion de l'état auth
+- Zustand pour le state global
+- ProtectedRoute pour protéger les routes
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Connexion de test
 
+```
+Email: admin@flotteq.com
+Mot de passe: (voir backend/seeders)
+```
+
+## 📦 Composants UI
+
+Les composants UI proviennent de **Shadcn UI** et sont copiés depuis l'ancien frontend.
+
+Pour ajouter un nouveau composant Shadcn :
+
+```bash
+npx shadcn-ui@latest add button
+```
+
+## 🛣️ Routing
+
+Routes principales :
+- `/login` - Page de connexion
+- `/dashboard` - Dashboard principal (protégé)
+- `/` - Redirige vers /dashboard
+
+## 🔄 Data Fetching
+
+Utilisation de React Query pour toutes les requêtes API :
+
+```typescript
+// Example hook
+export const useTenants = () => {
+  return useQuery({
+    queryKey: ['tenants'],
+    queryFn: () => tenantsApi.getAll(),
+  });
+};
+```
+
+## 🏗️ Prochaines étapes
+
+- [ ] Page Tenants (liste, création, édition)
+- [ ] Page Users (liste, création, édition, gestion des rôles)
+- [ ] Page Vehicles (liste depuis tous les tenants)
+- [ ] Page Drivers (liste depuis tous les tenants)
+- [ ] Dashboard avec statistiques globales
+- [ ] Page Subscriptions (gestion Stripe)
+- [ ] Page Support (tickets, alertes)
+- [ ] Page Analytics (métriques, rapports)
+
+## 📝 Conventions de code
+
+- **Composants** : PascalCase (ex: `DashboardPage.tsx`)
+- **Hooks** : camelCase avec préfixe "use" (ex: `useAuth.ts`)
+- **Types** : PascalCase (ex: `User`, `LoginDto`)
+- **API endpoints** : camelCase (ex: `authApi.login()`)
+- **Fichiers CSS** : kebab-case
+
+## 🐛 Debugging
+
+Le dev server Vite affiche les erreurs en temps réel dans le navigateur.
+
+Pour déboguer les requêtes API :
+- Ouvrir DevTools > Network
+- Filtrer par "Fetch/XHR"
+- Les tokens JWT sont visibles dans les headers
+
+## 🔗 Liens utiles
+
+- [Documentation Vite](https://vitejs.dev/)
+- [Documentation React Query](https://tanstack.com/query/latest)
+- [Documentation Shadcn UI](https://ui.shadcn.com/)
+- [Documentation Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction)
+- [Backend FlotteQ API](../backend/README.md)
+
+## 📄 Licence
+
+FlotteQ v2.0 - Propriétaire

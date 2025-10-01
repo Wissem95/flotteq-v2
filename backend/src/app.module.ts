@@ -17,15 +17,15 @@ import { DriversModule } from './modules/drivers.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { UsersModule } from './modules/users/users.module';
-import { StripeModule } from './stripe/stripe.module';
-import stripeConfig from './config/stripe.config';
+// import { StripeModule } from './stripe/stripe.module';
+// import stripeConfig from './config/stripe.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      load: [stripeConfig],
+      // load: [stripeConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -53,7 +53,7 @@ import stripeConfig from './config/stripe.config';
     ]),
     TenantModule,
     AuthModule,
-    StripeModule,
+    // StripeModule,  // Temporairement désactivé - nécessite clé Stripe valide
     SubscriptionsModule,
     UsersModule,
     MaintenanceModule,

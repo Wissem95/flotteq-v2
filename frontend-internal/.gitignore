@@ -1,42 +1,34 @@
-# dépendances
-/node_modules
-/.pnp
-.pnp.js
-
-# production
-/dist
-/build
-
-# fichiers système
-.DS_Store
-Thumbs.db
-
-# environnement
-.env
-.env.local
-.env.*.local
-
-# logs
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+lerna-debug.log*
 
-# éditeurs
-.vscode/
-.idea/
-*.sublime-project
-*.sublime-workspace
+node_modules
+dist
+dist-ssr
+*.local
 
-# test coverage
-coverage/
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# fichiers de build spécifiques à Vite
-.vite
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
 
-# TypeScript
-*.tsbuildinfo
-
-# macOS / Linux swap files
-*.swp
-.vercel
+# Build artifacts
+/build
+/.cache

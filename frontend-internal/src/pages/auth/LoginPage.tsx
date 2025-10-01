@@ -1,168 +1,122 @@
-// LoginPage.tsx - Page de connexion pour l'interface d'administration FlotteQ
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Building2, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { useInternalAuth } from "@/hooks/useInternalAuth";
-import { internalAuthService } from "@/services/internalAuthService";
+const loginSchema = z.object({
+  email: z.string().email('Email invalide'),
+  password: z.string().min(6, 'Minimum 6 caractères'),
+});
 
-const LoginPage: React.FC = () => {
+type LoginForm = z.infer<typeof loginSchema>;
+
+export const LoginPage = () => {
+  const { login, isAuthenticated, isLoginLoading, loginError, isLoginError } = useAuth();
   const navigate = useNavigate();
-  const { login, isLoading } = useInternalAuth();
-  
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [dbStatus, setDbStatus] = useState<'checking' | 'online' | 'offline'>('checking');
 
-  // Vérifier la santé de l'API au chargement
-  React.useEffect(() => {
-    const checkApiHealth = async () => {
-      try {
-        const isOnline = await internalAuthService.checkDatabaseConnection();
-        setDbStatus(isOnline ? 'online' : 'offline');
-      } catch {
-        setDbStatus('offline');
-      }
-    };
-    checkApiHealth();
-  }, []);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }));
-    // Effacer l'erreur quand l'utilisateur tape
-    if (error) setError("");
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    if (!formData.email || !formData.password) {
-      setError("Veuillez remplir tous les champs");
-      return;
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
     }
+  }, [isAuthenticated, navigate]);
 
-    try {
-      await login(formData.email, formData.password);
-      navigate("/dashboard/overview");
-    } catch (err: any) {
-      setError(err.message || "Erreur de connexion. Vérifiez vos identifiants.");
-    }
+  const onSubmit = (data: LoginForm) => {
+    login(data);
   };
-
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo et titre */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-xl mb-4">
-            <Building2 className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">FlotteQ Admin</h1>
-          <p className="text-gray-600 mt-2">Interface d'administration</p>
-        </div>
-
-        {/* Formulaire de connexion */}
-        <Card>
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Connexion</CardTitle>
-            <CardDescription>
-              Connectez-vous à l'interface d'administration FlotteQ
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="admin@flotteq.com"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Votre mot de passe"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-gray-400" />
-                    ) : (
-                      <Eye className="h-4 w-4 text-gray-400" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Connexion...
-                  </div>
-                ) : (
-                  "Se connecter"
-                )}
-              </Button>
-            </form>
-
-          </CardContent>
-        </Card>
-
-        {/* Informations supplémentaires */}
-        <div className="mt-8 text-center text-sm text-gray-500">
-          <p>Interface réservée aux administrateurs FlotteQ</p>
-          <p className="mt-1">
-            Besoin d'aide ? Contactez l'équipe technique
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-flotteq-light via-white to-flotteq-light">
+      <Card className="w-full max-w-md p-8 shadow-xl">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold flotteq-gradient-text mb-2">
+            FlotteQ Admin
+          </h1>
+          <p className="text-muted-foreground">
+            Connectez-vous pour accéder au dashboard
           </p>
         </div>
-      </div>
+
+        {/* Affichage des erreurs */}
+        {isLoginError && loginError && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {loginError instanceof Error
+                ? loginError.message
+                : 'Email ou mot de passe incorrect'}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              {...register('email')}
+              type="email"
+              placeholder="admin@flotteq.com"
+              disabled={isLoginLoading}
+            />
+            {errors.email && (
+              <p className="text-sm text-destructive">{errors.email.message}</p>
+            )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Mot de passe</Label>
+            <Input
+              id="password"
+              {...register('password')}
+              type="password"
+              placeholder="••••••••"
+              disabled={isLoginLoading}
+            />
+            {errors.password && (
+              <p className="text-sm text-destructive">
+                {errors.password.message}
+              </p>
+            )}
+          </div>
+
+          <Button
+            type="submit"
+            className="w-full bg-flotteq-blue hover:bg-flotteq-navy"
+            disabled={isLoginLoading}
+          >
+            {isLoginLoading ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                Connexion en cours...
+              </>
+            ) : (
+              'Se connecter'
+            )}
+          </Button>
+        </form>
+
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          <p>Version 2.0 - Architecture Multi-Tenant</p>
+          <p className="mt-2 text-xs">
+            Test: wissem@flotteq.com / Admin123!
+          </p>
+        </div>
+      </Card>
     </div>
   );
 };
-
-export default LoginPage; 
