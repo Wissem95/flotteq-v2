@@ -14,8 +14,9 @@ import { Driver } from './driver.entity';
 export enum TenantStatus {
   TRIAL = 'trial',
   ACTIVE = 'active',
-  SUSPENDED = 'suspended',
+  PAST_DUE = 'past_due',
   CANCELLED = 'cancelled',
+  INCOMPLETE = 'incomplete',
 }
 
 @Entity('tenants')
@@ -53,11 +54,28 @@ export class Tenant {
   })
   status: TenantStatus;
 
-  @Column({ nullable: true, name: 'subscription_id' })
-  subscriptionId: string; // Stripe subscription ID
+  @Column({ nullable: true, name: 'stripe_customer_id' })
+  stripeCustomerId: string;
 
-  @Column({ type: 'date', nullable: true, name: 'trial_ends_at' })
+  @Column({ nullable: true, name: 'stripe_subscription_id' })
+  stripeSubscriptionId: string;
+
+  @Column({
+    type: 'enum',
+    enum: ['trial', 'active', 'past_due', 'cancelled', 'incomplete'],
+    default: 'trial',
+    name: 'subscription_status',
+  })
+  subscriptionStatus: string;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'trial_ends_at' })
   trialEndsAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'subscription_started_at' })
+  subscriptionStartedAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'subscription_ended_at' })
+  subscriptionEndedAt: Date;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

@@ -9,6 +9,8 @@ import { Repository } from 'typeorm';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { StripeService } from '../../stripe/stripe.service';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class TenantsService {
@@ -17,6 +19,8 @@ export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
     private tenantsRepository: Repository<Tenant>,
+    private stripeService: StripeService,
+    private configService: ConfigService,
   ) {}
 
   async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
@@ -38,15 +42,48 @@ export class TenantsService {
       );
     }
 
-    // Créer le tenant avec statut TRIAL par défaut
+    const trialDays = this.configService.get<number>('stripe.trialDays', 14);
+
+    // 1. Créer le tenant en DB avec statut TRIAL par défaut
     const tenant = this.tenantsRepository.create({
       ...createTenantDto,
       status: TenantStatus.TRIAL,
-      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 jours
+      subscriptionStatus: 'trial',
+      trialEndsAt: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
     });
 
     const savedTenant = await this.tenantsRepository.save(tenant);
     this.logger.log(`Tenant créé avec succès: #${savedTenant.id}`);
+
+    // 2. Créer le customer Stripe
+    try {
+      const stripeCustomerId = await this.stripeService.createCustomer(
+        savedTenant,
+        createTenantDto.email,
+      );
+
+      // 3. Mettre à jour le tenant avec le stripeCustomerId
+      savedTenant.stripeCustomerId = stripeCustomerId;
+      await this.tenantsRepository.save(savedTenant);
+
+      // 4. Créer la subscription avec trial
+      const priceId = this.configService.get<string>('stripe.priceId');
+      if (priceId) {
+        const subscription = await this.stripeService.createSubscription(
+          stripeCustomerId,
+          priceId,
+        );
+
+        savedTenant.stripeSubscriptionId = subscription.id;
+        await this.tenantsRepository.save(savedTenant);
+        this.logger.log(`Stripe subscription created for tenant #${savedTenant.id}`);
+      } else {
+        this.logger.warn('STRIPE_PRICE_ID not configured, skipping subscription creation');
+      }
+    } catch (error) {
+      this.logger.error(`Failed to create Stripe resources for tenant #${savedTenant.id}`, error);
+      // Don't fail tenant creation if Stripe fails, but log the error
+    }
 
     return savedTenant;
   }
@@ -135,5 +172,13 @@ export class TenantsService {
       trialEndsAt: tenant.trialEndsAt,
       createdAt: tenant.createdAt,
     };
+  }
+
+  /**
+   * Vérifier si un tenant peut accéder au système
+   */
+  async canAccess(tenantId: number): Promise<boolean> {
+    const tenant = await this.findOne(tenantId);
+    return this.stripeService.isActive(tenant) || this.stripeService.isTrial(tenant);
   }
 }
