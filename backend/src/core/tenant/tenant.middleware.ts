@@ -28,7 +28,7 @@ export class TenantMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
     // Skip tenant validation for auth routes, health checks, and internal admin routes
     const path = req.baseUrl + req.path; // Chemin complet incluant le préfixe global
-    const skipRoutes = ['/auth', '/health', '/api/docs', '/api/tenants'];
+    const skipRoutes = ['/auth', '/health', '/api/docs', '/api/tenants', '/api/dashboard/internal'];
     const isSkippedRoute = skipRoutes.some(route => path.startsWith(route));
 
     if (isSkippedRoute) {

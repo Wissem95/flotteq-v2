@@ -134,10 +134,14 @@ export class TenantsService {
   }
 
   async findOne(id: number): Promise<Tenant> {
-    const tenant = await this.tenantsRepository.findOne({
-      where: { id },
-      relations: ['users', 'vehicles', 'drivers'],
-    });
+    const tenant = await this.tenantsRepository
+      .createQueryBuilder('tenant')
+      .leftJoinAndSelect('tenant.users', 'users')
+      .leftJoinAndSelect('tenant.vehicles', 'vehicles')
+      .leftJoinAndSelect('tenant.drivers', 'drivers')
+      .leftJoinAndSelect('tenant.plan', 'plan')
+      .where('tenant.id = :id', { id })
+      .getOne();
 
     if (!tenant) {
       throw new NotFoundException(`Tenant #${id} non trouvé`);
@@ -218,5 +222,40 @@ export class TenantsService {
   async canAccess(tenantId: number): Promise<boolean> {
     const tenant = await this.findOne(tenantId);
     return this.stripeService.isActive(tenant) || this.stripeService.isTrial(tenant);
+  }
+
+  /**
+   * Changer le plan d'un tenant
+   */
+  async changePlan(tenantId: number, newPlanId: number): Promise<Tenant> {
+    this.logger.log(`Changing plan for tenant ${tenantId} to plan ${newPlanId}`);
+
+    const tenant = await this.tenantsRepository.findOne({
+      where: { id: tenantId },
+      relations: ['plan'],
+    });
+
+    if (!tenant) {
+      throw new NotFoundException(`Tenant #${tenantId} not found`);
+    }
+
+    // Mettre à jour le planId
+    tenant.planId = newPlanId;
+
+    const updatedTenant = await this.tenantsRepository.save(tenant);
+
+    this.logger.log(`Successfully changed plan for tenant ${tenantId} to plan ${newPlanId}`);
+
+    // Retourner avec les relations
+    const result = await this.tenantsRepository.findOne({
+      where: { id: tenantId },
+      relations: ['plan', 'users', 'vehicles', 'drivers'],
+    });
+
+    if (!result) {
+      throw new NotFoundException(`Tenant #${tenantId} not found after update`);
+    }
+
+    return result;
   }
 }

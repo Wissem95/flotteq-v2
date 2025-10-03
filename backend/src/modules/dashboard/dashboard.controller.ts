@@ -1,8 +1,23 @@
-import { Controller, Get, UseGuards, Req } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  UseGuards,
+  Req,
+  Query,
+  ParseIntPipe,
+  DefaultValuePipe,
+} from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { DashboardService } from './dashboard.service';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
-import { Request } from 'express';
+import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
+import {
+  InternalStatsDto,
+  InternalRevenueDto,
+  InternalSubscriptionsDto,
+  ActivityLogDto,
+  RecentTenantDto,
+} from './dto/internal-stats.dto';
 import { DashboardOverviewDto } from './dto/dashboard-overview.dto';
 import { FleetStatusDto } from './dto/fleet-status.dto';
 import { CostAnalysisDto } from './dto/cost-analysis.dto';
@@ -11,57 +26,100 @@ import { MaintenanceStatsDto } from './dto/maintenance-stats.dto';
 import { DriverStatsDto } from './dto/driver-stats.dto';
 
 @ApiTags('dashboard')
-@ApiBearerAuth()
 @Controller('dashboard')
-@UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class DashboardController {
   constructor(private readonly dashboardService: DashboardService) {}
 
-  @Get('overview')
-  @ApiOperation({ summary: 'Get dashboard overview with global stats' })
-  @ApiResponse({ status: 200, description: 'Overview retrieved successfully', type: DashboardOverviewDto })
-  async getOverview(@Req() req: any): Promise<DashboardOverviewDto> {
+  // ============ INTERNAL (Admin FlotteQ) ============
+
+  @Get('internal/stats')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Get global stats for all tenants (FlotteQ admin only)' })
+  async getInternalStats(): Promise<InternalStatsDto> {
+    return this.dashboardService.getInternalStats();
+  }
+
+  @Get('internal/revenue')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Get MRR, ARR and revenue evolution (FlotteQ admin only)' })
+  async getInternalRevenue(): Promise<InternalRevenueDto> {
+    return this.dashboardService.getInternalRevenue();
+  }
+
+  @Get('internal/subscriptions')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Get subscription plans distribution (FlotteQ admin only)' })
+  async getInternalSubscriptions(): Promise<InternalSubscriptionsDto> {
+    return this.dashboardService.getInternalSubscriptions();
+  }
+
+  @Get('internal/activity')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Get recent platform activity (FlotteQ admin only)' })
+  async getInternalActivity(): Promise<ActivityLogDto[]> {
+    return this.dashboardService.getInternalActivity();
+  }
+
+  @Get('internal/tenants/recent')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({ summary: 'Get recently registered tenants (FlotteQ admin only)' })
+  async getInternalRecentTenants(
+    @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
+  ): Promise<RecentTenantDto[]> {
+    return this.dashboardService.getRecentTenants(limit);
+  }
+
+  // ============ TENANT (Clients) ============
+
+  @Get('tenant/overview')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get tenant dashboard overview' })
+  async getTenantOverview(@Req() req: any): Promise<DashboardOverviewDto> {
     const tenantId = req.user.tenantId;
     return this.dashboardService.getOverview(tenantId);
   }
 
-  @Get('fleet-status')
-  @ApiOperation({ summary: 'Get fleet status breakdown by vehicle status' })
-  @ApiResponse({ status: 200, description: 'Fleet status retrieved successfully', type: FleetStatusDto })
-  async getFleetStatus(@Req() req: any): Promise<FleetStatusDto> {
-    const tenantId = req.user.tenantId;
-    return this.dashboardService.getFleetStatus(tenantId);
+  @Get('tenant/fleet-status')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get fleet status by vehicle status' })
+  async getTenantFleetStatus(@Req() req: any): Promise<FleetStatusDto> {
+    return this.dashboardService.getFleetStatus(req.user.tenantId);
   }
 
-  @Get('costs')
-  @ApiOperation({ summary: 'Get cost analysis including maintenance and purchase costs' })
-  @ApiResponse({ status: 200, description: 'Cost analysis retrieved successfully', type: CostAnalysisDto })
-  async getCosts(@Req() req: any): Promise<CostAnalysisDto> {
-    const tenantId = req.user.tenantId;
-    return this.dashboardService.getCostAnalysis(tenantId);
+  @Get('tenant/costs')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get cost analysis for tenant' })
+  async getTenantCosts(@Req() req: any): Promise<CostAnalysisDto> {
+    return this.dashboardService.getCostAnalysis(req.user.tenantId);
   }
 
-  @Get('alerts')
-  @ApiOperation({ summary: 'Get all upcoming alerts (licenses, certificates, maintenances)' })
-  @ApiResponse({ status: 200, description: 'Alerts retrieved successfully', type: [AlertDto] })
-  async getAlerts(@Req() req: any): Promise<AlertDto[]> {
-    const tenantId = req.user.tenantId;
-    return this.dashboardService.getUpcomingAlerts(tenantId);
+  @Get('tenant/alerts')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get upcoming alerts for tenant' })
+  async getTenantAlerts(@Req() req: any): Promise<AlertDto[]> {
+    return this.dashboardService.getUpcomingAlerts(req.user.tenantId);
   }
 
-  @Get('maintenance-stats')
-  @ApiOperation({ summary: 'Get maintenance statistics' })
-  @ApiResponse({ status: 200, description: 'Maintenance stats retrieved successfully', type: MaintenanceStatsDto })
-  async getMaintenanceStats(@Req() req: any): Promise<MaintenanceStatsDto> {
-    const tenantId = req.user.tenantId;
-    return this.dashboardService.getMaintenanceStats(tenantId);
+  @Get('tenant/maintenance-stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get maintenance statistics for tenant' })
+  async getTenantMaintenanceStats(
+    @Req() req: any,
+  ): Promise<MaintenanceStatsDto> {
+    return this.dashboardService.getMaintenanceStats(req.user.tenantId);
   }
 
-  @Get('driver-stats')
-  @ApiOperation({ summary: 'Get driver statistics' })
-  @ApiResponse({ status: 200, description: 'Driver stats retrieved successfully', type: DriverStatsDto })
-  async getDriverStats(@Req() req: any): Promise<DriverStatsDto> {
-    const tenantId = req.user.tenantId;
-    return this.dashboardService.getDriverStats(tenantId);
+  @Get('tenant/driver-stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get driver statistics for tenant' })
+  async getTenantDriverStats(@Req() req: any): Promise<DriverStatsDto> {
+    return this.dashboardService.getDriverStats(req.user.tenantId);
   }
+
+  // ============ DRIVER (Conducteurs) - PLACEHOLDERS ============
+  // À implémenter dans Sprint 4
+
+  // ============ PARTNER (Partenaires) - PLACEHOLDERS ============
+  // À implémenter dans Sprint 2
 }

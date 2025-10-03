@@ -14,6 +14,7 @@ import { CreatePlanDto } from './dto/create-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
 
 @ApiTags('subscriptions')
@@ -27,7 +28,8 @@ export class SubscriptionsController {
   @Get('plans')
   @ApiOperation({ summary: 'Get all available subscription plans' })
   getPlans() {
-    return this.subscriptionsService.getPlans();
+    // Pour l'admin internal, on retourne TOUS les plans (actifs et inactifs)
+    return this.subscriptionsService.getPlans(false);
   }
 
   @Get('plans/:id')
@@ -37,18 +39,21 @@ export class SubscriptionsController {
   }
 
   @Post('plans')
+  @UseGuards(SuperAdminGuard)
   @ApiOperation({ summary: 'Create a new subscription plan (Admin only)' })
   createPlan(@Body() dto: CreatePlanDto) {
     return this.subscriptionsService.createPlan(dto);
   }
 
   @Patch('plans/:id')
+  @UseGuards(SuperAdminGuard)
   @ApiOperation({ summary: 'Update a subscription plan (Admin only)' })
   updatePlan(@Param('id') id: string, @Body() dto: UpdatePlanDto) {
     return this.subscriptionsService.updatePlan(+id, dto);
   }
 
   @Delete('plans/:id')
+  @UseGuards(SuperAdminGuard)
   @ApiOperation({ summary: 'Delete a subscription plan (Admin only)' })
   deletePlan(@Param('id') id: string) {
     return this.subscriptionsService.deletePlan(+id);
@@ -56,6 +61,7 @@ export class SubscriptionsController {
 
   // ========== ENDPOINTS ABONNEMENTS ==========
   @Get()
+  @UseGuards(SuperAdminGuard)
   @ApiOperation({ summary: 'Get all subscriptions (Admin only)' })
   getAllSubscriptions() {
     return this.subscriptionsService.getAllSubscriptions();

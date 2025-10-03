@@ -27,13 +27,17 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request interceptor pour ajouter le token
+// Request interceptor pour ajouter le token et X-Tenant-ID
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // Pour frontend-internal, on utilise toujours tenantId=1 (FlotteQ)
+    config.headers['X-Tenant-ID'] = '1';
+
     return config;
   },
   (error) => Promise.reject(error)

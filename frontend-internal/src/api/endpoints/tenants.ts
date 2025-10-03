@@ -52,4 +52,9 @@ export const tenantsApi = {
     const response = await apiClient.get<TenantStats>(`/tenants/${id}/stats`);
     return response.data;
   },
+
+  changePlan: async (id: number, planId: number): Promise<Tenant> => {
+    const response = await apiClient.patch<Tenant>(`/tenants/${id}/change-plan/${planId}`);
+    return response.data;
+  },
 };

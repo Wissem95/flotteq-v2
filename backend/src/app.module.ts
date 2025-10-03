@@ -11,6 +11,7 @@ import { TenantMiddleware } from './core/tenant/tenant.middleware';
 import { TenantGuard } from './core/tenant/tenant.guard';
 import { TenantInterceptor } from './core/tenant/tenant.interceptor';
 import { AuthModule } from './core/auth/auth.module';
+import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { DriversModule } from './modules/drivers.module';
@@ -70,7 +71,11 @@ import { UsersModule } from './modules/users/users.module';
     },
     {
       provide: APP_GUARD,
-      useClass: TenantGuard,
+      useClass: JwtAuthGuard,  // Auth d'abord
+    },
+    {
+      provide: APP_GUARD,
+      useClass: TenantGuard,   // Puis tenant filtering
     },
     {
       provide: APP_INTERCEPTOR,

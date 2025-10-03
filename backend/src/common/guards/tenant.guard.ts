@@ -1,13 +1,30 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../entities/user.entity';
 
 @Injectable()
 export class TenantGuard implements CanActivate {
+  constructor(private reflector: Reflector) {}
+
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
+    const path = request.route?.path || request.url;
+
+    // Skip public routes (auth, health, docs)
+    const publicRoutes = ['/auth', '/health', '/api/docs'];
+    if (publicRoutes.some(route => path.startsWith(route))) {
+      return true;
+    }
+
     const user = request.user;
 
-    if (!user || !user.tenantId) {
+    // Si pas d'user, la route nécessite probablement JwtAuthGuard
+    // On laisse passer, JwtAuthGuard bloquera si nécessaire
+    if (!user) {
+      return true;
+    }
+
+    if (!user.tenantId) {
       throw new ForbiddenException('Tenant ID manquant');
     }
 

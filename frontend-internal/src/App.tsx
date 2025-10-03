@@ -5,6 +5,8 @@ import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { TenantsListPage } from './pages/tenants/TenantsListPage';
 import { TenantDetailPage } from './pages/tenants/TenantDetailPage';
 import { TenantFormPage } from './pages/tenants/TenantFormPage';
+import { PlansPage } from './pages/subscriptions/PlansPage';
+import { ActiveSubscriptionsPage } from './pages/subscriptions/ActiveSubscriptionsPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { Toaster } from './components/ui/toaster';
@@ -36,6 +38,8 @@ function App() {
             <Route path="/tenants" element={<TenantsListPage />} />
             <Route path="/tenants/:id" element={<TenantDetailPage />} />
             <Route path="/tenants/:id/edit" element={<TenantFormPage />} />
+            <Route path="/subscriptions/plans" element={<PlansPage />} />
+            <Route path="/subscriptions/active" element={<ActiveSubscriptionsPage />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

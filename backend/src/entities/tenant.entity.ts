@@ -5,11 +5,14 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
   Index,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Vehicle } from './vehicle.entity';
 import { Driver } from './driver.entity';
+import { SubscriptionPlan } from './subscription-plan.entity';
 
 export enum TenantStatus {
   TRIAL = 'trial',
@@ -83,7 +86,14 @@ export class Tenant {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
+  @Column({ nullable: true, name: 'plan_id' })
+  planId: number;
+
   // Relations
+  @ManyToOne(() => SubscriptionPlan, { nullable: true })
+  @JoinColumn({ name: 'plan_id' })
+  plan: SubscriptionPlan;
+
   @OneToMany(() => User, (user) => user.tenant)
   users: User[];
 

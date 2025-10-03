@@ -1,3 +1,53 @@
+export interface User {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  isActive: boolean;
+  phone?: string;
+  createdAt: string;
+}
+
+export interface Vehicle {
+  id: string;
+  registration: string;
+  brand: string;
+  model: string;
+  year: number;
+  status: string;
+  vin: string;
+  color: string;
+  currentKm: number;
+}
+
+export interface Driver {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface Subscription {
+  id: string;
+  status: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  trialEnd?: string;
+  plan: SubscriptionPlan;
+}
+
+export interface SubscriptionPlan {
+  id: number;
+  name: string;
+  price: number;
+  maxVehicles: number;
+  maxUsers: number;
+  maxDrivers: number;
+  features: string[];
+}
+
 export interface Tenant {
   id: number;
   name: string;
@@ -16,10 +66,13 @@ export interface Tenant {
   subscriptionEndedAt?: string;
   createdAt: string;
   updatedAt: string;
+  planId?: number;
   // Relations (optionnelles selon le endpoint)
-  users?: Array<{ id: number; email: string; role: string }>;
-  vehicles?: Array<{ id: number; registration: string }>;
-  drivers?: Array<{ id: number; firstName: string; lastName: string }>;
+  users?: User[];
+  vehicles?: Vehicle[];
+  drivers?: Driver[];
+  subscription?: Subscription;
+  plan?: SubscriptionPlan;
 }
 
 export type TenantStatus = 'trial' | 'active' | 'past_due' | 'cancelled' | 'incomplete';

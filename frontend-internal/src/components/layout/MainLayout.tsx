@@ -1,3 +1,4 @@
+import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,8 @@ import {
   Users,
   Car,
   UserCheck,
+  CreditCard,
+  ChevronDown,
   LogOut,
 } from 'lucide-react';
 
@@ -15,6 +18,7 @@ export const MainLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSubscriptionsOpen, setIsSubscriptionsOpen] = React.useState(false);
 
   const menuItems = [
     {
@@ -26,6 +30,16 @@ export const MainLayout = () => {
       icon: Building2,
       label: 'Tenants',
       path: '/tenants',
+    },
+    {
+      icon: CreditCard,
+      label: 'Abonnements',
+      path: '/subscriptions',
+      hasSubmenu: true,
+      submenu: [
+        { label: 'Plans', path: '/subscriptions/plans' },
+        { label: 'Abonnements actifs', path: '/subscriptions/active' },
+      ],
     },
     {
       icon: Users,
@@ -60,21 +74,56 @@ export const MainLayout = () => {
 
         <nav className="flex-1 px-3 space-y-1">
           {menuItems.map((item) => (
-            <button
-              key={item.path}
-              onClick={() => !item.disabled && navigate(item.path)}
-              disabled={item.disabled}
-              className={cn(
-                'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
-                location.pathname.startsWith(item.path)
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-                  : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
-                item.disabled && 'opacity-50 cursor-not-allowed'
+            <div key={item.path}>
+              <button
+                onClick={() => {
+                  if (item.hasSubmenu) {
+                    setIsSubscriptionsOpen(!isSubscriptionsOpen);
+                  } else if (!item.disabled) {
+                    navigate(item.path);
+                  }
+                }}
+                disabled={item.disabled}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
+                  location.pathname.startsWith(item.path)
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground',
+                  item.disabled && 'opacity-50 cursor-not-allowed'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.hasSubmenu && (
+                  <ChevronDown
+                    className={cn(
+                      'h-4 w-4 transition-transform',
+                      isSubscriptionsOpen && 'rotate-180'
+                    )}
+                  />
+                )}
+              </button>
+
+              {/* Submenu */}
+              {item.hasSubmenu && isSubscriptionsOpen && (
+                <div className="ml-8 mt-1 space-y-1">
+                  {item.submenu?.map((subItem) => (
+                    <button
+                      key={subItem.path}
+                      onClick={() => navigate(subItem.path)}
+                      className={cn(
+                        'w-full flex items-center px-3 py-2 rounded-lg text-sm transition-colors',
+                        location.pathname === subItem.path
+                          ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                          : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground'
+                      )}
+                    >
+                      {subItem.label}
+                    </button>
+                  ))}
+                </div>
               )}
-            >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
-            </button>
+            </div>
           ))}
         </nav>
 

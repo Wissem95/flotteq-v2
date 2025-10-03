@@ -3,20 +3,33 @@ import { useTenant, useTenantStats } from '@/hooks/useTenants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TenantInfoTab } from '@/components/tenants/TenantInfoTab';
+import { TenantUsersTab } from '@/components/tenants/TenantUsersTab';
+import { TenantVehiclesTab } from '@/components/tenants/TenantVehiclesTab';
+import { TenantSubscriptionTab } from '@/components/tenants/TenantSubscriptionTab';
 import {
   ArrowLeft,
   Pencil,
   Users,
   Car,
   UserCheck,
-  Building2,
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
   Loader2,
 } from 'lucide-react';
+
+const getStatusColor = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'active':
+      return 'bg-green-100 text-green-800';
+    case 'trial':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'cancelled':
+    case 'past_due':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
 
 export const TenantDetailPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +54,9 @@ export const TenantDetailPage = () => {
     );
   }
 
+  // Calculate active users
+  const activeUsers = tenant.users?.filter((u) => u.isActive).length || 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -51,17 +67,22 @@ export const TenantDetailPage = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-bold">{tenant.name}</h1>
-            <p className="text-muted-foreground">Tenant #{tenant.id}</p>
+            <p className="text-muted-foreground">{tenant.email}</p>
           </div>
+          <Badge className={getStatusColor(tenant.status)}>
+            {tenant.status.toUpperCase()}
+          </Badge>
         </div>
-        <Button onClick={() => navigate(`/tenants/${id}/edit`)}>
-          <Pencil className="h-4 w-4 mr-2" />
-          Modifier
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate(`/tenants/${id}/edit`)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Modifier
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-full bg-blue-100">
@@ -69,7 +90,9 @@ export const TenantDetailPage = () => {
             </div>
             <div>
               <p className="text-2xl font-bold">{stats?.usersCount || 0}</p>
-              <p className="text-sm text-muted-foreground">Utilisateurs</p>
+              <p className="text-sm text-muted-foreground">
+                Utilisateurs ({activeUsers} actifs)
+              </p>
             </div>
           </div>
         </Card>
@@ -81,7 +104,12 @@ export const TenantDetailPage = () => {
             </div>
             <div>
               <p className="text-2xl font-bold">{stats?.vehiclesCount || 0}</p>
-              <p className="text-sm text-muted-foreground">Véhicules</p>
+              <p className="text-sm text-muted-foreground">
+                Véhicules
+                {tenant.subscription?.plan && (
+                  <> / {tenant.subscription.plan.maxVehicles} max</>
+                )}
+              </p>
             </div>
           </div>
         </Card>
@@ -97,89 +125,37 @@ export const TenantDetailPage = () => {
             </div>
           </div>
         </Card>
-
-        <Card className="p-6">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-full bg-orange-100">
-              <Car className="h-6 w-6 text-orange-600" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold">{stats?.activeVehicles || 0}</p>
-              <p className="text-sm text-muted-foreground">Actifs</p>
-            </div>
-          </div>
-        </Card>
       </div>
 
-      {/* Tenant Info */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Informations</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <Building2 className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Nom</p>
-                <p className="font-medium">{tenant.name}</p>
-              </div>
-            </div>
+      {/* Tabs */}
+      <Tabs defaultValue="info" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="info">Informations</TabsTrigger>
+          <TabsTrigger value="users">
+            Utilisateurs ({tenant.users?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="vehicles">
+            Véhicules ({tenant.vehicles?.length || 0})
+          </TabsTrigger>
+          <TabsTrigger value="subscription">Abonnement</TabsTrigger>
+        </TabsList>
 
-            <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Email</p>
-                <p className="font-medium">{tenant.email}</p>
-              </div>
-            </div>
+        <TabsContent value="info">
+          <TenantInfoTab tenant={tenant} />
+        </TabsContent>
 
-            <div className="flex items-center gap-3">
-              <Phone className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Téléphone</p>
-                <p className="font-medium">{tenant.phone}</p>
-              </div>
-            </div>
-          </div>
+        <TabsContent value="users">
+          <TenantUsersTab users={tenant.users || []} />
+        </TabsContent>
 
-          <div className="space-y-4">
-            <div className="flex items-center gap-3">
-              <MapPin className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Adresse</p>
-                <p className="font-medium">{tenant.address}</p>
-                <p className="text-sm">
-                  {tenant.postalCode} {tenant.city}, {tenant.country}
-                </p>
-              </div>
-            </div>
+        <TabsContent value="vehicles">
+          <TenantVehiclesTab vehicles={tenant.vehicles || []} />
+        </TabsContent>
 
-            <div className="flex items-center gap-3">
-              <Calendar className="h-5 w-5 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">Créé le</p>
-                <p className="font-medium">
-                  {new Date(tenant.createdAt).toLocaleDateString('fr-FR', {
-                    dateStyle: 'long',
-                  })}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <Separator className="my-6" />
-
-        <div className="flex gap-4">
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Status</p>
-            <Badge>{tenant.status.toUpperCase()}</Badge>
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground mb-1">Abonnement</p>
-            <Badge>{tenant.subscriptionStatus.toUpperCase()}</Badge>
-          </div>
-        </div>
-      </Card>
+        <TabsContent value="subscription">
+          <TenantSubscriptionTab tenant={tenant} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

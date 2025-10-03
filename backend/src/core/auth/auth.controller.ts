@@ -7,6 +7,7 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -16,6 +17,7 @@ export class AuthController {
     private readonly jwtService: JwtService,
   ) {}
 
+  @Public()
   @Post('register')
   @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 tentatives par minute
   @ApiOperation({ summary: 'Register new user' })
@@ -25,6 +27,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
+  @Public()
   @Post('login')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 tentatives par minute
   @ApiOperation({ summary: 'Login user' })
@@ -34,6 +37,7 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Public()
   @Post('refresh')
   @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({ status: 200, description: 'Token refreshed successfully' })
