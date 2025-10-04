@@ -26,10 +26,17 @@ export const ChangePlanDialog: React.FC<ChangePlanDialogProps> = ({
   });
 
   const changePlanMutation = useMutation({
-    mutationFn: (planId: number) => tenantsApi.changePlan(subscription.tenantId, planId),
-    onSuccess: () => {
+    mutationFn: (planId: number) => {
+      console.log('Mutation function called with planId:', planId, 'tenantId:', subscription.tenantId);
+      return tenantsApi.changePlan(subscription.tenantId, planId);
+    },
+    onSuccess: (data) => {
+      console.log('Plan changed successfully!', data);
       onSuccess();
       onClose();
+    },
+    onError: (error) => {
+      console.error('Error changing plan:', error);
     },
   });
 
@@ -38,8 +45,13 @@ export const ChangePlanDialog: React.FC<ChangePlanDialogProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted, selectedPlanId:', selectedPlanId);
+    console.log('Current plan ID:', currentPlan?.id);
     if (selectedPlanId) {
+      console.log('Calling API to change plan...');
       changePlanMutation.mutate(selectedPlanId);
+    } else {
+      console.log('No plan selected!');
     }
   };
 
@@ -73,7 +85,13 @@ export const ChangePlanDialog: React.FC<ChangePlanDialogProps> = ({
                   return (
                     <div
                       key={plan.id}
-                      onClick={() => !isCurrentPlan && setSelectedPlanId(plan.id)}
+                      onClick={() => {
+                        console.log('Plan clicked:', plan.id, plan.name, 'isCurrentPlan:', isCurrentPlan);
+                        if (!isCurrentPlan) {
+                          setSelectedPlanId(plan.id);
+                          console.log('Selected plan set to:', plan.id);
+                        }
+                      }}
                       className={`
                         relative border-2 rounded-lg p-4 cursor-pointer transition-all
                         ${isCurrentPlan ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60' : ''}

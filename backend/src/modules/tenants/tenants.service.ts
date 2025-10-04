@@ -7,6 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
+import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { StripeService } from '../../stripe/stripe.service';
@@ -19,6 +20,8 @@ export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
     private tenantsRepository: Repository<Tenant>,
+    @InjectRepository(Subscription)
+    private subscriptionRepository: Repository<Subscription>,
     private stripeService: StripeService,
     private configService: ConfigService,
   ) {}
@@ -230,32 +233,41 @@ export class TenantsService {
   async changePlan(tenantId: number, newPlanId: number): Promise<Tenant> {
     this.logger.log(`Changing plan for tenant ${tenantId} to plan ${newPlanId}`);
 
+    // Vérifier que le tenant existe
     const tenant = await this.tenantsRepository.findOne({
       where: { id: tenantId },
-      relations: ['plan'],
     });
 
     if (!tenant) {
       throw new NotFoundException(`Tenant #${tenantId} not found`);
     }
 
-    // Mettre à jour le planId
-    tenant.planId = newPlanId;
+    // Mettre à jour directement avec update() pour éviter les problèmes de relations
+    await this.tenantsRepository.update(tenantId, { planId: newPlanId });
+    this.logger.log(`Updated tenant ${tenantId} plan_id to ${newPlanId}`);
 
-    const updatedTenant = await this.tenantsRepository.save(tenant);
+    // Mettre à jour aussi la subscription active du tenant
+    const updateResult = await this.subscriptionRepository.update(
+      { tenantId, status: SubscriptionStatus.ACTIVE },
+      { planId: newPlanId }
+    );
+
+    if (updateResult.affected && updateResult.affected > 0) {
+      this.logger.log(`Updated ${updateResult.affected} subscription(s) with new plan ${newPlanId}`);
+    }
 
     this.logger.log(`Successfully changed plan for tenant ${tenantId} to plan ${newPlanId}`);
 
     // Retourner avec les relations
-    const result = await this.tenantsRepository.findOne({
+    const updatedTenant = await this.tenantsRepository.findOne({
       where: { id: tenantId },
       relations: ['plan', 'users', 'vehicles', 'drivers'],
     });
 
-    if (!result) {
+    if (!updatedTenant) {
       throw new NotFoundException(`Tenant #${tenantId} not found after update`);
     }
 
-    return result;
+    return updatedTenant;
   }
 }
