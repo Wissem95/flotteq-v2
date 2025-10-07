@@ -13,7 +13,7 @@ export interface SubscriptionPlan {
 }
 
 export interface Subscription {
-  id: number;
+  id: string; // UUID from database
   tenantId: number;
   planId: number;
   status: 'active' | 'cancelled' | 'expired' | 'trialing';

@@ -65,12 +65,14 @@ async function createUsers(dataSource: DataSource, tenants: Tenant[]) {
     { email: 'manager@flotteq.com', firstName: 'Manager', lastName: 'FlotteQ', tenantId: tenants[0].id, password },
     { email: 'user@flotteq.com', firstName: 'User', lastName: 'FlotteQ', tenantId: tenants[0].id, password },
 
-    // Tenant 2 - Transport Express
-    { email: 'admin@transport.com', firstName: 'Admin', lastName: 'Transport', tenantId: tenants[1].id, password },
-    { email: 'fleet@transport.com', firstName: 'Fleet', lastName: 'Manager', tenantId: tenants[1].id, password },
+    // Tenant 2 - Transport Express SARL
+    { email: 'admin@transport-express.fr', firstName: 'Admin', lastName: 'Transport', tenantId: tenants[1].id, password },
+    { email: 'fleet@transport-express.fr', firstName: 'Fleet', lastName: 'Manager', tenantId: tenants[1].id, password },
 
-    // Tenant 3 - Livraison Rapide
-    { email: 'admin@livraison.com', firstName: 'Admin', lastName: 'Livraison', tenantId: tenants[2].id, password },
+    // Tenant 3 - LogisTransaction
+    { email: 'admin@logistrans.com', firstName: 'Paul', lastName: 'Dubois', tenantId: tenants[2].id, password },
+    { email: 'viewer@logistrans.com', firstName: 'Claire', lastName: 'Moreau', tenantId: tenants[2].id, password },
+    { email: 'driver@logistrans.com', firstName: 'Pierre', lastName: 'Durand', tenantId: tenants[2].id, password },
   ];
 
   return userRepo.save(usersData);
@@ -128,9 +130,9 @@ async function createDrivers(dataSource: DataSource) {
       address: '67 promenade des Anglais'
     },
 
-    // Tenant 2 Drivers
+    // Tenant 2 Drivers (Transport Express SARL)
     {
-      firstName: 'Luc', lastName: 'Moreau', email: 'luc.moreau@transport.com',
+      firstName: 'Luc', lastName: 'Moreau', email: 'luc.moreau@transport-express.fr',
       phone: '+33667890123', licenseNumber: 'FR002234567',
       licenseExpiryDate: new Date('2026-04-15'), status: DriverStatus.ACTIVE,
       tenantId: 2, city: 'Nantes', postalCode: '44000',
@@ -138,7 +140,7 @@ async function createDrivers(dataSource: DataSource) {
       address: '89 rue de Strasbourg'
     },
     {
-      firstName: 'Julie', lastName: 'Roux', email: 'julie.roux@transport.com',
+      firstName: 'Julie', lastName: 'Roux', email: 'julie.roux@transport-express.fr',
       phone: '+33678901234', licenseNumber: 'FR002234568',
       licenseExpiryDate: new Date('2027-02-28'), status: DriverStatus.ACTIVE,
       tenantId: 2, city: 'Bordeaux', postalCode: '33000',
@@ -146,9 +148,9 @@ async function createDrivers(dataSource: DataSource) {
       address: '34 cours de l\'Intendance'
     },
 
-    // Tenant 3 Drivers
+    // Tenant 3 Drivers (LogisTransaction)
     {
-      firstName: 'Marc', lastName: 'Girard', email: 'marc.girard@livraison.com',
+      firstName: 'Marc', lastName: 'Girard', email: 'marc.girard@logistrans.com',
       phone: '+33689012345', licenseNumber: 'FR003234567',
       licenseExpiryDate: new Date('2025-11-30'), status: DriverStatus.ACTIVE,
       tenantId: 3, city: 'Lille', postalCode: '59000',
@@ -156,7 +158,7 @@ async function createDrivers(dataSource: DataSource) {
       address: '56 rue Nationale'
     },
     {
-      firstName: 'Emma', lastName: 'Simon', email: 'emma.simon@livraison.com',
+      firstName: 'Emma', lastName: 'Simon', email: 'emma.simon@logistrans.com',
       phone: '+33690123456', licenseNumber: 'FR003234568',
       licenseExpiryDate: new Date('2026-07-22'), status: DriverStatus.ACTIVE,
       tenantId: 3, city: 'Strasbourg', postalCode: '67000',
@@ -164,7 +166,7 @@ async function createDrivers(dataSource: DataSource) {
       address: '12 place Kléber'
     },
     {
-      firstName: 'Alex', lastName: 'Laurent', email: 'alex.laurent@livraison.com',
+      firstName: 'Alex', lastName: 'Laurent', email: 'alex.laurent@logistrans.com',
       phone: '+33601234567', licenseNumber: 'FR003234569',
       licenseExpiryDate: new Date('2025-05-10'), status: DriverStatus.INACTIVE,
       tenantId: 3, city: 'Rennes', postalCode: '35000',
@@ -536,10 +538,10 @@ async function createTenants(dataSource: DataSource) {
       country: 'France',
       status: TenantStatus.ACTIVE,
     },
-    // Tenant 2 - Transport Express Paris
+    // Tenant 2 - Transport Express SARL
     {
-      name: 'Transport Express Paris',
-      email: 'contact@transport-express.com',
+      name: 'Transport Express SARL',
+      email: 'admin@transport-express.fr',
       phone: '+33 1 98 76 54 32',
       address: '45 Rue de la Logistique',
       city: 'Lyon',
@@ -547,10 +549,10 @@ async function createTenants(dataSource: DataSource) {
       country: 'France',
       status: TenantStatus.ACTIVE,
     },
-    // Tenant 3 - Logistique Rapide
+    // Tenant 3 - LogisTransaction
     {
-      name: 'Logistique Rapide',
-      email: 'info@logistique-rapide.com',
+      name: 'LogisTransaction',
+      email: 'contact@logistrans.com',
       phone: '+33 4 56 78 90 12',
       address: '78 Boulevard du Commerce',
       city: 'Marseille',
@@ -577,6 +579,7 @@ async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]
       maxVehicles: 2,
       maxUsers: 1,
       maxDrivers: 2,
+      maxStorageMb: 100, // 100MB
       trialDays: 0, // Pas d'essai car c'est gratuit
       features: ['basic_dashboard', 'email_notifications'],
       isActive: true,
@@ -587,6 +590,7 @@ async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]
       maxVehicles: 10,
       maxUsers: 5,
       maxDrivers: 10,
+      maxStorageMb: 1024, // 1GB
       trialDays: 14, // 14 jours d'essai
       features: ['support_email', 'basic_reports', 'api_access', 'export_pdf'],
       isActive: true,
@@ -597,6 +601,7 @@ async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]
       maxVehicles: 50,
       maxUsers: 20,
       maxDrivers: 50,
+      maxStorageMb: 5120, // 5GB
       trialDays: 14, // 14 jours d'essai
       features: ['support_priority', 'advanced_reports', 'api_access', 'export_excel', 'custom_fields'],
       isActive: true,
@@ -607,6 +612,7 @@ async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]
       maxVehicles: -1, // Illimité
       maxUsers: -1,
       maxDrivers: -1,
+      maxStorageMb: 51200, // 50GB
       trialDays: 30, // 30 jours d'essai pour Enterprise
       features: ['support_24_7', 'custom_reports', 'api_access', 'dedicated_manager', 'sla', 'white_label'],
       isActive: true,

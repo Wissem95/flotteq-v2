@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useTenant, useTenantStats } from '@/hooks/useTenants';
+import { useTenant, useTenantStats, useTenantStorageUsage } from '@/hooks/useTenants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,12 +8,14 @@ import { TenantInfoTab } from '@/components/tenants/TenantInfoTab';
 import { TenantUsersTab } from '@/components/tenants/TenantUsersTab';
 import { TenantVehiclesTab } from '@/components/tenants/TenantVehiclesTab';
 import { TenantSubscriptionTab } from '@/components/tenants/TenantSubscriptionTab';
+import { TenantStorageTab } from '@/components/tenants/TenantStorageTab';
 import {
   ArrowLeft,
   Pencil,
   Users,
   Car,
   UserCheck,
+  HardDrive,
   Loader2,
 } from 'lucide-react';
 
@@ -37,6 +39,7 @@ export const TenantDetailPage = () => {
 
   const { data: tenant, isLoading } = useTenant(Number(id));
   const { data: stats } = useTenantStats(Number(id));
+  const { data: storageUsage } = useTenantStorageUsage(Number(id));
 
   if (isLoading) {
     return (
@@ -82,7 +85,7 @@ export const TenantDetailPage = () => {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="p-6">
           <div className="flex items-center gap-4">
             <div className="p-3 rounded-full bg-blue-100">
@@ -106,8 +109,8 @@ export const TenantDetailPage = () => {
               <p className="text-2xl font-bold">{stats?.vehiclesCount || 0}</p>
               <p className="text-sm text-muted-foreground">
                 Véhicules
-                {tenant.subscription?.plan && (
-                  <> / {tenant.subscription.plan.maxVehicles} max</>
+                {tenant.plan && (
+                  <> / {tenant.plan.maxVehicles} max</>
                 )}
               </p>
             </div>
@@ -125,11 +128,29 @@ export const TenantDetailPage = () => {
             </div>
           </div>
         </Card>
+
+        {storageUsage && (
+          <Card className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-full bg-orange-100">
+                <HardDrive className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">
+                  {storageUsage.usedMb.toFixed(0)} MB
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Stockage ({storageUsage.usagePercent.toFixed(0)}%)
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
       </div>
 
       {/* Tabs */}
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="info">Informations</TabsTrigger>
           <TabsTrigger value="users">
             Utilisateurs ({tenant.users?.length || 0})
@@ -138,6 +159,10 @@ export const TenantDetailPage = () => {
             Véhicules ({tenant.vehicles?.length || 0})
           </TabsTrigger>
           <TabsTrigger value="subscription">Abonnement</TabsTrigger>
+          <TabsTrigger value="storage">
+            <HardDrive className="h-4 w-4 mr-2" />
+            Stockage
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="info">
@@ -154,6 +179,13 @@ export const TenantDetailPage = () => {
 
         <TabsContent value="subscription">
           <TenantSubscriptionTab tenant={tenant} />
+        </TabsContent>
+
+        <TabsContent value="storage">
+          <TenantStorageTab
+            tenantId={Number(id)}
+            storageUsage={storageUsage}
+          />
         </TabsContent>
       </Tabs>
     </div>

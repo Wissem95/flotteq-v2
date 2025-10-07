@@ -28,11 +28,17 @@ export class UpdateMaintenanceDto {
   @IsEnum(MaintenanceStatus)
   status?: MaintenanceStatus;
 
-  @ApiProperty({ description: 'Cost', required: false })
+  @ApiProperty({ description: 'Estimated cost', required: false })
   @IsOptional()
   @IsNumber()
   @Min(0)
-  cost?: number;
+  estimatedCost?: number;
+
+  @ApiProperty({ description: 'Actual cost', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  actualCost?: number;
 
   @ApiProperty({ description: 'Garage or mechanic name', required: false })
   @IsOptional()

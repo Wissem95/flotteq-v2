@@ -17,7 +17,8 @@ describe('MaintenanceController', () => {
     scheduledDate: new Date('2025-10-15'),
     completedDate: null,
     status: MaintenanceStatus.SCHEDULED,
-    cost: 150.0,
+    estimatedCost: 150.0,
+    actualCost: null,
     performedBy: 'Garage ABC',
     nextMaintenanceKm: 15000,
     tenantId: 1,
@@ -71,7 +72,7 @@ describe('MaintenanceController', () => {
         type: MaintenanceType.PREVENTIVE,
         description: 'Routine checkup',
         scheduledDate: '2025-10-15',
-        cost: 150.0,
+        estimatedCost: 150.0,
       };
 
       mockMaintenanceService.create.mockResolvedValue(mockMaintenance);

@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { TenantsService } from './tenants.service';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
+import { Subscription } from '../../entities/subscription.entity';
+import { Document } from '../../entities/document.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { StripeService } from '../../stripe/stripe.service';
 
@@ -32,6 +34,19 @@ describe('TenantsService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
+    createQueryBuilder: jest.fn(),
+  };
+
+  const mockSubscriptionRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+    findOne: jest.fn(),
+  };
+
+  const mockDocumentRepository = {
+    find: jest.fn(),
+    createQueryBuilder: jest.fn(),
   };
 
   const mockStripeService = {
@@ -56,6 +71,14 @@ describe('TenantsService', () => {
         {
           provide: getRepositoryToken(Tenant),
           useValue: mockRepository,
+        },
+        {
+          provide: getRepositoryToken(Subscription),
+          useValue: mockSubscriptionRepository,
+        },
+        {
+          provide: getRepositoryToken(Document),
+          useValue: mockDocumentRepository,
         },
         {
           provide: StripeService,
@@ -170,33 +193,48 @@ describe('TenantsService', () => {
   describe('findAll', () => {
     it('should return an array of tenants', async () => {
       const mockTenants = [mockTenant, { ...mockTenant, id: 2 }];
-      mockRepository.find.mockResolvedValue(mockTenants);
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([mockTenants, 2]),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       const result = await service.findAll();
 
-      expect(mockRepository.find).toHaveBeenCalledWith({
-        relations: ['users'],
-        order: { createdAt: 'DESC' },
-      });
-      expect(result).toEqual(mockTenants);
+      expect(result.data).toEqual(mockTenants);
+      expect(result.total).toBe(2);
     });
   });
 
   describe('findOne', () => {
     it('should return a tenant with all relations', async () => {
-      mockRepository.findOne.mockResolvedValue(mockTenant);
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       const result = await service.findOne(1);
 
-      expect(mockRepository.findOne).toHaveBeenCalledWith({
-        where: { id: 1 },
-        relations: ['users', 'vehicles', 'drivers'],
-      });
       expect(result).toEqual(mockTenant);
     });
 
     it('should throw NotFoundException if tenant not found', async () => {
-      mockRepository.findOne.mockResolvedValue(null);
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(null),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       await expect(service.findOne(999)).rejects.toThrow(NotFoundException);
     });
@@ -210,7 +248,14 @@ describe('TenantsService', () => {
       };
 
       const updatedTenant = { ...mockTenant, ...updateDto };
-      mockRepository.findOne.mockResolvedValue(mockTenant);
+
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       mockRepository.save.mockResolvedValue(updatedTenant);
 
       const result = await service.update(1, updateDto);
@@ -225,9 +270,15 @@ describe('TenantsService', () => {
       };
 
       const anotherTenant = { ...mockTenant, id: 2 };
-      mockRepository.findOne
-        .mockResolvedValueOnce(mockTenant)
-        .mockResolvedValueOnce(anotherTenant);
+
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepository.findOne.mockResolvedValue(anotherTenant);
 
       await expect(service.update(1, updateDto)).rejects.toThrow(
         ConflictException,
@@ -238,7 +289,14 @@ describe('TenantsService', () => {
   describe('updateStatus', () => {
     it('should update tenant status', async () => {
       const updatedTenant = { ...mockTenant, status: TenantStatus.ACTIVE };
-      mockRepository.findOne.mockResolvedValue(mockTenant);
+
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       mockRepository.save.mockResolvedValue(updatedTenant);
 
       const result = await service.updateStatus(1, TenantStatus.ACTIVE);
@@ -273,6 +331,7 @@ describe('TenantsService', () => {
         drivers: [{}],
         status: TenantStatus.TRIAL,
       };
+
       mockRepository.findOne.mockResolvedValue(tenantWithRelations);
 
       const result = await service.getStats(1);
@@ -306,7 +365,13 @@ describe('TenantsService', () => {
 
   describe('canAccess', () => {
     it('should return true if tenant subscription is active', async () => {
-      mockRepository.findOne.mockResolvedValue(mockTenant);
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       mockStripeService.isActive.mockReturnValue(true);
       mockStripeService.isTrial.mockReturnValue(false);
 
@@ -317,7 +382,13 @@ describe('TenantsService', () => {
     });
 
     it('should return true if tenant is in trial period', async () => {
-      mockRepository.findOne.mockResolvedValue(mockTenant);
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(mockTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       mockStripeService.isActive.mockReturnValue(false);
       mockStripeService.isTrial.mockReturnValue(true);
 
@@ -333,7 +404,14 @@ describe('TenantsService', () => {
         subscriptionStatus: 'cancelled',
         trialEndsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
       };
-      mockRepository.findOne.mockResolvedValue(expiredTenant);
+
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        getOne: jest.fn().mockResolvedValue(expiredTenant),
+      };
+
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       mockStripeService.isActive.mockReturnValue(false);
       mockStripeService.isTrial.mockReturnValue(false);
 

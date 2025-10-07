@@ -3,3 +3,8 @@ node_modules
 .env
 
 /generated/prisma
+uploads/
+
+# Avoid accidental nesting
+backend/
+frontend-client/

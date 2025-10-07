@@ -5,6 +5,9 @@ import { DashboardService } from './dashboard.service';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../../entities/driver.entity';
 import { Maintenance, MaintenanceStatus, MaintenanceType } from '../maintenance/entities/maintenance.entity';
+import { Tenant } from '../../entities/tenant.entity';
+import { Subscription } from '../../entities/subscription.entity';
+import { User } from '../../entities/user.entity';
 
 describe('DashboardService', () => {
   let service: DashboardService;
@@ -28,6 +31,22 @@ describe('DashboardService', () => {
     createQueryBuilder: jest.fn(),
   };
 
+  const mockTenantRepository = {
+    count: jest.fn(),
+    find: jest.fn(),
+  };
+
+  const mockSubscriptionRepository = {
+    count: jest.fn(),
+    find: jest.fn(),
+    createQueryBuilder: jest.fn(),
+  };
+
+  const mockUserRepository = {
+    count: jest.fn(),
+    find: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -43,6 +62,18 @@ describe('DashboardService', () => {
         {
           provide: getRepositoryToken(Maintenance),
           useValue: mockMaintenanceRepository,
+        },
+        {
+          provide: getRepositoryToken(Tenant),
+          useValue: mockTenantRepository,
+        },
+        {
+          provide: getRepositoryToken(Subscription),
+          useValue: mockSubscriptionRepository,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository,
         },
       ],
     }).compile();

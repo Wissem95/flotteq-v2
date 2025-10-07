@@ -8,8 +8,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
 import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
+import { Document } from '../../entities/document.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { UpdateStorageQuotaDto, StorageUsageResponseDto } from './dto/update-storage-quota.dto';
 import { StripeService } from '../../stripe/stripe.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -22,6 +24,8 @@ export class TenantsService {
     private tenantsRepository: Repository<Tenant>,
     @InjectRepository(Subscription)
     private subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(Document)
+    private documentsRepository: Repository<Document>,
     private stripeService: StripeService,
     private configService: ConfigService,
   ) {}
@@ -229,6 +233,7 @@ export class TenantsService {
 
   /**
    * Changer le plan d'un tenant
+   * Réinitialise automatiquement le quota personnalisé pour utiliser celui du nouveau plan
    */
   async changePlan(tenantId: number, newPlanId: number): Promise<Tenant> {
     this.logger.log(`Changing plan for tenant ${tenantId} to plan ${newPlanId}`);
@@ -236,15 +241,25 @@ export class TenantsService {
     // Vérifier que le tenant existe
     const tenant = await this.tenantsRepository.findOne({
       where: { id: tenantId },
+      relations: ['plan'],
     });
 
     if (!tenant) {
       throw new NotFoundException(`Tenant #${tenantId} not found`);
     }
 
-    // Mettre à jour directement avec update() pour éviter les problèmes de relations
-    await this.tenantsRepository.update(tenantId, { planId: newPlanId });
-    this.logger.log(`Updated tenant ${tenantId} plan_id to ${newPlanId}`);
+    // Obtenir l'ancien et le nouveau plan pour logging
+    const oldPlanId = tenant.planId;
+    const oldCustomQuota = tenant.customStorageQuotaMb;
+
+    // Mettre à jour le plan ET réinitialiser le quota personnalisé
+    // Le quota personnalisé est remis à NULL pour utiliser celui du nouveau plan
+    await this.tenantsRepository.update(tenantId, {
+      planId: newPlanId,
+      customStorageQuotaMb: undefined, // Reset quota personnalisé lors du changement de plan
+    });
+
+    this.logger.log(`Updated tenant ${tenantId}: plan ${oldPlanId} → ${newPlanId}, custom quota ${oldCustomQuota} → null (will use plan quota)`);
 
     // Mettre à jour aussi la subscription active du tenant
     const updateResult = await this.subscriptionRepository.update(
@@ -269,5 +284,69 @@ export class TenantsService {
     }
 
     return updatedTenant;
+  }
+
+  /**
+   * Met à jour le quota de stockage personnalisé d'un tenant
+   * Réservé aux SUPER_ADMIN
+   */
+  async updateStorageQuota(
+    tenantId: number,
+    dto: UpdateStorageQuotaDto,
+  ): Promise<Tenant> {
+    const tenant = await this.findOne(tenantId);
+
+    // Mettre à jour le quota personnalisé
+    tenant.customStorageQuotaMb = dto.customStorageQuotaMb;
+    await this.tenantsRepository.save(tenant);
+
+    this.logger.log(
+      `Quota de stockage mis à jour pour tenant #${tenantId}: ${dto.customStorageQuotaMb}MB`,
+    );
+
+    return this.findOne(tenantId);
+  }
+
+  /**
+   * Récupère l'usage de stockage détaillé d'un tenant
+   */
+  async getStorageUsage(tenantId: number): Promise<StorageUsageResponseDto> {
+    const tenant = await this.findOne(tenantId);
+
+    if (!tenant.plan) {
+      throw new NotFoundException(`Le tenant #${tenantId} n'a pas de plan associé`);
+    }
+
+    // Calculer l'usage actuel
+    const usageResult = await this.documentsRepository
+      .createQueryBuilder('document')
+      .select('SUM(document.size)', 'totalBytes')
+      .addSelect('COUNT(document.id)', 'fileCount')
+      .where('document.tenantId = :tenantId', { tenantId })
+      .andWhere('document.deletedAt IS NULL')
+      .getRawOne();
+
+    const usedBytes = parseInt(usageResult?.totalBytes || '0', 10);
+    const usedMb = usedBytes / 1024 / 1024;
+    const fileCount = parseInt(usageResult?.fileCount || '0', 10);
+
+    // Quota effectif = custom si défini, sinon celui du plan
+    const effectiveQuotaMb = tenant.customStorageQuotaMb || tenant.plan.maxStorageMb;
+    const availableMb = Math.max(0, effectiveQuotaMb - usedMb);
+    const usagePercent = effectiveQuotaMb > 0
+      ? (usedMb / effectiveQuotaMb) * 100
+      : 0;
+
+    return {
+      tenantName: tenant.name,
+      planName: tenant.plan.name,
+      planQuotaMb: tenant.plan.maxStorageMb,
+      customQuotaMb: tenant.customStorageQuotaMb,
+      effectiveQuotaMb,
+      usedMb: parseFloat(usedMb.toFixed(2)),
+      availableMb: parseFloat(availableMb.toFixed(2)),
+      usagePercent: parseFloat(usagePercent.toFixed(2)),
+      fileCount,
+    };
   }
 }

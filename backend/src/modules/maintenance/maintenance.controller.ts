@@ -11,8 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { MaintenanceService } from './maintenance.service';
+import { MaintenanceTemplateService } from './maintenance-template.service';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
+import { CreateMaintenanceTemplateDto } from './dto/create-template.dto';
+import { UpdateMaintenanceTemplateDto } from './dto/update-template.dto';
+import { CreateMaintenanceFromTemplateDto } from './dto/create-from-template.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
 
@@ -21,7 +25,10 @@ import { TenantId } from '../../core/tenant/tenant.decorator';
 @UseGuards(JwtAuthGuard)
 @Controller('maintenance')
 export class MaintenanceController {
-  constructor(private readonly maintenanceService: MaintenanceService) {}
+  constructor(
+    private readonly maintenanceService: MaintenanceService,
+    private readonly templateService: MaintenanceTemplateService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new maintenance' })
@@ -110,5 +117,64 @@ export class MaintenanceController {
   @ApiResponse({ status: 404, description: 'Maintenance not found' })
   remove(@Param('id') id: string, @TenantId() tenantId: number) {
     return this.maintenanceService.remove(id, tenantId);
+  }
+
+  // ========== TEMPLATES ENDPOINTS ==========
+
+  @Post('templates')
+  @ApiOperation({ summary: 'Create a maintenance template' })
+  @ApiResponse({ status: 201, description: 'Template created successfully' })
+  createTemplate(
+    @Body() createTemplateDto: CreateMaintenanceTemplateDto,
+    @TenantId() tenantId: number,
+  ) {
+    return this.templateService.create(createTemplateDto, tenantId);
+  }
+
+  @Get('templates')
+  @ApiOperation({ summary: 'Get all maintenance templates' })
+  @ApiResponse({ status: 200, description: 'List of all templates' })
+  findAllTemplates(@TenantId() tenantId: number) {
+    return this.templateService.findAll(tenantId);
+  }
+
+  @Get('templates/:id')
+  @ApiOperation({ summary: 'Get a specific template' })
+  @ApiResponse({ status: 200, description: 'Template details' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
+  findOneTemplate(@Param('id') id: string, @TenantId() tenantId: number) {
+    return this.templateService.findOne(id, tenantId);
+  }
+
+  @Patch('templates/:id')
+  @ApiOperation({ summary: 'Update a template' })
+  @ApiResponse({ status: 200, description: 'Template updated successfully' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
+  updateTemplate(
+    @Param('id') id: string,
+    @Body() updateTemplateDto: UpdateMaintenanceTemplateDto,
+    @TenantId() tenantId: number,
+  ) {
+    return this.templateService.update(id, updateTemplateDto, tenantId);
+  }
+
+  @Delete('templates/:id')
+  @ApiOperation({ summary: 'Delete a template' })
+  @ApiResponse({ status: 200, description: 'Template deleted successfully' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
+  removeTemplate(@Param('id') id: string, @TenantId() tenantId: number) {
+    return this.templateService.remove(id, tenantId);
+  }
+
+  @Post('from-template/:templateId')
+  @ApiOperation({ summary: 'Create maintenance from template' })
+  @ApiResponse({ status: 201, description: 'Maintenance created from template' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
+  createFromTemplate(
+    @Param('templateId') templateId: string,
+    @Body() createDto: CreateMaintenanceFromTemplateDto,
+    @TenantId() tenantId: number,
+  ) {
+    return this.maintenanceService.createFromTemplate(templateId, createDto, tenantId);
   }
 }

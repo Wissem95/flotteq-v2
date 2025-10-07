@@ -16,10 +16,13 @@ import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { QueryTenantsDto } from './dto/query-tenants.dto';
+import { UpdateStorageQuotaDto } from './dto/update-storage-quota.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @Controller('tenants')
+@ApiTags('tenants')
 @UseGuards(JwtAuthGuard, SuperAdminGuard)
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
@@ -66,5 +69,22 @@ export class TenantsController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.tenantsService.remove(id);
+  }
+
+  @Get(':id/storage-usage')
+  @ApiOperation({ summary: 'Obtenir l\'usage de stockage d\'un tenant' })
+  @ApiResponse({ status: 200, description: 'Usage de stockage retourné avec succès' })
+  getStorageUsage(@Param('id', ParseIntPipe) id: number) {
+    return this.tenantsService.getStorageUsage(id);
+  }
+
+  @Patch(':id/storage-quota')
+  @ApiOperation({ summary: 'Mettre à jour le quota de stockage personnalisé d\'un tenant' })
+  @ApiResponse({ status: 200, description: 'Quota mis à jour avec succès' })
+  updateStorageQuota(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: UpdateStorageQuotaDto,
+  ) {
+    return this.tenantsService.updateStorageQuota(id, dto);
   }
 }

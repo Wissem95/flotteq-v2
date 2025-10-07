@@ -102,3 +102,11 @@ export const useDeleteTenant = () => {
     },
   });
 };
+
+export const useTenantStorageUsage = (id: number) => {
+  return useQuery({
+    queryKey: ['tenant-storage', id],
+    queryFn: () => tenantsApi.getStorageUsage(id),
+    enabled: !!id,
+  });
+};

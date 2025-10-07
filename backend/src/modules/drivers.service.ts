@@ -36,7 +36,12 @@ export class DriversService {
       where: { email: createDriverDto.email, tenantId },
     });
     if (existingEmail) {
-      throw new BadRequestException('Email already exists');
+      throw new BadRequestException({
+        message: 'Email already exists',
+        error: 'Bad Request',
+        statusCode: 400,
+        code: 'DUPLICATE_EMAIL',
+      });
     }
 
     // Vérifier si le numéro de permis existe déjà pour ce tenant
@@ -44,7 +49,12 @@ export class DriversService {
       where: { licenseNumber: createDriverDto.licenseNumber, tenantId },
     });
     if (existingLicense) {
-      throw new BadRequestException('License number already exists');
+      throw new BadRequestException({
+        message: 'License number already exists',
+        error: 'Bad Request',
+        statusCode: 400,
+        code: 'DUPLICATE_LICENSE',
+      });
     }
 
     const driver = this.driverRepository.create({

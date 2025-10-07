@@ -57,4 +57,9 @@ export const tenantsApi = {
     const response = await apiClient.patch<Tenant>(`/tenants/${id}/change-plan/${planId}`);
     return response.data;
   },
+
+  getStorageUsage: async (id: number): Promise<any> => {
+    const response = await apiClient.get(`/tenants/${id}/storage-usage`);
+    return response.data;
+  },
 };

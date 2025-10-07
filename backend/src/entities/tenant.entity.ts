@@ -80,6 +80,15 @@ export class Tenant {
   @Column({ type: 'timestamp', nullable: true, name: 'subscription_ended_at' })
   subscriptionEndedAt: Date;
 
+  @Column({ name: 'storage_used_bytes', type: 'bigint', default: '0' })
+  storageUsedBytes: string; // bigint stocké comme string en TypeScript
+
+  @Column({ name: 'custom_storage_quota_mb', nullable: true })
+  customStorageQuotaMb?: number; // Quota personnalisé (remplace celui du plan si défini)
+
+  @Column({ name: 'onboarding_completed', default: false })
+  onboardingCompleted: boolean;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

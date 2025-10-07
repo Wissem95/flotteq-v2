@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StripeService } from './stripe.service';
-import { Tenant } from '../entities/tenant.entity';
+import { Tenant, TenantStatus } from '../entities/tenant.entity';
 import stripeConfig from '../config/stripe.config';
 import Stripe from 'stripe';
 
@@ -27,7 +27,7 @@ describe('StripeService', () => {
     city: 'test-city',
     postalCode: 'test-postal',
     country: 'test-country',
-    status: 'trial' as any,
+    status: TenantStatus.TRIAL,
     stripeCustomerId: 'cus_test_123',
     stripeSubscriptionId: 'sub_test_123',
     subscriptionStatus: 'trial',
@@ -36,10 +36,13 @@ describe('StripeService', () => {
     subscriptionEndedAt: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
+    storageUsedBytes: '0',
+    planId: 1,
+    plan: {} as any,
     users: [],
     vehicles: [],
     drivers: [],
-  } as Tenant;
+  } as unknown as Tenant;
 
   beforeEach(async () => {
     stripeMock = {

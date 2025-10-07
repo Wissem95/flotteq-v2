@@ -11,6 +11,7 @@ import { User, UserRole } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { EmailQueueService } from '../notifications/email-queue.service';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +19,7 @@ export class UsersService {
     @InjectRepository(User)
     private usersRepository: Repository<User>,
     private subscriptionsService: SubscriptionsService,
+    private emailQueueService: EmailQueueService,
   ) {}
 
   async create(createUserDto: CreateUserDto, currentUser: User): Promise<User> {
@@ -63,6 +65,26 @@ export class UsersService {
     // Incrémenter l'usage
     if (currentUser.role !== UserRole.SUPER_ADMIN) {
       await this.subscriptionsService.updateUsage(tenantId, 'users', 1);
+    }
+
+    // Envoyer email de bienvenue (asynchrone)
+    try {
+      // Récupérer le tenant pour avoir son nom
+      const userWithTenant = await this.usersRepository.findOne({
+        where: { id: savedUser.id },
+        relations: ['tenant'],
+      });
+
+      if (userWithTenant?.tenant) {
+        await this.emailQueueService.queueWelcomeEmail(
+          savedUser.email,
+          savedUser.firstName,
+          userWithTenant.tenant.name,
+        );
+      }
+    } catch (error) {
+      // Log l'erreur mais ne pas bloquer la création de l'utilisateur
+      console.error('Failed to queue welcome email:', error);
     }
 
     return savedUser;

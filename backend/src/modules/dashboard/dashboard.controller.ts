@@ -24,6 +24,8 @@ import { CostAnalysisDto } from './dto/cost-analysis.dto';
 import { AlertDto } from './dto/alert.dto';
 import { MaintenanceStatsDto } from './dto/maintenance-stats.dto';
 import { DriverStatsDto } from './dto/driver-stats.dto';
+import { DashboardStatsDto } from './dto/dashboard-stats.dto';
+import { SubscriptionUsageDto } from './dto/subscription-usage.dto';
 
 @ApiTags('dashboard')
 @Controller('dashboard')
@@ -68,6 +70,29 @@ export class DashboardController {
     @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
   ): Promise<RecentTenantDto[]> {
     return this.dashboardService.getRecentTenants(limit);
+  }
+
+  // ============ SIMPLE ENDPOINTS (Frontend-Client Compatibility) ============
+
+  @Get('stats')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get dashboard stats for current tenant' })
+  async getStats(@Req() req: any): Promise<DashboardStatsDto> {
+    return this.dashboardService.getStats(req.user.tenantId);
+  }
+
+  @Get('alerts')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get alerts for current tenant' })
+  async getAlerts(@Req() req: any): Promise<AlertDto[]> {
+    return this.dashboardService.getUpcomingAlerts(req.user.tenantId);
+  }
+
+  @Get('subscription-usage')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Get subscription usage statistics for current tenant' })
+  async getSubscriptionUsage(@Req() req: any): Promise<SubscriptionUsageDto> {
+    return this.dashboardService.getSubscriptionUsage(req.user.tenantId);
   }
 
   // ============ TENANT (Clients) ============

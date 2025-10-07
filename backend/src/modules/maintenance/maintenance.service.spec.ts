@@ -19,7 +19,8 @@ describe('MaintenanceService', () => {
     scheduledDate: new Date('2025-10-15'),
     completedDate: null,
     status: MaintenanceStatus.SCHEDULED,
-    cost: 150.0,
+    estimatedCost: 150.0,
+    actualCost: null,
     performedBy: 'Garage ABC',
     nextMaintenanceKm: 15000,
     tenantId: 1,
@@ -70,7 +71,7 @@ describe('MaintenanceService', () => {
         type: MaintenanceType.PREVENTIVE,
         description: 'Routine checkup',
         scheduledDate: '2025-10-15',
-        cost: 150.0,
+        estimatedCost: 150.0,
         performedBy: 'Garage ABC',
         nextMaintenanceKm: 15000,
       };
@@ -144,7 +145,7 @@ describe('MaintenanceService', () => {
       const updateDto: UpdateMaintenanceDto = {
         status: MaintenanceStatus.COMPLETED,
         completedDate: '2025-10-14',
-        cost: 175.0,
+        actualCost: 175.0,
       };
 
       mockRepository.findOne.mockResolvedValue(mockMaintenance);

@@ -1,3 +1,5 @@
+import { SubscriptionPlan } from './subscription.types';
+
 export interface User {
   id: string;
   email: string;
@@ -29,24 +31,8 @@ export interface Driver {
   phone?: string;
 }
 
-export interface Subscription {
-  id: string;
-  status: string;
-  currentPeriodStart?: string;
-  currentPeriodEnd?: string;
-  trialEnd?: string;
-  plan: SubscriptionPlan;
-}
-
-export interface SubscriptionPlan {
-  id: number;
-  name: string;
-  price: number;
-  maxVehicles: number;
-  maxUsers: number;
-  maxDrivers: number;
-  features: string[];
-}
+// ✅ SubscriptionPlan importé depuis subscription.types.ts
+// ✅ Subscription complète disponible dans subscription.types.ts si besoin
 
 export interface Tenant {
   id: number;
@@ -71,7 +57,6 @@ export interface Tenant {
   users?: User[];
   vehicles?: Vehicle[];
   drivers?: Driver[];
-  subscription?: Subscription;
   plan?: SubscriptionPlan;
 }
 

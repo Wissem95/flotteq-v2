@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
+import { useContainer } from 'class-validator';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { AppModule } from './app.module';
@@ -9,6 +10,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
+  // Enable DI for class-validator (custom validators)
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const port = configService.get('PORT', 3000);
   const corsOrigin = configService.get('CORS_ORIGIN', 'http://localhost:5173,http://localhost:5174');

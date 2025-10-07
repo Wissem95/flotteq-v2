@@ -18,6 +18,9 @@ import { DriversModule } from './modules/drivers.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { UsersModule } from './modules/users/users.module';
+import { DocumentsModule } from './documents/documents.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { OnboardingModule } from './core/onboarding/onboarding.module';
 // import { StripeModule } from './stripe/stripe.module';
 // import stripeConfig from './config/stripe.config';
 
@@ -54,6 +57,7 @@ import { UsersModule } from './modules/users/users.module';
     ]),
     TenantModule,
     AuthModule,
+    OnboardingModule,
     // StripeModule,  // Temporairement désactivé - nécessite clé Stripe valide
     SubscriptionsModule,
     UsersModule,
@@ -61,6 +65,8 @@ import { UsersModule } from './modules/users/users.module';
     VehiclesModule,
     DriversModule,
     DashboardModule,
+    DocumentsModule,
+    NotificationsModule,
   ],
   controllers: [AppController, TestController],
   providers: [
@@ -71,11 +77,11 @@ import { UsersModule } from './modules/users/users.module';
     },
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard,  // Auth d'abord
+      useClass: JwtAuthGuard, // Auth d'abord
     },
     {
       provide: APP_GUARD,
-      useClass: TenantGuard,   // Puis tenant filtering
+      useClass: TenantGuard, // Puis tenant filtering
     },
     {
       provide: APP_INTERCEPTOR,
@@ -87,7 +93,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(TenantMiddleware)
-      .exclude('/api/auth/(.*)', '/auth/(.*)', '/health', '/api/docs(.*)', '/api/tenants(.*)')
+      .exclude('/api/auth/(.*)', '/auth/(.*)', '/health', '/api/docs(.*)', '/api/tenants(.*)', '/api/onboarding/(.*)')
       .forRoutes('*');
   }
 }

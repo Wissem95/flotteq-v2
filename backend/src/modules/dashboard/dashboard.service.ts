@@ -8,12 +8,14 @@ import { Tenant, TenantStatus } from '../../entities/tenant.entity';
 import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
 import { DashboardOverviewDto } from './dto/dashboard-overview.dto';
+import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { FleetStatusDto } from './dto/fleet-status.dto';
 import { CostAnalysisDto, MonthlyMaintenanceCost, MaintenanceCostByType } from './dto/cost-analysis.dto';
 import { AlertDto, AlertType, AlertSeverity } from './dto/alert.dto';
 import { MaintenanceStatsDto } from './dto/maintenance-stats.dto';
 import { DriverStatsDto } from './dto/driver-stats.dto';
 import { InternalStatsDto, InternalRevenueDto, InternalSubscriptionsDto, ActivityLogDto, RecentTenantDto } from './dto/internal-stats.dto';
+import { SubscriptionUsageDto } from './dto/subscription-usage.dto';
 
 @Injectable()
 export class DashboardService {
@@ -92,6 +94,52 @@ export class DashboardService {
     };
   }
 
+  async getStats(tenantId: number): Promise<DashboardStatsDto> {
+    const now = new Date();
+
+    const [
+      totalVehicles,
+      totalDrivers,
+      activeVehicles,
+      activeDrivers,
+      upcomingMaintenances,
+      overdueMaintenances,
+    ] = await Promise.all([
+      this.vehicleRepository.count({ where: { tenantId } }),
+      this.driverRepository.count({ where: { tenantId } }),
+      this.vehicleRepository.count({
+        where: { tenantId, status: VehicleStatus.AVAILABLE },
+      }),
+      this.driverRepository.count({
+        where: { tenantId, status: DriverStatus.ACTIVE },
+      }),
+      this.maintenanceRepository.count({
+        where: {
+          tenantId,
+          status: MaintenanceStatus.SCHEDULED,
+        },
+      }),
+      // Overdue maintenances: scheduled but scheduledDate is in the past
+      this.maintenanceRepository
+        .createQueryBuilder('maintenance')
+        .where('maintenance.tenantId = :tenantId', { tenantId })
+        .andWhere('maintenance.status = :status', {
+          status: MaintenanceStatus.SCHEDULED,
+        })
+        .andWhere('maintenance.scheduledDate < :now', { now })
+        .getCount(),
+    ]);
+
+    return {
+      totalVehicles,
+      activeVehicles,
+      totalDrivers,
+      activeDrivers,
+      upcomingMaintenances,
+      overdueMaintenances,
+    };
+  }
+
   async getFleetStatus(tenantId: number): Promise<FleetStatusDto> {
     const vehicles = await this.vehicleRepository.find({
       where: { tenantId },
@@ -123,11 +171,11 @@ export class DashboardService {
     // Get all maintenances
     const maintenances = await this.maintenanceRepository.find({
       where: { tenantId },
-      select: ['cost', 'type', 'createdAt', 'status'],
+      select: ['estimatedCost', 'actualCost', 'type', 'createdAt', 'status'],
     });
 
     const totalMaintenanceCost = maintenances.reduce(
-      (sum, m) => sum + Number(m.cost),
+      (sum, m) => sum + Number(m.actualCost || m.estimatedCost),
       0,
     );
 
@@ -158,7 +206,7 @@ export class DashboardService {
         const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
         const existing = monthlyMap.get(monthKey) || { cost: 0, count: 0 };
         monthlyMap.set(monthKey, {
-          cost: existing.cost + Number(m.cost),
+          cost: existing.cost + Number(m.actualCost || m.estimatedCost),
           count: existing.count + 1,
         });
       }
@@ -179,7 +227,7 @@ export class DashboardService {
     maintenances.forEach((m) => {
       const existing = typeMap.get(m.type) || { cost: 0, count: 0 };
       typeMap.set(m.type, {
-        cost: existing.cost + Number(m.cost),
+        cost: existing.cost + Number(m.actualCost || m.estimatedCost),
         count: existing.count + 1,
       });
     });
@@ -343,7 +391,8 @@ export class DashboardService {
       where: { tenantId },
       select: [
         'status',
-        'cost',
+        'estimatedCost',
+        'actualCost',
         'type',
         'scheduledDate',
         'completedDate',
@@ -359,7 +408,7 @@ export class DashboardService {
     );
 
     const totalCost = maintenances.reduce(
-      (sum, m) => sum + Number(m.cost),
+      (sum, m) => sum + Number(m.actualCost || m.estimatedCost),
       0,
     );
     const avgCost =
@@ -751,5 +800,73 @@ export class DashboardService {
         (Date.now() - tenant.createdAt.getTime()) / (1000 * 60 * 60 * 24),
       ),
     }));
+  }
+
+  async getSubscriptionUsage(tenantId: number): Promise<SubscriptionUsageDto> {
+    // Get tenant's subscription and plan
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { tenantId },
+      relations: ['plan'],
+    });
+
+    // If no subscription, return default values
+    if (!subscription || !subscription.plan) {
+      const vehiclesCount = await this.vehicleRepository.count({ where: { tenantId } });
+      const driversCount = await this.driverRepository.count({ where: { tenantId } });
+
+      return {
+        planName: 'Aucun plan actif',
+        maxVehicles: 0,
+        currentVehicles: vehiclesCount,
+        maxDrivers: 0,
+        currentDrivers: driversCount,
+        storageUsedMB: 0,
+        storageQuotaMB: 0,
+        usagePercentage: {
+          vehicles: 0,
+          drivers: 0,
+          storage: 0,
+        },
+      };
+    }
+
+    // Count current usage
+    const [vehiclesCount, driversCount] = await Promise.all([
+      this.vehicleRepository.count({ where: { tenantId } }),
+      this.driverRepository.count({ where: { tenantId } }),
+    ]);
+
+    // Get storage usage (simplified - you might want to calculate actual document storage)
+    const storageUsedMB = 0; // TODO: Calculate from documents table
+    const storageQuotaMB = subscription.plan.maxStorageMb || 10240; // Default 10GB
+
+    // Calculate percentages
+    const maxVehicles = subscription.plan.maxVehicles || 0;
+    const maxDrivers = subscription.plan.maxDrivers || 0;
+
+    const vehiclesPercentage = maxVehicles > 0
+      ? Math.round((vehiclesCount / maxVehicles) * 100 * 10) / 10
+      : 0;
+    const driversPercentage = maxDrivers > 0
+      ? Math.round((driversCount / maxDrivers) * 100 * 10) / 10
+      : 0;
+    const storagePercentage = storageQuotaMB > 0
+      ? Math.round((storageUsedMB / storageQuotaMB) * 100 * 10) / 10
+      : 0;
+
+    return {
+      planName: subscription.plan.name,
+      maxVehicles,
+      currentVehicles: vehiclesCount,
+      maxDrivers,
+      currentDrivers: driversCount,
+      storageUsedMB,
+      storageQuotaMB,
+      usagePercentage: {
+        vehicles: vehiclesPercentage,
+        drivers: driversPercentage,
+        storage: storagePercentage,
+      },
+    };
   }
 }

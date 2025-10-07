@@ -5,10 +5,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  OneToMany,
   JoinColumn,
 } from 'typeorm';
 import { Driver } from './driver.entity';
 import { Tenant } from './tenant.entity';
+import { Document, DocumentEntityType } from './document.entity';
+import { Maintenance } from '../modules/maintenance/entities/maintenance.entity';
 
 export enum VehicleStatus {
   AVAILABLE = 'available',
@@ -59,6 +62,9 @@ export class Vehicle {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   purchasePrice: number;
 
+  @Column({ type: 'simple-array', nullable: true })
+  photos: string[] | null;
+
   @Column({ type: String, name: 'assigned_driver_id', nullable: true })
   assignedDriverId: string | null;
 
@@ -72,6 +78,16 @@ export class Vehicle {
   @ManyToOne(() => Tenant, (tenant) => tenant.vehicles)
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
+
+  @OneToMany(() => Document, (document) => document.entityId, {
+    eager: false,
+  })
+  documents: Document[];
+
+  @OneToMany(() => Maintenance, (maintenance) => maintenance.vehicle, {
+    eager: false,
+  })
+  maintenances: Maintenance[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

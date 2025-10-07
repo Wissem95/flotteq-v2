@@ -6,6 +6,8 @@ import { AuthService } from './services/auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -66,5 +68,23 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getCurrentUser(@Request() req: any) {
     return req.user;
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } }) // 3 tentatives par minute
+  @ApiOperation({ summary: 'Demander un lien de réinitialisation de mot de passe' })
+  @ApiResponse({ status: 200, description: "Email envoyé si l'utilisateur existe" })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Réinitialiser le mot de passe avec le token' })
+  @ApiResponse({ status: 200, description: 'Mot de passe réinitialisé avec succès' })
+  @ApiResponse({ status: 400, description: 'Token invalide ou expiré' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto.token, dto.newPassword);
   }
 }

@@ -1,0 +1,34 @@
+<div style="padding: 20px 0;">
+  <h1 style="color: #1f2937; margin-bottom: 20px;">Bienvenue, {{firstName}} !</h1>
+
+  <p style="color: #4b5563; line-height: 1.6; margin-bottom: 15px;">
+    Vous avez été ajouté en tant que conducteur pour <strong>{{tenantName}}</strong> sur FlotteQ.
+  </p>
+
+  <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 25px 0;">
+    <h2 style="color: #1f2937; margin-top: 0; margin-bottom: 15px; font-size: 18px;">Vos identifiants de connexion</h2>
+    <p style="color: #4b5563; margin: 10px 0;"><strong>Email :</strong> {{email}}</p>
+    <p style="color: #4b5563; margin: 10px 0;"><strong>Mot de passe temporaire :</strong> <code style="background-color: #fff; padding: 5px 10px; border-radius: 4px; font-family: monospace;">{{tempPassword}}</code></p>
+  </div>
+
+  <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 25px 0; border-radius: 4px;">
+    <p style="color: #92400e; margin: 0; font-size: 14px;">
+      <strong>⚠️ Important :</strong> Pour des raisons de sécurité, veuillez changer ce mot de passe dès votre première connexion.
+    </p>
+  </div>
+
+  <p style="color: #4b5563; line-height: 1.6; margin-bottom: 20px;">
+    Connectez-vous dès maintenant pour accéder à votre espace conducteur et consulter les véhicules qui vous sont assignés.
+  </p>
+
+  <div style="text-align: center; margin: 30px 0;">
+    <a href="{{appUrl}}/login"
+       style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+      Se connecter
+    </a>
+  </div>
+
+  <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+    Si vous avez des questions, n'hésitez pas à contacter votre administrateur de flotte.
+  </p>
+</div>

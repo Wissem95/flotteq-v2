@@ -183,10 +183,13 @@ export class SubscriptionsService {
       const limitKey = `max${resource.charAt(0).toUpperCase() + resource.slice(1)}` as keyof SubscriptionPlan;
       const limit = plan[limitKey] as number;
 
-      throw new ForbiddenException(
-        `Limite atteinte : vous avez atteint la limite de ${limit} ${resource} pour votre plan ${plan.name}. ` +
-        `Veuillez upgrader votre abonnement pour continuer.`
-      );
+      throw new ForbiddenException({
+        message: `Limite atteinte : vous avez atteint la limite de ${limit} ${resource} pour votre plan ${plan.name}. ` +
+          `Veuillez upgrader votre abonnement pour continuer.`,
+        error: 'Forbidden',
+        statusCode: 403,
+        code: 'LIMIT_REACHED',
+      });
     }
   }
 

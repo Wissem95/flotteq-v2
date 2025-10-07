@@ -2,6 +2,8 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -11,6 +13,7 @@ import * as bcrypt from 'bcrypt';
 import { User } from '../../../entities/user.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
+import { EmailQueueService } from '../../../modules/notifications/email-queue.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +22,7 @@ export class AuthService {
     private userRepository: Repository<User>,
     private jwtService: JwtService,
     private configService: ConfigService,
+    private emailQueueService: EmailQueueService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -153,5 +157,87 @@ export class AuthService {
       where: { id: userId },
       select: ['id', 'email', 'tenantId', 'role', 'isActive', 'firstName', 'lastName'],
     });
+  }
+
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({
+      where: { email },
+      relations: ['tenant'],
+    });
+
+    if (!user) {
+      // Ne pas révéler si l'email existe ou non (sécurité)
+      return {
+        message:
+          "Si cet email existe, un lien de réinitialisation a été envoyé.",
+      };
+    }
+
+    // Générer token JWT avec expiration 1h
+    const resetToken = this.jwtService.sign(
+      { userId: user.id, type: 'reset-password' },
+      {
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+        expiresIn: '1h',
+      },
+    );
+
+    // Envoyer email avec lien
+    const resetUrl = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${resetToken}`;
+
+    await this.emailQueueService.queuePasswordResetEmail(
+      user.email,
+      user.firstName,
+      resetUrl,
+    );
+
+    return {
+      message:
+        "Si cet email existe, un lien de réinitialisation a été envoyé.",
+    };
+  }
+
+  async resetPassword(
+    token: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
+    try {
+      // Vérifier et décoder le token
+      const payload = this.jwtService.verify(token, {
+        secret: this.configService.get('JWT_ACCESS_SECRET'),
+      });
+
+      if (payload.type !== 'reset-password') {
+        throw new BadRequestException('Token invalide');
+      }
+
+      // Récupérer l'utilisateur
+      const user = await this.userRepository.findOne({
+        where: { id: payload.userId },
+      });
+
+      if (!user) {
+        throw new NotFoundException('Utilisateur non trouvé');
+      }
+
+      // Hasher le nouveau mot de passe
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
+
+      // Mettre à jour le mot de passe
+      user.password = hashedPassword;
+      await this.userRepository.save(user);
+
+      return { message: 'Mot de passe réinitialisé avec succès' };
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new BadRequestException(
+          'Le lien a expiré. Veuillez demander un nouveau lien.',
+        );
+      }
+      if (error.name === 'JsonWebTokenError') {
+        throw new BadRequestException('Token invalide');
+      }
+      throw error;
+    }
   }
 }

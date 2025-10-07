@@ -9,13 +9,18 @@ import {
   UseGuards,
   Query,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { multerConfig } from './config/multer.config';
 import { VehiclesService } from './vehicles.service';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
@@ -76,6 +81,28 @@ export class VehiclesController {
     return this.vehiclesService.getStats(tenantId);
   }
 
+  @Get(':id/timeline')
+  @ApiOperation({ summary: 'Récupérer la timeline d\'un véhicule (maintenances, documents, événements)' })
+  @ApiResponse({ status: 200, description: 'Timeline récupérée avec succès.' })
+  @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  getTimeline(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.getTimeline(id, tenantId);
+  }
+
+  @Get(':id/costs')
+  @ApiOperation({ summary: 'Analyse des coûts d\'un véhicule' })
+  @ApiResponse({ status: 200, description: 'Analyse des coûts récupérée avec succès.' })
+  @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  getCostAnalysis(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.getCostAnalysis(id, tenantId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer un véhicule par ID' })
   @ApiResponse({ status: 200, description: 'Véhicule trouvé.' })
@@ -101,6 +128,33 @@ export class VehiclesController {
     @TenantId() tenantId: number,
   ) {
     return this.vehiclesService.update(id, updateVehicleDto, tenantId);
+  }
+
+  @Post(':id/photos')
+  @UseInterceptors(FilesInterceptor('photos', 10, multerConfig))
+  @ApiOperation({ summary: 'Upload de photos pour un véhicule (max 10)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 200, description: 'Photos uploadées avec succès.' })
+  @ApiResponse({ status: 400, description: 'Fichiers invalides ou limite dépassée.' })
+  @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  async uploadPhotos(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.uploadPhotos(id, files, tenantId);
+  }
+
+  @Delete(':id/photos')
+  @ApiOperation({ summary: 'Supprimer une photo d\'un véhicule' })
+  @ApiResponse({ status: 200, description: 'Photo supprimée avec succès.' })
+  @ApiResponse({ status: 404, description: 'Véhicule ou photo non trouvé.' })
+  async deletePhoto(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body('photoUrl') photoUrl: string,
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.deletePhoto(id, photoUrl, tenantId);
   }
 
   @Delete(':id')

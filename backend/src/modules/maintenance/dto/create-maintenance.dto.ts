@@ -26,11 +26,17 @@ export class CreateMaintenanceDto {
   @IsDateString()
   scheduledDate: string;
 
-  @ApiProperty({ description: 'Estimated or actual cost', example: 150.00 })
+  @ApiProperty({ description: 'Estimated cost', example: 150.00 })
   @IsNotEmpty()
   @IsNumber()
   @Min(0)
-  cost: number;
+  estimatedCost: number;
+
+  @ApiProperty({ description: 'Actual cost (optional, for completed maintenance)', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  actualCost?: number;
 
   @ApiProperty({ description: 'Garage or mechanic name', required: false })
   @IsOptional()

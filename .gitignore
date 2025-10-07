@@ -41,3 +41,6 @@ postgres_data/
 # Temp files
 tmp/
 temp/
+
+# Uploaded files
+uploads/

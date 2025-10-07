@@ -2,8 +2,10 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, MoreThan } from 'typeorm';
 import { Maintenance, MaintenanceStatus } from './entities/maintenance.entity';
+import { MaintenanceTemplate } from './entities/maintenance-template.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
+import { CreateMaintenanceFromTemplateDto } from './dto/create-from-template.dto';
 import { MaintenanceAlertDto, MaintenanceCostSummaryDto } from './dto/maintenance-alert.dto';
 
 @Injectable()
@@ -13,6 +15,8 @@ export class MaintenanceService {
   constructor(
     @InjectRepository(Maintenance)
     private maintenanceRepository: Repository<Maintenance>,
+    @InjectRepository(MaintenanceTemplate)
+    private templateRepository: Repository<MaintenanceTemplate>,
   ) {}
 
   async create(createMaintenanceDto: CreateMaintenanceDto, tenantId: number): Promise<Maintenance> {
@@ -156,5 +160,33 @@ export class MaintenanceService {
       .getRawOne();
 
     return parseFloat(result.total) || 0;
+  }
+
+  async createFromTemplate(
+    templateId: string,
+    createDto: CreateMaintenanceFromTemplateDto,
+    tenantId: number
+  ): Promise<Maintenance> {
+    const template = await this.templateRepository.findOne({
+      where: { id: templateId, tenantId },
+    });
+
+    if (!template) {
+      throw new NotFoundException(`Template with ID ${templateId} not found`);
+    }
+
+    const maintenance = this.maintenanceRepository.create({
+      vehicleId: createDto.vehicleId,
+      type: template.type,
+      description: template.description,
+      scheduledDate: new Date(createDto.scheduledDate),
+      estimatedCost: createDto.estimatedCost || template.estimatedCost,
+      actualCost: null,
+      performedBy: createDto.performedBy || null,
+      nextMaintenanceKm: createDto.nextMaintenanceKm || null,
+      tenantId,
+    });
+
+    return this.maintenanceRepository.save(maintenance);
   }
 }

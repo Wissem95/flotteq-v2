@@ -1,0 +1,20 @@
+<h2>📄 Document bientôt expiré</h2>
+
+<p>Bonjour {{firstName}},</p>
+
+<p>Le document suivant expire dans <strong>{{daysUntil}} jours</strong> :</p>
+
+<div style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; border-radius: 6px; margin: 20px 0;">
+  <p style="margin: 5px 0;"><strong>Document :</strong> {{documentName}}</p>
+  <p style="margin: 5px 0;"><strong>Type :</strong> {{documentType}}</p>
+  <p style="margin: 5px 0;"><strong>Date d'expiration :</strong> {{expirationDate}}</p>
+  <p style="margin: 5px 0;"><strong>Entité :</strong> {{entityType}} - {{entityName}}</p>
+</div>
+
+<p style="background: #f8d7da; padding: 12px; border-radius: 6px; color: #721c24; font-size: 14px;">
+  ⚠️ <strong>Important :</strong> Pensez à renouveler ce document avant son expiration pour éviter toute interruption de service.
+</p>
+
+<a href="{{appUrl}}/documents/{{documentId}}" class="button">Renouveler le document</a>
+
+<p style="color: #666; font-size: 14px;"><small>Rappel automatique envoyé 30 jours avant l'expiration.</small></p>

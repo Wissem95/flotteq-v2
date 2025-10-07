@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { User, UserRole } from '../../entities/user.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { EmailQueueService } from '../notifications/email-queue.service';
 import { ForbiddenException, ConflictException } from '@nestjs/common';
 
 describe('UsersService', () => {
@@ -34,6 +35,10 @@ describe('UsersService', () => {
     updateUsage: jest.fn(),
   };
 
+  const mockEmailQueueService = {
+    queueWelcomeEmail: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -45,6 +50,10 @@ describe('UsersService', () => {
         {
           provide: SubscriptionsService,
           useValue: mockSubscriptionsService,
+        },
+        {
+          provide: EmailQueueService,
+          useValue: mockEmailQueueService,
         },
       ],
     }).compile();
@@ -62,14 +71,26 @@ describe('UsersService', () => {
         role: UserRole.MANAGER,
       };
 
-      mockRepository.findOne.mockResolvedValue(null);
+      const savedUser = { ...createDto, id: 'new-id', tenantId: 2 };
+
+      mockRepository.findOne
+        .mockResolvedValueOnce(null) // First call: check if email exists
+        .mockResolvedValueOnce({ // Second call: get user with tenant for email
+          ...savedUser,
+          tenant: { id: 2, name: 'Test Tenant' },
+        });
       mockRepository.create.mockReturnValue(createDto);
-      mockRepository.save.mockResolvedValue({ ...createDto, id: 'new-id' });
+      mockRepository.save.mockResolvedValue(savedUser);
 
       const result = await service.create(createDto, mockUser as any);
 
       expect(mockSubscriptionsService.enforceLimit).toHaveBeenCalledWith(2, 'users');
       expect(mockSubscriptionsService.updateUsage).toHaveBeenCalledWith(2, 'users', 1);
+      expect(mockEmailQueueService.queueWelcomeEmail).toHaveBeenCalledWith(
+        'new@example.com',
+        'New',
+        'Test Tenant'
+      );
       expect(result.id).toBe('new-id');
     });
 

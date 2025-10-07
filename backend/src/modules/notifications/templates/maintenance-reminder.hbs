@@ -1,0 +1,21 @@
+<h2>⚠️ Rappel : Maintenance programmée</h2>
+
+<p>Bonjour {{firstName}},</p>
+
+<p>Une maintenance est prévue <strong>{{daysUntil}}</strong> pour le véhicule :</p>
+
+<div style="background: #f5f5f5; padding: 15px; border-radius: 6px; border-left: 4px solid #667eea; margin: 20px 0;">
+  <p style="margin: 5px 0;"><strong>Véhicule :</strong> {{vehicleBrand}} {{vehicleModel}} ({{vehiclePlate}})</p>
+  <p style="margin: 5px 0;"><strong>Type :</strong> {{maintenanceType}}</p>
+  <p style="margin: 5px 0;"><strong>Date :</strong> {{maintenanceDate}}</p>
+  {{#if garageName}}
+  <p style="margin: 5px 0;"><strong>Garage :</strong> {{garageName}}</p>
+  {{/if}}
+  {{#if estimatedCost}}
+  <p style="margin: 5px 0;"><strong>Coût estimé :</strong> {{estimatedCost}} €</p>
+  {{/if}}
+</div>
+
+<a href="{{appUrl}}/maintenances/{{maintenanceId}}" class="button">Voir les détails</a>
+
+<p style="color: #666; font-size: 14px;"><small>Rappel automatique envoyé {{daysUntil}} avant la maintenance.</small></p>

@@ -31,6 +31,9 @@ export class SubscriptionPlan {
   @Column({ default: 0 })
   trialDays: number; // 0 = pas d'essai, 14 = 14 jours d'essai
 
+  @Column({ name: 'max_storage_mb', default: 1000 })
+  maxStorageMb: number; // Quota de stockage en MB
+
   @Column('simple-array')
   features: string[]; // ['support_email', 'export_pdf', 'api_access']
 

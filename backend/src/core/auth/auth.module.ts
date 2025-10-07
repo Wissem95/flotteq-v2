@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { TenantAuthGuard } from './guards/tenant-auth.guard';
+import { NotificationsModule } from '../../modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TenantAuthGuard } from './guards/tenant-auth.guard';
         },
       }),
     }),
+    NotificationsModule,
   ],
   controllers: [AuthController],
   providers: [
