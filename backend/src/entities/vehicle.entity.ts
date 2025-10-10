@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   OneToMany,
   JoinColumn,
@@ -18,6 +19,18 @@ export enum VehicleStatus {
   IN_USE = 'in_use',
   MAINTENANCE = 'maintenance',
   OUT_OF_SERVICE = 'out_of_service',
+}
+
+export enum TransmissionType {
+  MANUAL = 'manual',
+  AUTOMATIC = 'automatic',
+}
+
+export enum FuelType {
+  GASOLINE = 'gasoline',
+  DIESEL = 'diesel',
+  ELECTRIC = 'electric',
+  HYBRID = 'hybrid',
 }
 
 @Entity('vehicles')
@@ -56,11 +69,26 @@ export class Vehicle {
   @Column()
   color: string;
 
-  @Column({ type: 'date' })
-  purchaseDate: Date;
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  transmission: TransmissionType | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  purchasePrice: number;
+  @Column({ type: 'varchar', length: 20, nullable: true, name: 'fuelType' })
+  fuelType: FuelType | null;
+
+  @Column({ type: 'int', default: 0 })
+  mileage: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  purchaseDate: Date | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  purchasePrice: number | null;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'lastTechnicalInspection' })
+  lastTechnicalInspection: Date | null;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'nextTechnicalInspection' })
+  nextTechnicalInspection: Date | null;
 
   @Column({ type: 'simple-array', nullable: true })
   photos: string[] | null;
@@ -70,7 +98,7 @@ export class Vehicle {
 
   @ManyToOne(() => Driver, driver => driver.vehicles, { nullable: true })
   @JoinColumn({ name: 'assigned_driver_id' })
-  assignedDriver: Driver;
+  assignedDriver: Driver | null;
 
   @Column({ name: 'tenant_id' })
   tenantId: number;
@@ -94,4 +122,7 @@ export class Vehicle {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 }

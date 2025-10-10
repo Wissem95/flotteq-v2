@@ -57,8 +57,7 @@ export async function seedTestTenants(dataSource: DataSource): Promise<void> {
       city: 'Marseille',
       postalCode: '13001',
       country: 'France',
-      status: TenantStatus.TRIAL,
-      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+      status: TenantStatus.ACTIVE,
     },
     {
       name: 'Livraison Plus',

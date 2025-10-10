@@ -12,7 +12,6 @@ import { SubscriptionPlan } from './subscription-plan.entity';
 import { Tenant } from './tenant.entity';
 
 export enum SubscriptionStatus {
-  TRIALING = 'trialing',
   ACTIVE = 'active',
   PAST_DUE = 'past_due',
   CANCELED = 'canceled',
@@ -57,9 +56,6 @@ export class Subscription {
 
   @Column({ type: 'date', nullable: true })
   currentPeriodEnd: Date;
-
-  @Column({ type: 'date', nullable: true })
-  trialEnd: Date;
 
   @Column({ type: 'jsonb', default: {} })
   usage: {

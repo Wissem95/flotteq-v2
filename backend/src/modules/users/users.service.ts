@@ -10,8 +10,10 @@ import { Repository } from 'typeorm';
 import { User, UserRole } from '../../entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { EmailQueueService } from '../notifications/email-queue.service';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class UsersService {
@@ -23,8 +25,9 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto, currentUser: User): Promise<User> {
-    // Vérifier les permissions
-    if (!currentUser.canManageUsers()) {
+    // Vérifier les permissions (utiliser vérification directe du rôle)
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    if (!canManage) {
       throw new ForbiddenException('Vous n\'avez pas le droit de créer des utilisateurs');
     }
 
@@ -92,7 +95,9 @@ export class UsersService {
 
   async findAll(tenantId: number, currentUser: User): Promise<User[]> {
     // Super admin voit tous les users
-    if (currentUser.canViewAllData()) {
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+
+    if (canViewAll) {
       return this.usersRepository.find({
         order: { createdAt: 'DESC' },
         relations: ['tenant'],
@@ -116,8 +121,9 @@ export class UsersService {
       throw new NotFoundException(`Utilisateur #${id} non trouvé`);
     }
 
-    // Vérifier les permissions
-    if (!currentUser.canViewAllData() && user.tenantId !== currentUser.tenantId) {
+    // Vérifier les permissions (utiliser vérification directe du rôle)
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+    if (!canViewAll && user.tenantId !== currentUser.tenantId) {
       throw new ForbiddenException('Accès non autorisé');
     }
 
@@ -134,8 +140,9 @@ export class UsersService {
   async update(id: string, updateUserDto: UpdateUserDto, currentUser: User): Promise<User> {
     const user = await this.findOne(id, currentUser);
 
-    // Vérifier les permissions de modification
-    if (!currentUser.canManageUsers() && user.id !== currentUser.id) {
+    // Vérifier les permissions de modification (utiliser vérification directe du rôle)
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    if (!canManage && user.id !== currentUser.id) {
       throw new ForbiddenException('Vous ne pouvez modifier que votre propre profil');
     }
 
@@ -159,8 +166,9 @@ export class UsersService {
   async remove(id: string, currentUser: User): Promise<void> {
     const user = await this.findOne(id, currentUser);
 
-    // Vérifier les permissions
-    if (!currentUser.canManageUsers()) {
+    // Vérifier les permissions (utiliser vérification directe du rôle)
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    if (!canManage) {
       throw new ForbiddenException('Vous n\'avez pas le droit de supprimer des utilisateurs');
     }
 
@@ -206,5 +214,119 @@ export class UsersService {
     }
 
     return stats;
+  }
+
+  async deactivate(id: string, currentUser: User): Promise<User> {
+    // Prevent self-deactivation
+    if (id === currentUser.id) {
+      throw new BadRequestException('Vous ne pouvez pas désactiver votre propre compte');
+    }
+
+    const user = await this.usersRepository.findOne({
+      where: { id, tenantId: currentUser.tenantId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    // A tenant_admin cannot deactivate a super_admin
+    if (currentUser.role === UserRole.TENANT_ADMIN && user.role === UserRole.SUPER_ADMIN) {
+      throw new ForbiddenException('Vous ne pouvez pas désactiver un super administrateur');
+    }
+
+    user.isActive = false;
+    return await this.usersRepository.save(user);
+  }
+
+  async activate(id: string, currentUser: User): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    // Verify tenant access
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+    if (!canViewAll && user.tenantId !== currentUser.tenantId) {
+      throw new ForbiddenException('Accès non autorisé');
+    }
+
+    user.isActive = true;
+    return await this.usersRepository.save(user);
+  }
+
+  async generateInvitation(
+    inviteUserDto: InviteUserDto,
+    currentUser: User,
+  ): Promise<{ invitationLink: string; token: string }> {
+    const { email, role } = inviteUserDto;
+
+    // Verify permissions (utiliser vérification directe du rôle)
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    if (!canManage) {
+      throw new ForbiddenException('Vous n\'avez pas le droit d\'inviter des utilisateurs');
+    }
+
+    // Limit roles that tenant_admin can assign
+    if (currentUser.role === UserRole.TENANT_ADMIN) {
+      const allowedRoles = [UserRole.MANAGER, UserRole.DRIVER, UserRole.VIEWER];
+      if (!allowedRoles.includes(role)) {
+        throw new ForbiddenException('Vous ne pouvez pas assigner ce rôle');
+      }
+    }
+
+    // Check if email already exists for this tenant
+    const existingUser = await this.usersRepository.findOne({
+      where: { email, tenantId: currentUser.tenantId },
+    });
+
+    // Option A: Refuser si user déjà actif avec password
+    if (existingUser && existingUser.isActive && existingUser.password) {
+      throw new ConflictException(
+        'Cet utilisateur est déjà actif. Utilisez la fonction "Réinitialiser le mot de passe" si nécessaire.'
+      );
+    }
+
+    // Generate unique token
+    const token = randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 48); // Expires in 48 hours
+
+    let user: User;
+
+    if (existingUser && !existingUser.isActive) {
+      // Réutiliser le user inactif existant (ré-invitation)
+      existingUser.invitationToken = token;
+      existingUser.invitationExpiresAt = expiresAt;
+      existingUser.role = role; // Mettre à jour le rôle si changé
+      user = await this.usersRepository.save(existingUser);
+    } else {
+      // Create "ghost" user with invitation
+      user = this.usersRepository.create({
+        email,
+        role,
+        tenantId: currentUser.tenantId,
+        isActive: false,
+        invitationToken: token,
+        invitationExpiresAt: expiresAt,
+        firstName: '',
+        lastName: '',
+        password: randomBytes(32).toString('hex'), // Temporary password, will be set on acceptance
+      });
+      await this.usersRepository.save(user);
+    }
+
+    // Build invitation link - différent selon le rôle (client vs internal)
+    const isInternalRole = ['super_admin', 'support'].includes(role);
+    const frontendUrl = isInternalRole
+      ? (process.env.FRONTEND_INTERNAL_URL || 'http://localhost:5175')
+      : (process.env.FRONTEND_CLIENT_URL || 'http://localhost:5174');
+
+    const invitationLink = `${frontendUrl}/accept-invitation?token=${token}`;
+
+    return { invitationLink, token };
   }
 }

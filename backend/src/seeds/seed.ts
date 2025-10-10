@@ -558,8 +558,7 @@ async function createTenants(dataSource: DataSource) {
       city: 'Marseille',
       postalCode: '13001',
       country: 'France',
-      status: TenantStatus.TRIAL,
-      trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 jours
+      status: TenantStatus.ACTIVE,
     },
   ];
 
@@ -638,7 +637,7 @@ async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]
       status = SubscriptionStatus.ACTIVE;
     } else {
       plan = createdPlans.find(p => p.name === 'Starter')!;
-      status = SubscriptionStatus.TRIALING;
+      status = SubscriptionStatus.ACTIVE;
     }
 
     const subscriptionData: any = {
@@ -654,9 +653,7 @@ async function createSubscriptionPlans(dataSource: DataSource, tenants: Tenant[]
       },
     };
 
-    if (plan.trialDays > 0 && status === SubscriptionStatus.TRIALING) {
-      subscriptionData.trialEnd = new Date(Date.now() + plan.trialDays * 24 * 60 * 60 * 1000);
-    }
+    // Plus de période d'essai
 
     const subscription = subscriptionRepo.create(subscriptionData);
     await subscriptionRepo.save(subscription);

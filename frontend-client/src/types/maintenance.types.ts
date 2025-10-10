@@ -1,17 +1,21 @@
-export enum MaintenanceType {
-  PREVENTIVE = 'preventive',
-  CORRECTIVE = 'corrective',
-  INSPECTION = 'inspection',
-  TIRE_CHANGE = 'tire_change',
-  OIL_CHANGE = 'oil_change',
-}
+export const MaintenanceType = {
+  PREVENTIVE: 'preventive',
+  CORRECTIVE: 'corrective',
+  INSPECTION: 'inspection',
+  TIRE_CHANGE: 'tire_change',
+  OIL_CHANGE: 'oil_change',
+} as const;
 
-export enum MaintenanceStatus {
-  SCHEDULED = 'scheduled',
-  IN_PROGRESS = 'in_progress',
-  COMPLETED = 'completed',
-  CANCELLED = 'cancelled',
-}
+export type MaintenanceType = typeof MaintenanceType[keyof typeof MaintenanceType];
+
+export const MaintenanceStatus = {
+  SCHEDULED: 'scheduled',
+  IN_PROGRESS: 'in_progress',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
+
+export type MaintenanceStatus = typeof MaintenanceStatus[keyof typeof MaintenanceStatus];
 
 export interface Maintenance {
   id: string;

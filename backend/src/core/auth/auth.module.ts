@@ -4,6 +4,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../../entities/user.entity';
+import { Tenant } from '../../entities/tenant.entity';
+import { Subscription } from '../../entities/subscription.entity';
+import { SubscriptionPlan } from '../../entities/subscription-plan.entity';
 import { AuthService } from './services/auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -13,7 +16,7 @@ import { NotificationsModule } from '../../modules/notifications/notifications.m
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([User, Tenant, Subscription, SubscriptionPlan]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

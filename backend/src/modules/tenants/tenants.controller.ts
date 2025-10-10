@@ -66,9 +66,30 @@ export class TenantsController {
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Soft delete d\'un tenant' })
+  @ApiResponse({ status: 200, description: 'Tenant désactivé avec succès' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.tenantsService.remove(id);
+  }
+
+  @Patch(':id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Réactiver un tenant soft-deleted' })
+  @ApiResponse({ status: 200, description: 'Tenant réactivé avec succès' })
+  restore(@Param('id', ParseIntPipe) id: number) {
+    return this.tenantsService.restore(id);
+  }
+
+  @Patch(':id/status')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Activer/Désactiver un tenant' })
+  @ApiResponse({ status: 200, description: 'Statut du tenant mis à jour' })
+  updateTenantStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: { isActive: boolean },
+  ) {
+    return this.tenantsService.updateTenantStatus(id, dto.isActive);
   }
 
   @Get(':id/storage-usage')

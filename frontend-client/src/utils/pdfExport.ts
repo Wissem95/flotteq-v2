@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { Maintenance, MaintenanceType, MaintenanceStatus } from '../types/maintenance.types';
+import { MaintenanceType, MaintenanceStatus } from '../types/maintenance.types';
+import type { Maintenance } from '../types/maintenance.types';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -59,8 +60,8 @@ export const exportMaintenancesToPDF = (maintenances: Maintenance[], month?: Dat
     m.vehicle?.registration || m.vehicleId.substring(0, 8),
     getTypeLabel(m.type),
     m.description.length > 40 ? m.description.substring(0, 37) + '...' : m.description,
-    `${m.estimatedCost.toFixed(2)} €`,
-    m.actualCost ? `${m.actualCost.toFixed(2)} €` : '-',
+    `${Number(m.estimatedCost || 0).toFixed(2)} €`,
+    m.actualCost ? `${Number(m.actualCost).toFixed(2)} €` : '-',
     getStatusLabel(m.status),
   ]);
 
@@ -86,8 +87,8 @@ export const exportMaintenancesToPDF = (maintenances: Maintenance[], month?: Dat
   // Statistiques
   const finalY = (doc as any).lastAutoTable.finalY || 50;
 
-  const totalEstimated = maintenances.reduce((sum, m) => sum + m.estimatedCost, 0);
-  const totalActual = maintenances.reduce((sum, m) => sum + (m.actualCost || 0), 0);
+  const totalEstimated = maintenances.reduce((sum, m) => sum + (Number(m.estimatedCost) || 0), 0);
+  const totalActual = maintenances.reduce((sum, m) => sum + (Number(m.actualCost) || 0), 0);
   const completedCount = maintenances.filter(m => m.status === MaintenanceStatus.COMPLETED).length;
 
   doc.setFontSize(10);
@@ -181,7 +182,7 @@ export const exportMonthlyCalendarPDF = (maintenances: Maintenance[], month: Dat
         const type = m.type.substring(0, 10);
         return `${vehicle} - ${type}`;
       }).join('\n'),
-      dayMaintenances.reduce((sum, m) => sum + m.estimatedCost, 0).toFixed(2) + ' €',
+      dayMaintenances.reduce((sum, m) => sum + (Number(m.estimatedCost) || 0), 0).toFixed(2) + ' €',
     ];
   });
 

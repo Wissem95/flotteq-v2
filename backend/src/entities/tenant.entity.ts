@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   OneToMany,
   ManyToOne,
   JoinColumn,
@@ -15,7 +16,6 @@ import { Driver } from './driver.entity';
 import { SubscriptionPlan } from './subscription-plan.entity';
 
 export enum TenantStatus {
-  TRIAL = 'trial',
   ACTIVE = 'active',
   PAST_DUE = 'past_due',
   CANCELLED = 'cancelled',
@@ -53,7 +53,7 @@ export class Tenant {
   @Column({
     type: 'enum',
     enum: TenantStatus,
-    default: TenantStatus.TRIAL,
+    default: TenantStatus.ACTIVE,
   })
   status: TenantStatus;
 
@@ -65,14 +65,11 @@ export class Tenant {
 
   @Column({
     type: 'enum',
-    enum: ['trial', 'active', 'past_due', 'cancelled', 'incomplete'],
-    default: 'trial',
+    enum: ['active', 'past_due', 'cancelled', 'incomplete'],
+    default: 'active',
     name: 'subscription_status',
   })
   subscriptionStatus: string;
-
-  @Column({ type: 'timestamp', nullable: true, name: 'trial_ends_at' })
-  trialEndsAt: Date;
 
   @Column({ type: 'timestamp', nullable: true, name: 'subscription_started_at' })
   subscriptionStartedAt: Date;
@@ -94,6 +91,9 @@ export class Tenant {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 
   @Column({ nullable: true, name: 'plan_id' })
   planId: number;

@@ -1,6 +1,6 @@
-import { IsEnum, IsUUID } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
-import { DocumentEntityType } from '../../entities/document.entity';
+import { IsEnum, IsUUID, IsOptional, IsDateString, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { DocumentEntityType, DocumentType } from '../../entities/document.entity';
 import { ValidateDocumentEntity } from '../validators/document-entity-exists.validator';
 
 export class UploadDocumentDto {
@@ -22,4 +22,29 @@ export class UploadDocumentDto {
     message: 'L\'entité référencée n\'existe pas en base de données',
   })
   entityId: string;
+
+  @ApiPropertyOptional({
+    enum: DocumentType,
+    description: 'Type de document',
+    example: 'permis',
+  })
+  @IsOptional()
+  @IsEnum(DocumentType)
+  documentType?: DocumentType;
+
+  @ApiPropertyOptional({
+    description: 'Date d\'expiration du document',
+    example: '2025-12-31',
+  })
+  @IsOptional()
+  @IsDateString()
+  expiryDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'Notes optionnelles',
+    example: 'Document renouvelé',
+  })
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }

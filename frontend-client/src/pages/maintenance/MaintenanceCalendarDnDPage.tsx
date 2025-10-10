@@ -1,13 +1,15 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as BigCalendar, momentLocalizer, View, SlotInfo } from 'react-big-calendar';
+import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
+import type { View, SlotInfo } from 'react-big-calendar';
 import moment from 'moment';
 import 'moment/locale/fr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import '../../styles/calendar.css';
 import { useMaintenances, useUpdateMaintenance, useCreateMaintenance } from '../../hooks/useMaintenance';
 import { useVehicles } from '../../hooks/useVehicles';
-import { MaintenanceStatus, MaintenanceType, Maintenance } from '../../types/maintenance.types';
+import { MaintenanceStatus, MaintenanceType } from '../../types/maintenance.types';
+import type { Maintenance } from '../../types/maintenance.types';
 import { ArrowLeft, Plus, FileDown } from 'lucide-react';
 import { exportMonthlyCalendarPDF } from '../../utils/pdfExport';
 import QuickCreateMaintenanceModal from '../../components/maintenance/QuickCreateMaintenanceModal';

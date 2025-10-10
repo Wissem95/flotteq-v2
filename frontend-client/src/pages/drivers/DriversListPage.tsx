@@ -6,6 +6,7 @@ import { PAGINATION } from '@/config/constants';
 import DriverCard from '@/components/drivers/DriverCard';
 import DriverFilters from '@/components/drivers/DriverFilters';
 import AddDriverModal from '@/components/drivers/AddDriverModal';
+import { ProtectedButton } from '@/components/common/ProtectedButton';
 
 export default function DriversListPage() {
   const [page, setPage] = useState<number>(PAGINATION.DEFAULT_PAGE);
@@ -46,12 +47,14 @@ export default function DriversListPage() {
             {data?.total || 0} conducteur{(data?.total || 0) > 1 ? 's' : ''} au total
           </p>
         </div>
-        <button
+        <ProtectedButton
           onClick={() => setIsAddModalOpen(true)}
+          permission="drivers.create"
           className="bg-flotteq-blue text-white px-4 py-2 rounded-md hover:bg-flotteq-navy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-flotteq-blue"
+          disabledMessage="Vous n'avez pas la permission de créer des conducteurs"
         >
           Ajouter un conducteur
-        </button>
+        </ProtectedButton>
       </div>
 
       {expiringDrivers && expiringDrivers.length > 0 && (

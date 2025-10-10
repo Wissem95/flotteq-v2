@@ -10,14 +10,21 @@ export interface RegisterDto {
   planId: string; // Plan Stripe choisi
 }
 
+export interface AcceptInvitationDto {
+  token: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+}
+
 export const authService = {
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const response = await api.post<AuthResponse>('/auth/login', credentials);
     return response.data;
   },
 
-  async register(data: RegisterDto): Promise<{ checkoutUrl: string }> {
-    const response = await api.post<{ checkoutUrl: string }>('/auth/register', data);
+  async register(data: RegisterDto): Promise<AuthResponse> {
+    const response = await api.post<AuthResponse>('/auth/register', data);
     return response.data;
   },
 
@@ -33,6 +40,16 @@ export const authService = {
 
   async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
     const response = await api.post('/auth/reset-password', { token, newPassword });
+    return response.data;
+  },
+
+  async acceptInvitation(data: AcceptInvitationDto): Promise<{ message: string }> {
+    const response = await api.post('/auth/accept-invitation', data);
+    return response.data;
+  },
+
+  async verifyInvitation(token: string): Promise<{ email: string; role: string }> {
+    const response = await api.get(`/auth/verify-invitation?token=${token}`);
     return response.data;
   },
 

@@ -6,8 +6,10 @@ import { DriverStatus } from '@/types/driver.types';
 import DriverInfoTab from '@/components/drivers/DriverInfoTab';
 import DriverVehiclesTab from '@/components/drivers/DriverVehiclesTab';
 import DriverExpiringBadge from '@/components/drivers/DriverExpiringBadge';
+import { EntityDocumentsTab } from '@/components/documents/EntityDocumentsTab';
+import { DocumentEntityType } from '@/types/document.types';
 
-type TabType = 'info' | 'vehicles';
+type TabType = 'info' | 'vehicles' | 'documents';
 
 const statusConfig = {
   active: { label: 'Actif', className: 'bg-green-100 text-green-800' },
@@ -176,12 +178,31 @@ export default function DriverDetailPage() {
               </span>
             )}
           </button>
+          <button
+            onClick={() => setActiveTab('documents')}
+            className={`pb-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'documents'
+                ? 'border-flotteq-blue text-flotteq-blue'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Documents
+          </button>
         </nav>
       </div>
 
       {/* Tab Content */}
       {activeTab === 'info' && <DriverInfoTab driver={driver} />}
       {activeTab === 'vehicles' && <DriverVehiclesTab driver={driver} />}
+      {activeTab === 'documents' && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <EntityDocumentsTab
+            entityType={DocumentEntityType.DRIVER}
+            entityId={driver.id}
+            entityName={`${driver.firstName} ${driver.lastName}`}
+          />
+        </div>
+      )}
     </div>
   );
 }

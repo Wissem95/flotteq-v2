@@ -7,6 +7,22 @@ export const VehicleStatus = {
 
 export type VehicleStatus = typeof VehicleStatus[keyof typeof VehicleStatus];
 
+export const TransmissionType = {
+  MANUAL: 'manual',
+  AUTOMATIC: 'automatic',
+} as const;
+
+export type TransmissionType = typeof TransmissionType[keyof typeof TransmissionType];
+
+export const FuelType = {
+  GASOLINE: 'gasoline',
+  DIESEL: 'diesel',
+  ELECTRIC: 'electric',
+  HYBRID: 'hybrid',
+} as const;
+
+export type FuelType = typeof FuelType[keyof typeof FuelType];
+
 export interface Vehicle {
   id: string;
   registration: string;
@@ -15,10 +31,15 @@ export interface Vehicle {
   year: number;
   vin: string;
   color: string;
-  purchaseDate: string;
-  purchasePrice: number;
-  initialMileage: number | null;
-  currentKm: number;
+  transmission?: TransmissionType;
+  fuelType?: FuelType;
+  mileage?: number;
+  purchaseDate?: string;
+  purchasePrice?: number;
+  lastTechnicalInspection?: string;
+  nextTechnicalInspection?: string;
+  initialMileage?: number | null;
+  currentKm?: number;
   status: VehicleStatus;
   photos: string[] | null;
   assignedDriverId: string | null;
@@ -98,13 +119,18 @@ export interface CreateVehicleData {
   year: number;
   vin: string;
   color: string;
+  transmission?: TransmissionType;
+  fuelType?: FuelType;
+  mileage?: number;
   purchaseDate?: string;
   purchasePrice?: number;
+  lastTechnicalInspection?: string;
+  nextTechnicalInspection?: string;
   initialMileage?: number;
   currentKm?: number;
   status?: VehicleStatus;
 }
 
 export interface UpdateVehicleData extends Partial<CreateVehicleData> {
-  assignedDriverId?: string;
+  assignedDriverId?: string | null;
 }

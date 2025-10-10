@@ -5,6 +5,14 @@ interface VehicleCostsProps {
   vehicleId: string;
 }
 
+const maintenanceTypeLabels: Record<string, string> = {
+  'preventive': 'Préventive',
+  'corrective': 'Corrective',
+  'inspection': 'Contrôle technique',
+  'tire_change': 'Changement de pneus',
+  'oil_change': 'Vidange',
+};
+
 export default function VehicleCosts({ vehicleId }: VehicleCostsProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['vehicle-costs', vehicleId],
@@ -77,8 +85,8 @@ export default function VehicleCosts({ vehicleId }: VehicleCostsProps) {
             {data.costsByType.map((costType) => (
               <div key={costType.type} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900 capitalize">
-                    {costType.type.replace('_', ' ')}
+                  <p className="text-sm font-medium text-gray-900">
+                    {maintenanceTypeLabels[costType.type] || costType.type}
                   </p>
                   <p className="text-xs text-gray-500">{costType.count} intervention{costType.count > 1 ? 's' : ''}</p>
                 </div>

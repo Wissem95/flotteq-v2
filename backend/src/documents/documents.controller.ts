@@ -13,6 +13,8 @@ import {
   Res,
   StreamableFile,
   NotFoundException,
+  ParseIntPipe,
+  DefaultValuePipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -33,16 +35,21 @@ import { DocumentOwnershipGuard } from './guards/document-ownership.guard';
 import { StorageQuotaInterceptor } from './interceptors/storage-quota.interceptor';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { QueryDocumentsDto } from './dto/query-documents.dto';
+import { ExpiringDocumentDto } from './dto/expiring-document.dto';
 import { Document } from '../entities/document.entity';
+import { RolesGuard } from '../common/guards/roles.guard';
+import { Roles } from '../common/decorators/roles.decorator';
+import { UserRole } from '../entities/user.entity';
 
 @ApiTags('Documents')
 @ApiBearerAuth()
 @Controller('documents')
-@UseGuards(JwtAuthGuard, DocumentOwnershipGuard)
+@UseGuards(JwtAuthGuard, DocumentOwnershipGuard, RolesGuard)
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post('upload')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({
     summary: 'Upload un document lié à une entité',
     description: 'Upload un fichier PDF/image et l\'associe à un véhicule, conducteur ou maintenance',
@@ -89,6 +96,7 @@ export class DocumentsController {
       dto.entityId,
       userId,
       tenantId,
+      dto,
     );
   }
 
@@ -144,11 +152,30 @@ export class DocumentsController {
     return new StreamableFile(file);
   }
 
+  @Get('alerts/expiring')
+  @ApiOperation({
+    summary: 'Liste des documents expirant bientôt',
+    description: 'Récupère les documents avec date d\'expiration dans les X prochains jours',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des documents avec urgence calculée',
+    type: [ExpiringDocumentDto],
+  })
+  @ApiResponse({ status: 401, description: 'Non authentifié' })
+  async getExpiringDocuments(
+    @Query('days', new DefaultValuePipe(30), ParseIntPipe) days: number,
+    @TenantId() tenantId: number,
+  ): Promise<ExpiringDocumentDto[]> {
+    return this.documentsService.findExpiringSoon(tenantId, days);
+  }
+
   @Delete(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Supprime un document (soft delete)' })
   @ApiResponse({ status: 200, description: 'Document supprimé' })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
-  @ApiResponse({ status: 403, description: 'Seul l\'uploader ou admin peut supprimer' })
+  @ApiResponse({ status: 403, description: 'Seul l\'uploader, manager ou admin peut supprimer' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,

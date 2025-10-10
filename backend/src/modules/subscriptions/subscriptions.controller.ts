@@ -16,6 +16,7 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('subscriptions')
 @ApiBearerAuth()
@@ -25,11 +26,12 @@ export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
   // ========== ENDPOINTS PLANS (Public pour voir les plans) ==========
+  @Public()
   @Get('plans')
   @ApiOperation({ summary: 'Get all available subscription plans' })
   getPlans() {
-    // Pour l'admin internal, on retourne TOUS les plans (actifs et inactifs)
-    return this.subscriptionsService.getPlans(false);
+    // Retourner uniquement les plans actifs pour le public
+    return this.subscriptionsService.getPlans(true);
   }
 
   @Get('plans/:id')

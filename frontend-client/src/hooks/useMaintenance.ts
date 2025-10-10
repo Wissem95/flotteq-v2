@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { maintenanceService } from '../api/services/maintenance.service';
-import {
+import type {
   CreateMaintenanceDto,
   UpdateMaintenanceDto,
   CreateMaintenanceTemplateDto,
@@ -14,11 +14,11 @@ export const useMaintenances = () => {
   });
 };
 
-export const useMaintenance = (id: string) => {
+export const useMaintenance = (id: string, options?: { enabled?: boolean }) => {
   return useQuery({
     queryKey: ['maintenance', id],
     queryFn: () => maintenanceService.getById(id),
-    enabled: !!id,
+    enabled: options?.enabled !== undefined ? options.enabled : (!!id && id !== 'new'),
   });
 };
 

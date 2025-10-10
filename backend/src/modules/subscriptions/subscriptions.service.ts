@@ -84,11 +84,11 @@ export class SubscriptionsService {
       throw new BadRequestException('Ce tenant a déjà un abonnement actif');
     }
 
-    // Créer l'abonnement avec ou sans période d'essai selon le plan
+    // Créer l'abonnement actif immédiatement (pas de période d'essai)
     const subscriptionData: any = {
       tenantId,
       planId,
-      status: plan.trialDays > 0 ? SubscriptionStatus.TRIALING : SubscriptionStatus.ACTIVE,
+      status: SubscriptionStatus.ACTIVE,
       currentPeriodStart: new Date(),
       currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       usage: {
@@ -97,10 +97,6 @@ export class SubscriptionsService {
         drivers: 0,
       },
     };
-
-    if (plan.trialDays > 0) {
-      subscriptionData.trialEnd = new Date(Date.now() + plan.trialDays * 24 * 60 * 60 * 1000);
-    }
 
     const subscription = this.subscriptionRepo.create(subscriptionData);
     const saved = await this.subscriptionRepo.save(subscription);
@@ -118,10 +114,11 @@ export class SubscriptionsService {
 
     if (!subscription) {
       // Chercher si en trial
+      // Plus de période d'essai - chercher l'abonnement actif
       const trial = await this.subscriptionRepo.findOne({
         where: {
           tenantId,
-          status: SubscriptionStatus.TRIALING,
+          status: SubscriptionStatus.ACTIVE,
         },
         relations: ['plan'],
       });
@@ -215,11 +212,7 @@ export class SubscriptionsService {
     subscription.planId = newPlanId;
     subscription.plan = newPlan;
 
-    // Si le nouveau plan a une période d'essai et qu'on n'a jamais eu d'essai
-    if (newPlan.trialDays > 0 && subscription.status !== SubscriptionStatus.TRIALING) {
-      subscription.status = SubscriptionStatus.TRIALING;
-      subscription.trialEnd = new Date(Date.now() + newPlan.trialDays * 24 * 60 * 60 * 1000);
-    }
+    // Garder le statut actif (pas de période d'essai)
 
     return await this.subscriptionRepo.save(subscription);
   }
@@ -262,15 +255,21 @@ export class SubscriptionsService {
         },
       },
       status: subscription.status,
-      trialEnd: subscription.trialEnd,
       currentPeriodEnd: subscription.currentPeriodEnd,
     };
   }
 
   async getAllSubscriptions(): Promise<Subscription[]> {
-    return await this.subscriptionRepo.find({
+    // Retourner uniquement les subscriptions actives de tenants non supprimés
+    const subscriptions = await this.subscriptionRepo.find({
       relations: ['plan', 'tenant'],
+      where: {
+        status: SubscriptionStatus.ACTIVE,
+      },
       order: { createdAt: 'DESC' },
     });
+
+    // Filtrer pour exclure les tenants supprimés (soft deleted)
+    return subscriptions.filter(sub => sub.tenant && !sub.tenant.deletedAt);
   }
 }

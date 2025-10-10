@@ -4,6 +4,7 @@ import StatsCard from '@/components/dashboard/StatsCard';
 import CostsChart from '@/components/dashboard/CostsChart';
 import AlertsList from '@/components/dashboard/AlertsList';
 import SubscriptionUsage from '@/components/dashboard/SubscriptionUsage';
+import { ExpiringDocumentsWidget } from '@/components/dashboard/ExpiringDocumentsWidget';
 import type { DashboardStats } from '@/types/dashboard.types';
 import { Car, Users, Wrench, Plus } from 'lucide-react';
 
@@ -85,6 +86,9 @@ export default function DashboardPage() {
         <CostsChart />
         <AlertsList />
       </div>
+
+      {/* Documents expirant */}
+      <ExpiringDocumentsWidget />
 
       {/* Utilisation du plan */}
       <SubscriptionUsage />

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -49,14 +50,11 @@ export class TenantsService {
       );
     }
 
-    const trialDays = this.configService.get<number>('stripe.trialDays', 14);
-
-    // 1. Créer le tenant en DB avec statut TRIAL par défaut
+    // 1. Créer le tenant en DB avec statut ACTIVE par défaut
     const tenant = this.tenantsRepository.create({
       ...createTenantDto,
-      status: TenantStatus.TRIAL,
-      subscriptionStatus: 'trial',
-      trialEndsAt: new Date(Date.now() + trialDays * 24 * 60 * 60 * 1000),
+      status: TenantStatus.ACTIVE,
+      subscriptionStatus: 'active',
     });
 
     const savedTenant = await this.tenantsRepository.save(tenant);
@@ -193,14 +191,79 @@ export class TenantsService {
     return updatedTenant;
   }
 
-  async remove(id: number): Promise<void> {
-    const result = await this.tenantsRepository.delete(id);
+  async remove(id: number): Promise<{ message: string }> {
+    const tenant = await this.tenantsRepository.findOne({
+      where: { id },
+    });
 
-    if (result.affected === 0) {
+    if (!tenant) {
       throw new NotFoundException(`Tenant #${id} non trouvé`);
     }
 
-    this.logger.log(`Tenant #${id} supprimé`);
+    // Annuler la subscription active du tenant
+    const activeSubscription = await this.subscriptionRepository.findOne({
+      where: { tenantId: id, status: SubscriptionStatus.ACTIVE },
+    });
+
+    if (activeSubscription) {
+      activeSubscription.status = SubscriptionStatus.CANCELED;
+      activeSubscription.canceledAt = new Date();
+      await this.subscriptionRepository.save(activeSubscription);
+      this.logger.log(`Subscription du tenant #${id} annulée`);
+    }
+
+    // Soft delete du tenant (TypeORM gère automatiquement avec @DeleteDateColumn)
+    await this.tenantsRepository.softRemove(tenant);
+
+    this.logger.log(`Tenant #${id} désactivé (soft delete)`);
+    return { message: `Tenant ${tenant.name} désactivé avec succès` };
+  }
+
+  async restore(id: number): Promise<Tenant> {
+    const tenant = await this.tenantsRepository.findOne({
+      where: { id },
+      withDeleted: true, // Inclure les soft deleted
+    });
+
+    if (!tenant) {
+      throw new NotFoundException(`Tenant #${id} non trouvé`);
+    }
+
+    if (!tenant.deletedAt) {
+      throw new BadRequestException(`Tenant #${id} n'est pas désactivé`);
+    }
+
+    // Réactiver la subscription annulée
+    const canceledSubscription = await this.subscriptionRepository.findOne({
+      where: { tenantId: id, status: SubscriptionStatus.CANCELED },
+      order: { canceledAt: 'DESC' }, // Prendre la plus récente
+    });
+
+    if (canceledSubscription) {
+      canceledSubscription.status = SubscriptionStatus.ACTIVE;
+      // Note: canceledAt garde sa valeur historique pour traçabilité
+      // Prolonger la période
+      const now = new Date();
+      canceledSubscription.currentPeriodStart = now;
+      canceledSubscription.currentPeriodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 jours
+      await this.subscriptionRepository.save(canceledSubscription);
+      this.logger.log(`Subscription du tenant #${id} réactivée`);
+    }
+
+    await this.tenantsRepository.restore(id);
+    this.logger.log(`Tenant #${id} réactivé`);
+
+    return this.findOne(id);
+  }
+
+  async updateTenantStatus(id: number, isActive: boolean): Promise<Tenant> {
+    const tenant = await this.findOne(id);
+
+    tenant.status = isActive ? TenantStatus.ACTIVE : TenantStatus.CANCELLED;
+    await this.tenantsRepository.save(tenant);
+
+    this.logger.log(`Tenant #${id} ${isActive ? 'activé' : 'désactivé'}`);
+    return tenant;
   }
 
   async getStats(tenantId: number) {
@@ -218,7 +281,6 @@ export class TenantsService {
       vehiclesCount: tenant.vehicles?.length || 0,
       driversCount: tenant.drivers?.length || 0,
       status: tenant.status,
-      trialEndsAt: tenant.trialEndsAt,
       createdAt: tenant.createdAt,
     };
   }
@@ -228,7 +290,7 @@ export class TenantsService {
    */
   async canAccess(tenantId: number): Promise<boolean> {
     const tenant = await this.findOne(tenantId);
-    return this.stripeService.isActive(tenant) || this.stripeService.isTrial(tenant);
+    return this.stripeService.isActive(tenant);
   }
 
   /**

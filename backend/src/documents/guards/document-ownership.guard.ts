@@ -77,9 +77,24 @@ export class DocumentOwnershipGuard implements CanActivate {
    * Permissions de base sans documentId (GET liste, POST upload)
    */
   private checkBasicPermissions(user: any, method: string): boolean {
+    console.log('DocumentOwnershipGuard - checkBasicPermissions:', {
+      userId: user?.id,
+      role: user?.role,
+      method,
+      allUserKeys: user ? Object.keys(user) : [],
+    });
+
+    if (!user) {
+      throw new ForbiddenException('Utilisateur non authentifié dans DocumentOwnershipGuard');
+    }
+
+    // TENANT_ADMIN, MANAGER, DRIVER peuvent uploader
+    // Seul VIEWER est en lecture seule
     if (user.role === UserRole.VIEWER && method !== 'GET') {
       throw new ForbiddenException('Les viewers ont un accès en lecture seule');
     }
+
+    // Tous les autres rôles (TENANT_ADMIN, MANAGER, DRIVER, etc.) peuvent uploader
     return true;
   }
 

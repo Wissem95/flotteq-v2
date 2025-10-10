@@ -6,11 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import { User } from '../../../entities/user.entity';
+import { User, UserRole } from '../../../entities/user.entity';
+import { Tenant } from '../../../entities/tenant.entity';
+import { Subscription, SubscriptionStatus } from '../../../entities/subscription.entity';
+import { SubscriptionPlan } from '../../../entities/subscription-plan.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { EmailQueueService } from '../../../modules/notifications/email-queue.service';
@@ -20,13 +23,39 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Tenant)
+    private tenantRepository: Repository<Tenant>,
+    @InjectRepository(Subscription)
+    private subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(SubscriptionPlan)
+    private subscriptionPlanRepository: Repository<SubscriptionPlan>,
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailQueueService: EmailQueueService,
+    private dataSource: DataSource,
   ) {}
 
   async register(dto: RegisterDto) {
-    // Vérifie si l'email existe déjà
+    // 1. Valider planId AVANT toute création en base
+    const planId = parseInt(dto.planId, 10);
+    if (isNaN(planId)) {
+      throw new BadRequestException(`Invalid plan ID: ${dto.planId}. Must be a number.`);
+    }
+
+    const plan = await this.subscriptionPlanRepository.findOne({
+      where: { id: planId },
+    });
+
+    if (!plan) {
+      throw new BadRequestException(`Invalid plan ID: ${planId}. Plan not found.`);
+    }
+
+    // 2. Valider companyName
+    if (!dto.companyName) {
+      throw new BadRequestException('Company name is required for registration');
+    }
+
+    // 3. Vérifier si email existe déjà
     const existingUser = await this.userRepository.findOne({
       where: { email: dto.email },
     });
@@ -35,26 +64,68 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
-    // Hash le password avec un salt de 12
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
+    // 4. Transaction atomique : Tenant + User + Subscription ensemble
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    const user = await this.userRepository.save({
-      email: dto.email,
-      password: hashedPassword,
-      firstName: dto.firstName,
-      lastName: dto.lastName,
-      tenantId: parseInt(dto.tenantId || '1'),
-    });
+    try {
+      // 4a. Créer tenant
+      const tenant = queryRunner.manager.create(Tenant, {
+        name: dto.companyName,
+        email: dto.email,
+      });
+      await queryRunner.manager.save(tenant);
 
-    const tokens = await this.generateTokens(user);
+      // 4b. Créer user
+      const hashedPassword = await bcrypt.hash(dto.password, 12);
+      const user = queryRunner.manager.create(User, {
+        email: dto.email,
+        password: hashedPassword,
+        firstName: dto.firstName,
+        lastName: dto.lastName,
+        tenantId: tenant.id,
+        role: UserRole.TENANT_ADMIN,
+      });
+      await queryRunner.manager.save(user);
 
-    // Sauvegarde le refresh token hashé
-    await this.updateRefreshToken(user.id, tokens.refresh_token);
+      // 4c. Créer subscription
+      const now = new Date();
+      const endDate = new Date();
+      endDate.setDate(endDate.getDate() + 30);
 
-    // Ne pas retourner le password
-    const { password, refreshToken, ...userWithoutSensitive } = user;
+      const subscription = queryRunner.manager.create(Subscription, {
+        tenantId: tenant.id,
+        planId: plan.id,
+        status: SubscriptionStatus.ACTIVE,
+        currentPeriodStart: now,
+        currentPeriodEnd: endDate,
+        usage: {
+          vehicles: 0,
+          users: 0,
+          drivers: 0,
+        },
+      });
+      await queryRunner.manager.save(subscription);
 
-    return { user: userWithoutSensitive, ...tokens };
+      // 5. COMMIT (tout ou rien)
+      await queryRunner.commitTransaction();
+
+      // 6. Générer tokens
+      const tokens = await this.generateTokens(user);
+      await this.updateRefreshToken(user.id, tokens.refresh_token);
+
+      // 7. Retourner résultat sans données sensibles
+      const { password, refreshToken, ...userWithoutSensitive } = user;
+      return { user: userWithoutSensitive, ...tokens };
+
+    } catch (error) {
+      // 8. ROLLBACK en cas d'erreur
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async login(dto: LoginDto) {
@@ -239,5 +310,45 @@ export class AuthService {
       }
       throw error;
     }
+  }
+
+  async acceptInvitation(dto: { token: string; password: string; firstName: string; lastName: string }) {
+    const user = await this.userRepository.findOne({
+      where: { invitationToken: dto.token },
+    });
+
+    if (!user || !user.invitationExpiresAt || user.invitationExpiresAt < new Date()) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+
+    // Hasher le mot de passe
+    const hashedPassword = await bcrypt.hash(dto.password, 12);
+
+    // Activer et mettre à jour
+    user.password = hashedPassword;
+    user.firstName = dto.firstName;
+    user.lastName = dto.lastName;
+    user.isActive = true;
+    user.invitationToken = null;
+    user.invitationExpiresAt = null;
+
+    await this.userRepository.save(user);
+
+    return { message: 'Compte activé avec succès' };
+  }
+
+  async verifyInvitation(token: string): Promise<{ email: string; role: string }> {
+    const user = await this.userRepository.findOne({
+      where: { invitationToken: token },
+    });
+
+    if (!user || !user.invitationExpiresAt || user.invitationExpiresAt < new Date()) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+
+    return {
+      email: user.email,
+      role: user.role,
+    };
   }
 }

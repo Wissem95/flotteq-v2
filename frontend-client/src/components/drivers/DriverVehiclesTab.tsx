@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { driversService } from '@/api/services/drivers.service';
 import type { Driver } from '@/types/driver.types';
+import { AssignEntityModal } from '../common/AssignEntityModal';
 
 interface DriverVehiclesTabProps {
   driver: Driver;
@@ -9,10 +11,21 @@ interface DriverVehiclesTabProps {
 
 export default function DriverVehiclesTab({ driver }: DriverVehiclesTabProps) {
   const queryClient = useQueryClient();
+  const [showAssignModal, setShowAssignModal] = useState(false);
 
   const { data: vehicles, isLoading } = useQuery({
     queryKey: ['driver', driver.id, 'vehicles'],
     queryFn: () => driversService.getDriverVehicles(driver.id),
+  });
+
+  const assignMutation = useMutation({
+    mutationFn: (vehicleId: string) => driversService.assignVehicle(driver.id, { vehicleId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['driver', driver.id, 'vehicles'] });
+      queryClient.invalidateQueries({ queryKey: ['driver', driver.id] });
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+    },
   });
 
   const unassignMutation = useMutation({
@@ -24,6 +37,10 @@ export default function DriverVehiclesTab({ driver }: DriverVehiclesTabProps) {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
     },
   });
+
+  const handleAssignVehicle = (vehicleId: string) => {
+    assignMutation.mutate(vehicleId);
+  };
 
   if (isLoading) {
     return (
@@ -37,6 +54,18 @@ export default function DriverVehiclesTab({ driver }: DriverVehiclesTabProps) {
   if (!vehicles || vehicles.length === 0) {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-lg font-semibold text-gray-900">Véhicules assignés (0)</h3>
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="px-4 py-2 bg-flotteq-blue text-white rounded-md hover:bg-flotteq-navy transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Assigner un véhicule
+          </button>
+        </div>
         <div className="text-center py-12">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
@@ -44,16 +73,37 @@ export default function DriverVehiclesTab({ driver }: DriverVehiclesTabProps) {
           <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun véhicule assigné</h3>
           <p className="mt-1 text-sm text-gray-500">Ce conducteur n'a aucun véhicule assigné pour le moment</p>
         </div>
+
+        <AssignEntityModal
+          isOpen={showAssignModal}
+          onClose={() => setShowAssignModal(false)}
+          onAssign={handleAssignVehicle}
+          type="vehicle"
+          excludeIds={[]}
+        />
       </div>
     );
   }
 
+  const assignedVehicleIds = vehicles.map((v) => v.id);
+
   return (
     <div className="bg-white rounded-lg shadow">
       <div className="p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Véhicules assignés ({vehicles.length})
-        </h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Véhicules assignés ({vehicles.length})
+          </h3>
+          <button
+            onClick={() => setShowAssignModal(true)}
+            className="px-4 py-2 bg-flotteq-blue text-white rounded-md hover:bg-flotteq-navy transition-colors flex items-center gap-2"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Assigner un véhicule
+          </button>
+        </div>
 
         <div className="space-y-4">
           {vehicles.map((vehicle) => (
@@ -111,6 +161,20 @@ export default function DriverVehiclesTab({ driver }: DriverVehiclesTabProps) {
           Erreur lors de la désassignation du véhicule
         </div>
       )}
+
+      {assignMutation.isError && (
+        <div className="mx-6 mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          Erreur lors de l'assignation du véhicule
+        </div>
+      )}
+
+      <AssignEntityModal
+        isOpen={showAssignModal}
+        onClose={() => setShowAssignModal(false)}
+        onAssign={handleAssignVehicle}
+        type="vehicle"
+        excludeIds={assignedVehicleIds}
+      />
     </div>
   );
 }

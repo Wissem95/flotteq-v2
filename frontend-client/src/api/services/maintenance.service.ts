@@ -1,5 +1,5 @@
-import api from '../axios';
-import {
+import api from '@/config/api';
+import type {
   Maintenance,
   MaintenanceTemplate,
   MaintenanceAlert,

@@ -34,6 +34,17 @@ export class DashboardService {
     private userRepository: Repository<User>,
   ) {}
 
+  private getMaintenanceTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      'preventive': 'Maintenance préventive',
+      'corrective': 'Maintenance corrective',
+      'inspection': 'Contrôle technique',
+      'tire_change': 'Changement de pneus',
+      'oil_change': 'Vidange',
+    };
+    return labels[type] || type;
+  }
+
   async getOverview(tenantId: number): Promise<DashboardOverviewDto> {
     const [
       totalVehicles,
@@ -77,7 +88,7 @@ export class DashboardService {
       vehicles.length > 0
         ? vehicles.reduce(
             (sum, v) =>
-              sum + (currentYear - new Date(v.purchaseDate).getFullYear()),
+              sum + (currentYear - (v.purchaseDate ? new Date(v.purchaseDate).getFullYear() : currentYear)),
             0,
           ) / vehicles.length
         : 0;
@@ -296,8 +307,8 @@ export class DashboardService {
               : daysUntilExpiry <= 15
                 ? AlertSeverity.HIGH
                 : AlertSeverity.MEDIUM,
-          title: 'License Expiring Soon',
-          message: `${driver.firstName} ${driver.lastName}'s license expires in ${daysUntilExpiry} days`,
+          title: 'Permis expire bientôt',
+          message: `Le permis de ${driver.firstName} ${driver.lastName} expire dans ${daysUntilExpiry} jours`,
           entityId: driver.id,
           entityType: 'driver',
           dueDate: licenseExpiry,
@@ -322,8 +333,8 @@ export class DashboardService {
                 : daysUntilMedical <= 15
                   ? AlertSeverity.HIGH
                   : AlertSeverity.MEDIUM,
-            title: 'Medical Certificate Expiring',
-            message: `${driver.firstName} ${driver.lastName}'s medical certificate expires in ${daysUntilMedical} days`,
+            title: 'Certificat médical expire bientôt',
+            message: `Le certificat médical de ${driver.firstName} ${driver.lastName} expire dans ${daysUntilMedical} jours`,
             entityId: driver.id,
             entityType: 'driver',
             dueDate: medicalExpiry,
@@ -362,8 +373,8 @@ export class DashboardService {
             : daysUntil <= 7
               ? AlertSeverity.MEDIUM
               : AlertSeverity.LOW,
-        title: 'Maintenance Due Soon',
-        message: `${maintenance.type} for vehicle ${maintenance.vehicle?.registration || 'unknown'} scheduled in ${daysUntil} days`,
+        title: 'Maintenance programmée bientôt',
+        message: `${this.getMaintenanceTypeLabel(maintenance.type)} pour le véhicule ${maintenance.vehicle?.registration || 'inconnu'} programmée dans ${daysUntil} jours`,
         entityId: maintenance.id,
         entityType: 'maintenance',
         dueDate: scheduledDate,
@@ -509,8 +520,8 @@ export class DashboardService {
       totalUsers,
     ] = await Promise.all([
       this.tenantRepository.count(),
-      this.tenantRepository.count({ where: { status: In([TenantStatus.ACTIVE, TenantStatus.TRIAL]) } }),
-      this.tenantRepository.count({ where: { status: TenantStatus.TRIAL } }),
+      this.tenantRepository.count({ where: { status: TenantStatus.ACTIVE } }),
+      0, // Plus de période d'essai
       this.tenantRepository.count({ where: { status: TenantStatus.CANCELLED } }),
       this.vehicleRepository.count(),
       this.driverRepository.count(),
@@ -519,7 +530,7 @@ export class DashboardService {
 
     // Calculer MRR
     const activeSubscriptions = await this.subscriptionRepository.find({
-      where: { status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]) },
+      where: { status: SubscriptionStatus.ACTIVE },
       relations: ['plan'],
     });
 
@@ -563,7 +574,7 @@ export class DashboardService {
   async getInternalRevenue(): Promise<InternalRevenueDto> {
     // MRR actuel
     const activeSubscriptions = await this.subscriptionRepository.find({
-      where: { status: In([SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]) },
+      where: { status: SubscriptionStatus.ACTIVE },
       relations: ['plan'],
     });
 
@@ -631,8 +642,8 @@ export class DashboardService {
           '(sub.currentPeriodEnd IS NULL OR sub.currentPeriodEnd > :targetDate)',
           { targetDate },
         )
-        .andWhere('sub.status IN (:...statuses)', {
-          statuses: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING],
+        .andWhere('sub.status = :status', {
+          status: SubscriptionStatus.ACTIVE,
         })
         .getMany();
 
@@ -687,9 +698,7 @@ export class DashboardService {
     const activeSubscriptions = subscriptions.filter(
       (s) => s.status === SubscriptionStatus.ACTIVE,
     ).length;
-    const trialSubscriptions = subscriptions.filter(
-      (s) => s.status === SubscriptionStatus.TRIALING,
-    ).length;
+    const trialSubscriptions = 0; // Plus de période d'essai
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);

@@ -41,11 +41,13 @@ export class DriversController {
 
   @Get()
   findAll(
-    @Query('page', ParseIntPipe) page = 1,
-    @Query('limit', ParseIntPipe) limit = 10,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
     @Query('status') status?: DriverStatus,
   ) {
-    return this.driversService.findAll(page, limit, status);
+    const parsedPage = page ? parseInt(page, 10) : 1;
+    const parsedLimit = limit ? parseInt(limit, 10) : 10;
+    return this.driversService.findAll(parsedPage, parsedLimit, status);
   }
 
   @Get('available')

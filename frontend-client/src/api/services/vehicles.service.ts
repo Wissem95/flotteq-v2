@@ -11,6 +11,11 @@ import type {
 } from '../../types/vehicle.types';
 
 export const vehiclesService = {
+  async getAll(): Promise<Vehicle[]> {
+    const response = await api.get<VehicleListResponse>('/vehicles');
+    return response.data.data;
+  },
+
   async getVehicles(filters: VehicleFilters = {}): Promise<VehicleListResponse> {
     const params = new URLSearchParams();
     if (filters.page) params.append('page', filters.page.toString());
@@ -23,6 +28,10 @@ export const vehiclesService = {
 
     const response = await api.get(`/vehicles?${params.toString()}`);
     return response.data;
+  },
+
+  async getById(id: string): Promise<Vehicle> {
+    return this.getVehicleById(id);
   },
 
   async getVehicleById(id: string): Promise<Vehicle> {
@@ -57,5 +66,31 @@ export const vehiclesService = {
 
   async deleteVehicle(id: string): Promise<void> {
     await api.delete(`/vehicles/${id}`);
+  },
+
+  async uploadPhotos(vehicleId: string, files: File[]): Promise<Vehicle> {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('photos', file);
+    });
+
+    const response = await api.post(`/vehicles/${vehicleId}/photos`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+
+  async deletePhoto(vehicleId: string, photoUrl: string): Promise<Vehicle> {
+    const response = await api.delete(`/vehicles/${vehicleId}/photos`, {
+      data: { photoUrl },
+    });
+    return response.data;
+  },
+
+  async unassignDriver(vehicleId: string): Promise<Vehicle> {
+    const response = await api.delete(`/vehicles/${vehicleId}/driver`);
+    return response.data;
   },
 };

@@ -26,7 +26,10 @@ export class RegisterDto {
   lastName: string;
 
   @IsString()
-  @IsOptional()
-  @ApiProperty({ required: false, example: 'tenant-123', description: 'Tenant ID (optional)' })
-  tenantId?: string;
+  @ApiProperty({ example: 'My Company', description: 'Company name' })
+  companyName: string;
+
+  @IsString()
+  @ApiProperty({ example: 'price_123456789', description: 'Stripe plan ID' })
+  planId: string;
 }

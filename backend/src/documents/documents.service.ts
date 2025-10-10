@@ -1,7 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Document, DocumentEntityType } from '../entities/document.entity';
+import { Repository, MoreThan } from 'typeorm';
+import { Document, DocumentEntityType, DocumentType } from '../entities/document.entity';
+import { ExpiringDocumentDto } from './dto/expiring-document.dto';
+import { UploadDocumentDto } from './dto/upload-document.dto';
 
 @Injectable()
 export class DocumentsService {
@@ -16,6 +18,7 @@ export class DocumentsService {
     entityId: string,
     uploadedById: string,
     tenantId: number,
+    dto?: Partial<UploadDocumentDto>,
   ): Promise<Document> {
     const document = this.documentsRepository.create({
       fileName: file.originalname,
@@ -26,6 +29,9 @@ export class DocumentsService {
       entityId,
       uploadedById,
       tenantId,
+      documentType: dto?.documentType,
+      expiryDate: dto?.expiryDate ? new Date(dto.expiryDate) : undefined,
+      notes: dto?.notes,
     });
 
     return this.documentsRepository.save(document);
@@ -33,7 +39,7 @@ export class DocumentsService {
 
   async findAll(
     tenantId: number,
-    entityType?: DocumentEntityType,
+    entityType?: string,
     entityId?: string,
   ): Promise<Document[]> {
     const query = this.documentsRepository
@@ -81,5 +87,56 @@ export class DocumentsService {
       .getRawOne();
 
     return parseInt(result?.total || '0', 10);
+  }
+
+  /**
+   * Trouve les documents expirant bientôt
+   * @param tenantId ID du tenant
+   * @param days Nombre de jours avant expiration (défaut: 30)
+   * @returns Liste des documents avec calcul de l'urgence
+   */
+  async findExpiringSoon(
+    tenantId: number,
+    days: number = 30,
+  ): Promise<ExpiringDocumentDto[]> {
+    const today = new Date();
+    const futureDate = new Date();
+    futureDate.setDate(today.getDate() + days);
+
+    const documents = await this.documentsRepository
+      .createQueryBuilder('document')
+      .where('document.tenantId = :tenantId', { tenantId })
+      .andWhere('document.expiryDate IS NOT NULL')
+      .andWhere('document.expiryDate > :today', { today })
+      .andWhere('document.expiryDate <= :futureDate', { futureDate })
+      .andWhere('document.deletedAt IS NULL')
+      .orderBy('document.expiryDate', 'ASC')
+      .getMany();
+
+    return documents.map((doc) => {
+      const daysUntilExpiry = Math.ceil(
+        (doc.expiryDate!.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      let urgencyLevel: 'critical' | 'warning' | 'info';
+      if (daysUntilExpiry <= 7) {
+        urgencyLevel = 'critical';
+      } else if (daysUntilExpiry <= 15) {
+        urgencyLevel = 'warning';
+      } else {
+        urgencyLevel = 'info';
+      }
+
+      return {
+        id: doc.id,
+        fileName: doc.fileName,
+        documentType: doc.documentType!,
+        entityType: doc.entityType,
+        entityId: doc.entityId,
+        expiryDate: doc.expiryDate!,
+        daysUntilExpiry,
+        urgencyLevel,
+      };
+    });
   }
 }

@@ -10,9 +10,8 @@ export class TenantFactory {
     tenant.city = data.city || 'Paris';
     tenant.postalCode = data.postalCode || '75001';
     tenant.country = data.country || 'France';
-    tenant.status = data.status || TenantStatus.TRIAL;
-    tenant.subscriptionStatus = data.subscriptionStatus || 'trial';
-    tenant.trialEndsAt = data.trialEndsAt || new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
+    tenant.status = data.status || TenantStatus.ACTIVE;
+    tenant.subscriptionStatus = data.subscriptionStatus || 'active';
     return Object.assign(tenant, data);
   }
 }

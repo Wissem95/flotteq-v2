@@ -2,15 +2,17 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMaintenance, useUpdateMaintenance, useCreateMaintenance } from '../../hooks/useMaintenance';
 import { useVehicles } from '../../hooks/useVehicles';
-import { MaintenanceType, MaintenanceStatus, CreateMaintenanceDto, UpdateMaintenanceDto } from '../../types/maintenance.types';
+import { MaintenanceType, MaintenanceStatus } from '../../types/maintenance.types';
+import type { CreateMaintenanceDto, UpdateMaintenanceDto } from '../../types/maintenance.types';
 import { ArrowLeft, Save, AlertCircle } from 'lucide-react';
+import { ProtectedButton } from '@/components/common/ProtectedButton';
 
 export default function MaintenanceDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNew = id === 'new';
 
-  const { data: maintenance, isLoading } = useMaintenance(id || '');
+  const { data: maintenance, isLoading } = useMaintenance(id || '', { enabled: !isNew && !!id });
   const { data: vehicles = [] } = useVehicles();
   const updateMutation = useUpdateMaintenance();
   const createMutation = useCreateMaintenance();
@@ -34,8 +36,8 @@ export default function MaintenanceDetailPage() {
         type: maintenance.type,
         description: maintenance.description,
         scheduledDate: maintenance.scheduledDate.split('T')[0],
-        estimatedCost: maintenance.estimatedCost,
-        actualCost: maintenance.actualCost || undefined,
+        estimatedCost: Number(maintenance.estimatedCost) || 0,
+        actualCost: maintenance.actualCost ? Number(maintenance.actualCost) : undefined,
         status: maintenance.status,
         performedBy: maintenance.performedBy || '',
         nextMaintenanceKm: maintenance.nextMaintenanceKm || undefined,
@@ -64,17 +66,26 @@ export default function MaintenanceDetailPage() {
           type: formData.type,
           description: formData.description,
           scheduledDate: formData.scheduledDate,
-          estimatedCost: formData.estimatedCost,
-          actualCost: formData.actualCost,
+          estimatedCost: Number(formData.estimatedCost),
           status: formData.status,
-          performedBy: formData.performedBy || undefined,
-          nextMaintenanceKm: formData.nextMaintenanceKm,
         };
+
+        // Only add optional fields if they have values
+        if (formData.actualCost !== undefined && !isNaN(formData.actualCost)) {
+          dto.actualCost = Number(formData.actualCost);
+        }
+        if (formData.performedBy) dto.performedBy = formData.performedBy;
+        if (formData.nextMaintenanceKm !== undefined && !isNaN(formData.nextMaintenanceKm)) {
+          dto.nextMaintenanceKm = Number(formData.nextMaintenanceKm);
+        }
+
         await updateMutation.mutateAsync({ id: id!, dto });
       }
       navigate('/maintenances');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving maintenance:', error);
+      console.error('Error response:', error.response?.data);
+      alert(`Erreur: ${error.response?.data?.message || error.message}`);
     }
   };
 
@@ -117,7 +128,7 @@ export default function MaintenanceDetailPage() {
               onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
               required
               disabled={!isNew}
-              className="w-full rounded-lg border-gray-300 focus:border-flotteq-blue focus:ring-flotteq-blue disabled:bg-gray-100"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-flotteq-blue focus:border-flotteq-blue disabled:bg-gray-100 disabled:text-gray-500"
             >
               <option value="">Sélectionner un véhicule</option>
               {vehicles.map((vehicle) => (
@@ -137,7 +148,7 @@ export default function MaintenanceDetailPage() {
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as MaintenanceType })}
               required
-              className="w-full rounded-lg border-gray-300 focus:border-flotteq-blue focus:ring-flotteq-blue"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-flotteq-blue focus:border-flotteq-blue"
             >
               <option value={MaintenanceType.PREVENTIVE}>Préventive</option>
               <option value={MaintenanceType.CORRECTIVE}>Corrective</option>
@@ -205,8 +216,9 @@ export default function MaintenanceDetailPage() {
               <input
                 type="number"
                 step="0.01"
+                min="0"
                 value={formData.estimatedCost}
-                onChange={(e) => setFormData({ ...formData, estimatedCost: parseFloat(e.target.value) })}
+                onChange={(e) => setFormData({ ...formData, estimatedCost: parseFloat(e.target.value) || 0 })}
                 required
                 className="w-full rounded-lg border-gray-300 focus:border-flotteq-blue focus:ring-flotteq-blue"
               />
@@ -219,8 +231,9 @@ export default function MaintenanceDetailPage() {
               <input
                 type="number"
                 step="0.01"
-                value={formData.actualCost || ''}
-                onChange={(e) => setFormData({ ...formData, actualCost: e.target.value ? parseFloat(e.target.value) : undefined })}
+                min="0"
+                value={formData.actualCost ?? ''}
+                onChange={(e) => setFormData({ ...formData, actualCost: e.target.value ? (parseFloat(e.target.value) || 0) : undefined })}
                 className="w-full rounded-lg border-gray-300 focus:border-flotteq-blue focus:ring-flotteq-blue"
               />
               {costDifference !== 0 && (
@@ -290,14 +303,16 @@ export default function MaintenanceDetailPage() {
           >
             Annuler
           </button>
-          <button
+          <ProtectedButton
             type="submit"
             disabled={createMutation.isPending || updateMutation.isPending}
+            permission={isNew ? "maintenances.create" : "maintenances.update"}
+            disabledMessage={isNew ? "Seuls les managers peuvent créer des maintenances" : "Seuls les managers peuvent modifier des maintenances"}
             className="flex items-center gap-2 px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
           >
             <Save className="h-5 w-5" />
             {createMutation.isPending || updateMutation.isPending ? 'Enregistrement...' : 'Enregistrer'}
-          </button>
+          </ProtectedButton>
         </div>
       </form>
     </div>

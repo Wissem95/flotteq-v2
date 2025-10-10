@@ -1,15 +1,18 @@
-import { IsEnum, IsUUID, IsOptional } from 'class-validator';
+import { IsEnum, IsUUID, IsOptional, IsString } from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { DocumentEntityType } from '../../entities/document.entity';
 
 export class QueryDocumentsDto {
-  @ApiPropertyOptional({ enum: DocumentEntityType })
+  @ApiPropertyOptional({
+    enum: DocumentEntityType,
+    description: 'Type d\'entité (vehicle, driver, maintenance)'
+  })
   @IsOptional()
-  @IsEnum(DocumentEntityType)
-  entityType?: DocumentEntityType;
+  @IsString()
+  entityType?: string;
 
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
-  @IsUUID()
+  @IsString()
   entityId?: string;
 }

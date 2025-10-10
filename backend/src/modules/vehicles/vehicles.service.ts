@@ -10,7 +10,7 @@ import * as fs from 'fs/promises';
 import * as path from 'path';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Vehicle } from '../../entities/vehicle.entity';
+import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Document, DocumentEntityType } from '../../entities/document.entity';
 import { Maintenance, MaintenanceStatus } from '../maintenance/entities/maintenance.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
@@ -39,6 +39,17 @@ export class VehiclesService {
     @InjectRepository(Maintenance)
     private readonly maintenanceRepository: Repository<Maintenance>,
   ) {}
+
+  private getMaintenanceTypeLabel(type: string): string {
+    const labels: Record<string, string> = {
+      'preventive': 'Maintenance préventive',
+      'corrective': 'Maintenance corrective',
+      'inspection': 'Contrôle technique',
+      'tire_change': 'Changement de pneus',
+      'oil_change': 'Vidange',
+    };
+    return labels[type] || type;
+  }
 
   async create(
     createVehicleDto: CreateVehicleDto,
@@ -85,14 +96,18 @@ export class VehiclesService {
 
   async findAll(
     queryDto: QueryVehicleDto,
-    tenantId: number,
+    tenantId: number | null,
   ): Promise<{ data: Vehicle[]; total: number; page: number; limit: number }> {
     const { page = 1, limit = 10, ...filters } = queryDto;
     const skip = (page - 1) * limit;
 
     const queryBuilder = this.vehicleRepository
-      .createQueryBuilder('vehicle')
-      .where('vehicle.tenantId = :tenantId', { tenantId });
+      .createQueryBuilder('vehicle');
+
+    // Filtrer par tenant uniquement si tenantId est fourni (non super_admin)
+    if (tenantId !== null) {
+      queryBuilder.where('vehicle.tenantId = :tenantId', { tenantId });
+    }
 
     // Appliquer les filtres
     if (filters.status) {
@@ -144,6 +159,7 @@ export class VehiclesService {
   async findOne(id: string, tenantId: number): Promise<Vehicle> {
     const vehicle = await this.vehicleRepository.findOne({
       where: { id, tenantId },
+      relations: ['assignedDriver'],
     });
 
     if (!vehicle) {
@@ -202,10 +218,46 @@ export class VehiclesService {
     return updatedVehicle;
   }
 
+  async unassignDriver(vehicleId: string, tenantId: number): Promise<Vehicle> {
+    // Charger le véhicule avec un refresh depuis la DB
+    const vehicle = await this.vehicleRepository.findOne({
+      where: { id: vehicleId, tenantId },
+    });
+
+    if (!vehicle) {
+      throw new NotFoundException(`Vehicle with ID ${vehicleId} not found`);
+    }
+
+    if (!vehicle.assignedDriverId) {
+      throw new BadRequestException('Vehicle has no assigned driver');
+    }
+
+    // Mise à jour directe via query builder pour éviter le cache TypeORM
+    await this.vehicleRepository
+      .createQueryBuilder()
+      .update(Vehicle)
+      .set({
+        assignedDriverId: null,
+        status: VehicleStatus.AVAILABLE
+      })
+      .where('id = :id', { id: vehicleId })
+      .andWhere('tenantId = :tenantId', { tenantId })
+      .execute();
+
+    this.logger.log(`Driver unassigned from vehicle ${vehicleId}`);
+
+    // Recharger le véhicule depuis la DB avec un refresh
+    const updatedVehicle = await this.vehicleRepository.findOne({
+      where: { id: vehicleId, tenantId },
+    });
+
+    return updatedVehicle!;
+  }
+
   async remove(id: string, tenantId: number): Promise<void> {
     const vehicle = await this.findOne(id, tenantId);
-    await this.vehicleRepository.remove(vehicle);
-    this.logger.log(`Vehicle ${id} deleted for tenant ${tenantId}`);
+    await this.vehicleRepository.softRemove(vehicle);
+    this.logger.log(`Vehicle ${id} soft deleted for tenant ${tenantId}`);
   }
 
   async count(tenantId: number): Promise<number> {
@@ -282,7 +334,7 @@ export class VehiclesService {
       timelineItems.push({
         type: TimelineItemType.MAINTENANCE,
         date: m.scheduledDate,
-        description: `Maintenance ${m.type}: ${m.description}`,
+        description: `${this.getMaintenanceTypeLabel(m.type)}: ${m.description}`,
         metadata: {
           maintenanceId: m.id,
           type: m.type,
@@ -329,8 +381,17 @@ export class VehiclesService {
       },
     });
 
-    // Trier par date décroissante
-    timelineItems.sort((a, b) => b.date.getTime() - a.date.getTime());
+    // Trier par date décroissante (conversion sécurisée en Date)
+    timelineItems.sort((a, b) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+
+      // Protection contre les dates invalides (NaN)
+      if (isNaN(dateA)) return 1;  // Mettre à la fin
+      if (isNaN(dateB)) return -1; // Mettre à la fin
+
+      return dateB - dateA;
+    });
 
     // Limiter le nombre d'items
     const limitedItems = timelineItems.slice(0, limit);
@@ -389,7 +450,7 @@ export class VehiclesService {
     const costsByType = Array.from(costsByTypeMap.values());
 
     // Coût total de possession
-    const purchasePrice = parseFloat(vehicle.purchasePrice.toString());
+    const purchasePrice = vehicle.purchasePrice ? parseFloat(vehicle.purchasePrice.toString()) : 0;
     const totalOwnershipCost = purchasePrice + totalMaintenanceCost;
 
     // Coût par kilomètre

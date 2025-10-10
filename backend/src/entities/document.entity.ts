@@ -18,6 +18,16 @@ export enum DocumentEntityType {
   MAINTENANCE = 'maintenance',
 }
 
+export enum DocumentType {
+  PERMIS = 'permis',
+  CARTE_GRISE = 'carte_grise',
+  ASSURANCE = 'assurance',
+  CONTROLE_TECHNIQUE = 'controle_technique',
+  FACTURE = 'facture',
+  CONTRAT = 'contrat',
+  AUTRE = 'autre',
+}
+
 @Entity('documents')
 export class Document {
   @ApiProperty({ format: 'uuid', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
@@ -58,6 +68,23 @@ export class Document {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'uploaded_by_id' })
   uploadedBy: User;
+
+  @ApiPropertyOptional({ enum: DocumentType, example: 'permis' })
+  @Column({
+    name: 'document_type',
+    type: 'enum',
+    enum: DocumentType,
+    nullable: true,
+  })
+  documentType?: DocumentType;
+
+  @ApiPropertyOptional({ example: '2025-12-31T00:00:00Z', description: 'Date d\'expiration du document' })
+  @Column({ name: 'expiry_date', type: 'timestamp', nullable: true })
+  expiryDate?: Date;
+
+  @ApiPropertyOptional({ example: 'Document renouvelé suite à contrôle', description: 'Notes optionnelles' })
+  @Column({ name: 'notes', type: 'text', nullable: true })
+  notes?: string;
 
   @ApiProperty()
   @Column({ name: 'tenant_id' })

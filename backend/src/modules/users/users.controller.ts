@@ -13,6 +13,7 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -32,6 +33,16 @@ export class UsersController {
   @CheckLimit('users')
   create(@Body() createUserDto: CreateUserDto, @CurrentUser() currentUser: User) {
     return this.usersService.create(createUserDto, currentUser);
+  }
+
+  @Post('invite')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
+  async invite(
+    @Body() inviteUserDto: InviteUserDto,
+    @CurrentUser() currentUser: User,
+  ): Promise<{ invitationLink: string; token: string }> {
+    return this.usersService.generateInvitation(inviteUserDto, currentUser);
   }
 
   @Get()
@@ -103,5 +114,19 @@ export class UsersController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
   remove(@Param('id') id: string, @CurrentUser() currentUser: User) {
     return this.usersService.remove(id, currentUser);
+  }
+
+  @Patch(':id/deactivate')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
+  async deactivate(@Param('id') id: string, @CurrentUser() currentUser: User): Promise<User> {
+    return this.usersService.deactivate(id, currentUser);
+  }
+
+  @Patch(':id/activate')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
+  async activate(@Param('id') id: string, @CurrentUser() currentUser: User): Promise<User> {
+    return this.usersService.activate(id, currentUser);
   }
 }

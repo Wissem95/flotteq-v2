@@ -1,16 +1,8 @@
-import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { memoryStorage } from 'multer';
 import { BadRequestException } from '@nestjs/common';
 
 export const multerConfig = {
-  storage: diskStorage({
-    destination: './uploads/vehicles',
-    filename: (req, file, callback) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const ext = extname(file.originalname);
-      callback(null, `vehicle-${uniqueSuffix}${ext}`);
-    },
-  }),
+  storage: memoryStorage(),
   fileFilter: (req: any, file: any, callback: any) => {
     // Accepter uniquement les images
     if (!file.mimetype.match(/\/(jpg|jpeg|png|webp)$/)) {
@@ -24,6 +16,7 @@ export const multerConfig = {
     callback(null, true);
   },
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB
+    fileSize: 5 * 1024 * 1024, // 5MB par fichier
+    files: 10, // Max 10 fichiers simultanés
   },
 };

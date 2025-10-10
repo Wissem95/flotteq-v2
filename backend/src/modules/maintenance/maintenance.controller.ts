@@ -19,10 +19,13 @@ import { UpdateMaintenanceTemplateDto } from './dto/update-template.dto';
 import { CreateMaintenanceFromTemplateDto } from './dto/create-from-template.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../entities/user.entity';
 
 @ApiTags('Maintenance')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 @Controller('maintenance')
 export class MaintenanceController {
   constructor(
@@ -31,8 +34,10 @@ export class MaintenanceController {
   ) {}
 
   @Post()
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Create a new maintenance' })
   @ApiResponse({ status: 201, description: 'Maintenance created successfully' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   create(
     @Body() createMaintenanceDto: CreateMaintenanceDto,
     @TenantId() tenantId: number,
@@ -100,9 +105,11 @@ export class MaintenanceController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Update a maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance updated successfully' })
   @ApiResponse({ status: 404, description: 'Maintenance not found' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   update(
     @Param('id') id: string,
     @Body() updateMaintenanceDto: UpdateMaintenanceDto,
@@ -112,9 +119,11 @@ export class MaintenanceController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Delete a maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance deleted successfully' })
   @ApiResponse({ status: 404, description: 'Maintenance not found' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   remove(@Param('id') id: string, @TenantId() tenantId: number) {
     return this.maintenanceService.remove(id, tenantId);
   }
@@ -122,8 +131,10 @@ export class MaintenanceController {
   // ========== TEMPLATES ENDPOINTS ==========
 
   @Post('templates')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Create a maintenance template' })
   @ApiResponse({ status: 201, description: 'Template created successfully' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   createTemplate(
     @Body() createTemplateDto: CreateMaintenanceTemplateDto,
     @TenantId() tenantId: number,
@@ -147,9 +158,11 @@ export class MaintenanceController {
   }
 
   @Patch('templates/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Update a template' })
   @ApiResponse({ status: 200, description: 'Template updated successfully' })
   @ApiResponse({ status: 404, description: 'Template not found' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   updateTemplate(
     @Param('id') id: string,
     @Body() updateTemplateDto: UpdateMaintenanceTemplateDto,
@@ -159,17 +172,21 @@ export class MaintenanceController {
   }
 
   @Delete('templates/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Delete a template' })
   @ApiResponse({ status: 200, description: 'Template deleted successfully' })
   @ApiResponse({ status: 404, description: 'Template not found' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   removeTemplate(@Param('id') id: string, @TenantId() tenantId: number) {
     return this.templateService.remove(id, tenantId);
   }
 
   @Post('from-template/:templateId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Create maintenance from template' })
   @ApiResponse({ status: 201, description: 'Maintenance created from template' })
   @ApiResponse({ status: 404, description: 'Template not found' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   createFromTemplate(
     @Param('templateId') templateId: string,
     @Body() createDto: CreateMaintenanceFromTemplateDto,

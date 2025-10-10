@@ -4,6 +4,7 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  DeleteDateColumn,
   ManyToOne,
   JoinColumn,
   BeforeInsert,
@@ -73,11 +74,20 @@ export class User {
   @Column({ nullable: true, name: 'reset_password_expires' })
   resetPasswordExpires: Date;
 
+  @Column({ type: 'varchar', nullable: true, name: 'invitation_token' })
+  invitationToken: string | null;
+
+  @Column({ type: 'timestamp', nullable: true, name: 'invitation_expires_at' })
+  invitationExpiresAt: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
+
+  @DeleteDateColumn({ name: 'deleted_at' })
+  deletedAt?: Date;
 
   @BeforeInsert()
   @BeforeUpdate()

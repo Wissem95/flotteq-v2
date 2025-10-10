@@ -44,14 +44,13 @@ export class StripeService {
   }
 
   /**
-   * Créer une subscription avec période d'essai de 14 jours
+   * Créer une subscription active immédiatement
    */
   async createSubscription(customerId: string, priceId: string): Promise<Stripe.Subscription> {
     try {
       const subscription = await this.stripe.subscriptions.create({
         customer: customerId,
         items: [{ price: priceId }],
-        trial_period_days: this.config.trialDays,
         payment_behavior: 'default_incomplete',
         payment_settings: {
           save_default_payment_method: 'on_subscription',
@@ -111,25 +110,10 @@ export class StripeService {
   }
 
   /**
-   * Vérifier si un tenant est en période d'essai
-   */
-  isTrial(tenant: Tenant): boolean {
-    if (tenant.subscriptionStatus !== 'trial') {
-      return false;
-    }
-
-    if (!tenant.trialEndsAt) {
-      return false;
-    }
-
-    return new Date() < new Date(tenant.trialEndsAt);
-  }
-
-  /**
    * Vérifier si un tenant a un abonnement actif
    */
   isActive(tenant: Tenant): boolean {
-    return tenant.subscriptionStatus === 'active' || this.isTrial(tenant);
+    return tenant.subscriptionStatus === 'active';
   }
 
   /**
@@ -173,10 +157,6 @@ export class StripeService {
           await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
           break;
 
-        case 'customer.subscription.trial_will_end':
-          await this.handleTrialWillEnd(event.data.object as Stripe.Subscription);
-          break;
-
         default:
           this.logger.log(`Unhandled event type: ${event.type}`);
       }
@@ -198,10 +178,6 @@ export class StripeService {
     tenant.stripeSubscriptionId = subscription.id;
     tenant.subscriptionStatus = subscription.status as any;
     tenant.subscriptionStartedAt = new Date(subscription.created * 1000);
-
-    if (subscription.trial_end) {
-      tenant.trialEndsAt = new Date(subscription.trial_end * 1000);
-    }
 
     await this.tenantRepository.save(tenant);
     this.logger.log(`Subscription created for tenant ${tenant.id}`);
@@ -269,18 +245,6 @@ export class StripeService {
     tenant.subscriptionStatus = 'past_due';
     await this.tenantRepository.save(tenant);
     this.logger.log(`Payment failed for tenant ${tenant.id}, status set to past_due`);
-  }
-
-  private async handleTrialWillEnd(subscription: Stripe.Subscription): Promise<void> {
-    const tenant = await this.findTenantBySubscriptionId(subscription.id);
-
-    if (!tenant) {
-      this.logger.warn(`Tenant not found for subscription ${subscription.id}`);
-      return;
-    }
-
-    this.logger.log(`Trial will end for tenant ${tenant.id} on ${new Date(subscription.trial_end! * 1000)}`);
-    // Here you could send a notification email to the tenant
   }
 
   private async findTenantByCustomerId(customerId: string): Promise<Tenant | null> {

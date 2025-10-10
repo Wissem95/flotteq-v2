@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import TenantLayout from './layouts/TenantLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
+import AcceptInvitationPage from './pages/auth/AcceptInvitationPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import OnboardingPage from './pages/onboarding/OnboardingPage';
@@ -16,6 +17,8 @@ import MaintenancesListPage from './pages/maintenance/MaintenancesListPage';
 import MaintenanceDetailPage from './pages/maintenance/MaintenanceDetailPage';
 import MaintenanceCalendarPage from './pages/maintenance/MaintenanceCalendarPage';
 import MaintenanceCalendarDnDPage from './pages/maintenance/MaintenanceCalendarDnDPage';
+import { DocumentsPage } from './pages/documents/DocumentsPage';
+import { UsersPage } from './pages/users/UsersPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +38,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
             {/* Onboarding route (protected but standalone) */}
@@ -66,6 +70,8 @@ function App() {
               <Route path="maintenances/:id" element={<MaintenanceDetailPage />} />
               <Route path="maintenances/calendar" element={<MaintenanceCalendarPage />} />
               <Route path="maintenances/calendar-interactive" element={<MaintenanceCalendarDnDPage />} />
+              <Route path="documents" element={<DocumentsPage />} />
+              <Route path="users" element={<UsersPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

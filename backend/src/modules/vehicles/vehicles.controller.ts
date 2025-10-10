@@ -11,6 +11,7 @@ import {
   ParseUUIDPipe,
   UseInterceptors,
   UploadedFiles,
+  Req,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import {
@@ -30,11 +31,14 @@ import { TenantGuard } from '../../core/tenant/tenant.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
 import { SubscriptionLimitGuard, CheckLimit } from '../../common/guards/subscription-limit.guard';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
+import { RolesGuard } from '../../common/guards/roles.guard';
+import { Roles } from '../../common/decorators/roles.decorator';
+import { UserRole } from '../../entities/user.entity';
 
 @ApiTags('vehicles')
 @ApiBearerAuth()
 @Controller('vehicles')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
 export class VehiclesController {
   constructor(
     private readonly vehiclesService: VehiclesService,
@@ -42,6 +46,7 @@ export class VehiclesController {
   ) {}
 
   @Post()
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('vehicles')
   @ApiOperation({ summary: 'Créer un nouveau véhicule' })
@@ -50,7 +55,7 @@ export class VehiclesController {
     description: 'Le véhicule a été créé avec succès.',
   })
   @ApiResponse({ status: 409, description: 'Véhicule déjà existant.' })
-  @ApiResponse({ status: 403, description: 'Limite de véhicules atteinte pour votre plan.' })
+  @ApiResponse({ status: 403, description: 'Limite de véhicules atteinte pour votre plan ou rôle insuffisant.' })
   async create(
     @Body() createVehicleDto: CreateVehicleDto,
     @TenantId() tenantId: number,
@@ -67,8 +72,11 @@ export class VehiclesController {
     status: 200,
     description: 'Liste des véhicules récupérée avec succès.',
   })
-  findAll(@Query() query: QueryVehicleDto, @TenantId() tenantId: number) {
-    return this.vehiclesService.findAll(query, tenantId);
+  findAll(@Query() query: QueryVehicleDto, @TenantId() tenantId: number, @Req() req: any) {
+    // Si super_admin, ignorer le filtre tenant (voir tous les véhicules)
+    const userRole = req.user?.role;
+    const isSuperAdmin = ['super_admin', 'support'].includes(userRole);
+    return this.vehiclesService.findAll(query, isSuperAdmin ? null : tenantId);
   }
 
   @Get('stats')
@@ -115,6 +123,7 @@ export class VehiclesController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Mettre à jour un véhicule' })
   @ApiResponse({
     status: 200,
@@ -122,6 +131,7 @@ export class VehiclesController {
   })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
   @ApiResponse({ status: 409, description: 'Conflit avec un véhicule existant.' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateVehicleDto: UpdateVehicleDto,
@@ -130,13 +140,29 @@ export class VehiclesController {
     return this.vehiclesService.update(id, updateVehicleDto, tenantId);
   }
 
+  @Delete(':id/driver')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @ApiOperation({ summary: 'Désassigner le conducteur d\'un véhicule' })
+  @ApiResponse({ status: 200, description: 'Conducteur désassigné avec succès.' })
+  @ApiResponse({ status: 400, description: 'Aucun conducteur assigné.' })
+  @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
+  unassignDriver(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.unassignDriver(id, tenantId);
+  }
+
   @Post(':id/photos')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @UseInterceptors(FilesInterceptor('photos', 10, multerConfig))
   @ApiOperation({ summary: 'Upload de photos pour un véhicule (max 10)' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: 'Photos uploadées avec succès.' })
   @ApiResponse({ status: 400, description: 'Fichiers invalides ou limite dépassée.' })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
   async uploadPhotos(
     @Param('id', ParseUUIDPipe) id: string,
     @UploadedFiles() files: Express.Multer.File[],
@@ -146,9 +172,11 @@ export class VehiclesController {
   }
 
   @Delete(':id/photos')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Supprimer une photo d\'un véhicule' })
   @ApiResponse({ status: 200, description: 'Photo supprimée avec succès.' })
   @ApiResponse({ status: 404, description: 'Véhicule ou photo non trouvé.' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
   async deletePhoto(
     @Param('id', ParseUUIDPipe) id: string,
     @Body('photoUrl') photoUrl: string,
@@ -158,12 +186,14 @@ export class VehiclesController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Supprimer un véhicule' })
   @ApiResponse({
     status: 200,
     description: 'Le véhicule a été supprimé avec succès.',
   })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: number,

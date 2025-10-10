@@ -5,6 +5,7 @@ import { MaintenanceType, MaintenanceStatus } from '../../types/maintenance.type
 import { format } from 'date-fns';
 import { Plus, Trash2, Edit, Wrench, AlertCircle, FileDown } from 'lucide-react';
 import { exportMaintenancesToPDF } from '../../utils/pdfExport';
+import { ProtectedButton } from '@/components/common/ProtectedButton';
 
 export default function MaintenancesListPage() {
   const navigate = useNavigate();
@@ -94,20 +95,24 @@ export default function MaintenancesListPage() {
           <p className="text-gray-500 mt-1">Gérez les maintenances de votre flotte</p>
         </div>
         <div className="flex gap-3">
-          <button
+          <ProtectedButton
+            permission="maintenances.export"
+            disabledMessage="Vous n'avez pas la permission d'exporter les maintenances"
             onClick={() => exportMaintenancesToPDF(filteredMaintenances)}
             className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
           >
             <FileDown className="h-5 w-5" />
             Exporter PDF
-          </button>
-          <button
+          </ProtectedButton>
+          <ProtectedButton
+            permission="maintenances.create"
+            disabledMessage="Vous n'avez pas la permission de créer des maintenances"
             onClick={() => navigate('/maintenances/new')}
             className="flex items-center gap-2 px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Plus className="h-5 w-5" />
             Nouvelle maintenance
-          </button>
+          </ProtectedButton>
         </div>
       </div>
 
@@ -212,11 +217,11 @@ export default function MaintenancesListPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm font-medium text-gray-900">
-                        {maintenance.estimatedCost.toFixed(2)} €
+                        {maintenance.estimatedCost ? Number(maintenance.estimatedCost).toFixed(2) : '0.00'} €
                       </span>
                       {maintenance.actualCost && (
                         <div className="text-xs text-gray-500">
-                          Réel: {maintenance.actualCost.toFixed(2)} €
+                          Réel: {Number(maintenance.actualCost).toFixed(2)} €
                         </div>
                       )}
                     </td>
@@ -227,7 +232,9 @@ export default function MaintenancesListPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end gap-2">
-                        <button
+                        <ProtectedButton
+                          permission="maintenances.update"
+                          disabledMessage="Vous n'avez pas la permission de modifier les maintenances"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/maintenances/${maintenance.id}`);
@@ -235,8 +242,10 @@ export default function MaintenancesListPage() {
                           className="text-flotteq-blue hover:text-blue-700"
                         >
                           <Edit className="h-4 w-4" />
-                        </button>
-                        <button
+                        </ProtectedButton>
+                        <ProtectedButton
+                          permission="maintenances.delete"
+                          disabledMessage="Vous n'avez pas la permission de supprimer les maintenances"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleDelete(maintenance.id);
@@ -244,7 +253,7 @@ export default function MaintenancesListPage() {
                           className="text-red-600 hover:text-red-800"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </ProtectedButton>
                       </div>
                     </td>
                   </tr>

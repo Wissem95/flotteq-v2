@@ -21,9 +21,8 @@ export const TENANT_TRANSPORT_EXPRESS: Partial<Tenant> = {
   city: 'Lyon',
   postalCode: '69002',
   country: 'France',
-  status: TenantStatus.TRIAL,
-  subscriptionStatus: 'trial',
-  trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+  status: TenantStatus.ACTIVE,
+  subscriptionStatus: 'active',
 };
 
 export const TENANT_LOGISTRANS: Partial<Tenant> = {

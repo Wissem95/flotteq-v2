@@ -1,5 +1,5 @@
-import { Controller, Post, Get, Body, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Body, UseGuards, Request, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './services/auth.service';
@@ -8,6 +8,7 @@ import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { AcceptInvitationDto } from './dto/accept-invitation.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -86,5 +87,24 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Token invalide ou expiré' })
   async resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto.token, dto.newPassword);
+  }
+
+  @Public()
+  @Post('accept-invitation')
+  @ApiOperation({ summary: 'Accepter une invitation et activer le compte' })
+  @ApiResponse({ status: 200, description: 'Compte activé avec succès' })
+  @ApiResponse({ status: 400, description: 'Token invalide ou expiré' })
+  async acceptInvitation(@Body() dto: AcceptInvitationDto) {
+    return this.authService.acceptInvitation(dto);
+  }
+
+  @Public()
+  @Get('verify-invitation')
+  @ApiOperation({ summary: 'Vérifier un token d\'invitation et récupérer l\'email' })
+  @ApiQuery({ name: 'token', required: true, type: String })
+  @ApiResponse({ status: 200, description: 'Token valide, informations retournées' })
+  @ApiResponse({ status: 400, description: 'Token invalide ou expiré' })
+  async verifyInvitation(@Query('token') token: string) {
+    return this.authService.verifyInvitation(token);
   }
 }

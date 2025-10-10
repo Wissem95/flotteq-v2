@@ -6,9 +6,11 @@ import {
   Car,
   Users,
   Wrench,
+  FileText,
   LogOut,
   Menu,
   X,
+  UserCog,
 } from 'lucide-react';
 
 interface TenantLayoutProps {
@@ -21,7 +23,12 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const menuItems = [
+  const menuItems: Array<{
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    path: string;
+    disabled?: boolean;
+  }> = [
     {
       icon: LayoutDashboard,
       label: 'Tableau de bord',
@@ -42,6 +49,16 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
       label: 'Maintenances',
       path: '/maintenances',
     },
+    {
+      icon: FileText,
+      label: 'Documents',
+      path: '/documents',
+    },
+    {
+      icon: UserCog,
+      label: 'Utilisateurs',
+      path: '/users',
+    },
   ];
 
   const handleLogout = async () => {
@@ -55,29 +72,29 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
       <aside
         className={`${
           isSidebarOpen ? 'w-64' : 'w-20'
-        } bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}
+        } flotteq-gradient flex flex-col transition-all duration-300 shadow-xl`}
       >
         {/* Logo & Toggle */}
-        <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div className="p-6 border-b border-white/20 flex items-center justify-between">
           {isSidebarOpen ? (
             <>
               <div>
-                <h1 className="text-2xl font-bold text-flotteq-blue">FlotteQ</h1>
-                <p className="text-sm text-gray-500">Gestion de flotte</p>
+                <h1 className="text-2xl font-bold text-white">FlotteQ</h1>
+                <p className="text-sm text-white/80">Gestion de flotte</p>
               </div>
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-1 hover:bg-gray-100 rounded-lg"
+                className="p-1 hover:bg-white/10 rounded-lg transition-colors"
               >
-                <X className="h-5 w-5 text-gray-500" />
+                <X className="h-5 w-5 text-white" />
               </button>
             </>
           ) : (
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="p-1 hover:bg-gray-100 rounded-lg mx-auto"
+              className="p-1 hover:bg-white/10 rounded-lg mx-auto transition-colors"
             >
-              <Menu className="h-5 w-5 text-gray-500" />
+              <Menu className="h-5 w-5 text-white" />
             </button>
           )}
         </div>
@@ -95,10 +112,10 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
                 disabled={item.disabled}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
                   isActive
-                    ? 'bg-flotteq-blue text-white'
+                    ? 'bg-white/20 text-white font-semibold'
                     : item.disabled
-                      ? 'text-gray-400 cursor-not-allowed'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      ? 'text-white/40 cursor-not-allowed'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`}
                 title={!isSidebarOpen ? item.label : ''}
               >
@@ -110,33 +127,33 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
         </nav>
 
         {/* User Section */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-white/20">
           {isSidebarOpen ? (
             <div className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-flotteq-blue text-white flex items-center justify-center font-semibold">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-white/20 text-white flex items-center justify-center font-semibold">
                 {user?.firstName?.[0]}{user?.lastName?.[0]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className="text-sm font-medium text-white truncate">
                   {user?.firstName} {user?.lastName}
                 </p>
-                <p className="text-xs text-gray-500 truncate">{user?.email}</p>
+                <p className="text-xs text-white/70 truncate">{user?.email}</p>
               </div>
               <button
                 onClick={handleLogout}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
                 title="Déconnexion"
               >
-                <LogOut className="h-4 w-4 text-gray-500" />
+                <LogOut className="h-4 w-4 text-white" />
               </button>
             </div>
           ) : (
             <button
               onClick={handleLogout}
-              className="w-full p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="w-full p-2 hover:bg-white/10 rounded-lg transition-colors"
               title="Déconnexion"
             >
-              <LogOut className="h-5 w-5 text-gray-500 mx-auto" />
+              <LogOut className="h-5 w-5 text-white mx-auto" />
             </button>
           )}
         </div>

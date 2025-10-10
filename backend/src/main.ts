@@ -3,19 +3,21 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import helmet from 'helmet';
 import * as compression from 'compression';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
 
   // Enable DI for class-validator (custom validators)
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const port = configService.get('PORT', 3000);
-  const corsOrigin = configService.get('CORS_ORIGIN', 'http://localhost:5173,http://localhost:5174');
+  const corsOrigin = configService.get('CORS_ORIGIN', 'http://localhost:5173,http://localhost:5174,http://localhost:5175');
 
   // Security
   app.use(helmet());
@@ -25,6 +27,8 @@ async function bootstrap() {
   app.enableCors({
     origin: corsOrigin.split(','),
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
   });
 
   // Global validation pipe
@@ -35,6 +39,11 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Servir les fichiers statiques du dossier uploads
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   // Global prefix
   app.setGlobalPrefix('api');

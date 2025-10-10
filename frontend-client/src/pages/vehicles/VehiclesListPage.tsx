@@ -4,6 +4,7 @@ import { vehiclesService } from '../../api/services/vehicles.service';
 import VehicleCard from '../../components/vehicles/VehicleCard';
 import VehicleFilters from '../../components/vehicles/VehicleFilters';
 import AddVehicleModal from '../../components/vehicles/AddVehicleModal';
+import { ProtectedButton } from '../../components/common/ProtectedButton';
 import type { VehicleFilters as VehicleFiltersType } from '../../types/vehicle.types';
 
 export default function VehiclesListPage() {
@@ -43,12 +44,14 @@ export default function VehiclesListPage() {
             {data?.total || 0} véhicule{data && data.total > 1 ? 's' : ''}
           </p>
         </div>
-        <button
+        <ProtectedButton
+          permission="vehicles.create"
           onClick={() => setIsModalOpen(true)}
           className="bg-flotteq-blue text-white px-6 py-2 rounded-md hover:bg-flotteq-navy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-flotteq-blue"
+          disabledMessage="Seuls les managers et admins peuvent ajouter des véhicules"
         >
           + Ajouter un véhicule
-        </button>
+        </ProtectedButton>
       </div>
 
       <AddVehicleModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
