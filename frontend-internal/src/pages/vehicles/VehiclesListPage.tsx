@@ -84,7 +84,7 @@ export const VehiclesListPage = () => {
                 <TableHead>Année</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>KM Actuel</TableHead>
-                <TableHead>Tenant ID</TableHead>
+                <TableHead>Tenant</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -103,7 +103,12 @@ export const VehiclesListPage = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>{vehicle.currentKm.toLocaleString()} km</TableCell>
-                  <TableCell>{vehicle.tenantId}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{vehicle.tenant?.name || 'N/A'}</span>
+                      <span className="text-xs text-muted-foreground">ID: {vehicle.tenantId}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"

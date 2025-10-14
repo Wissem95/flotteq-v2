@@ -60,6 +60,7 @@ export const RecentTenantsList = ({ tenants }: RecentTenantsListProps) => {
               <TableHead>Nom</TableHead>
               <TableHead>Plan</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Utilisateurs</TableHead>
               <TableHead>Véhicules</TableHead>
               <TableHead>Inscrit depuis</TableHead>
             </TableRow>
@@ -86,6 +87,7 @@ export const RecentTenantsList = ({ tenants }: RecentTenantsListProps) => {
                     {tenant.status}
                   </Badge>
                 </TableCell>
+                <TableCell>{tenant.usersCount}</TableCell>
                 <TableCell>{tenant.vehiclesCount}</TableCell>
                 <TableCell className="text-sm text-gray-600">
                   {tenant.daysActive} jours

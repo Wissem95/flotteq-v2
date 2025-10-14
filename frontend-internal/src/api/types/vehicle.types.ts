@@ -37,6 +37,11 @@ export interface Vehicle {
   photos?: string[];
   assignedDriverId?: string;
   tenantId: number;
+  tenant?: {
+    id: number;
+    name: string;
+    email: string;
+  };
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;

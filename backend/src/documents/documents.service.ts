@@ -57,9 +57,15 @@ export class DocumentsService {
     return query.getMany();
   }
 
-  async findOne(id: string, tenantId: number): Promise<Document> {
+  async findOne(id: string, tenantId: number, skipTenantCheck = false): Promise<Document> {
+    const where: any = { id };
+
+    if (!skipTenantCheck) {
+      where.tenantId = tenantId;
+    }
+
     const document = await this.documentsRepository.findOne({
-      where: { id, tenantId },
+      where,
     });
 
     if (!document) {
@@ -69,8 +75,8 @@ export class DocumentsService {
     return document;
   }
 
-  async remove(id: string, tenantId: number): Promise<void> {
-    const document = await this.findOne(id, tenantId);
+  async remove(id: string, tenantId: number, skipTenantCheck = false): Promise<void> {
+    const document = await this.findOne(id, tenantId, skipTenantCheck);
     await this.documentsRepository.softDelete(id);
   }
 

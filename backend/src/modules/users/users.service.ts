@@ -14,6 +14,8 @@ import { InviteUserDto } from './dto/invite-user.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { randomBytes } from 'crypto';
+import { PaginatedResponse } from '../../common/dto/paginated-response.dto';
+import { IsNull } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -109,6 +111,47 @@ export class UsersService {
       where: { tenantId },
       order: { createdAt: 'DESC' },
     });
+  }
+
+  async findAllPaginated(
+    tenantId: number,
+    currentUser: User,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedResponse<User>> {
+    const skip = (page - 1) * limit;
+
+    // Super admin voit tous les users
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+
+    let whereConditions: any = {};
+
+    if (!canViewAll) {
+      // Les autres ne voient que les users de leur tenant
+      whereConditions = { tenantId };
+    }
+
+    const [users, total] = await this.usersRepository.findAndCount({
+      where: whereConditions,
+      skip,
+      take: limit,
+      order: { createdAt: 'DESC' },
+      relations: canViewAll ? ['tenant'] : [],
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data: users,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
   }
 
   async findOne(id: string, currentUser: User): Promise<User> {

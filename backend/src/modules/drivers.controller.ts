@@ -20,6 +20,7 @@ import { DriverStatus } from '../entities/driver.entity';
 import { SubscriptionLimitGuard, CheckLimit } from '../common/guards/subscription-limit.guard';
 import { SubscriptionsService } from './subscriptions/subscriptions.service';
 import { TenantId } from '../core/tenant/tenant.decorator';
+import { Auditable } from '../common/decorators/auditable.decorator';
 
 @Controller('drivers')
 @UseGuards(JwtAuthGuard)
@@ -32,6 +33,7 @@ export class DriversController {
   @Post()
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('drivers')
+  @Auditable('Driver')
   async create(@Body() createDriverDto: CreateDriverDto, @TenantId() tenantId: number) {
     const driver = await this.driversService.create(createDriverDto);
     // Incrémenter l'usage après création réussie
@@ -71,6 +73,7 @@ export class DriversController {
   }
 
   @Patch(':id')
+  @Auditable('Driver')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateDriverDto: UpdateDriverDto,
@@ -79,6 +82,7 @@ export class DriversController {
   }
 
   @Delete(':id')
+  @Auditable('Driver')
   async remove(@Param('id', ParseUUIDPipe) id: string, @TenantId() tenantId: number) {
     const result = await this.driversService.remove(id);
     // Décrémenter l'usage après suppression réussie

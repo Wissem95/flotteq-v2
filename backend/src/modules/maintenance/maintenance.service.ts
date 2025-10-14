@@ -37,9 +37,15 @@ export class MaintenanceService {
     });
   }
 
-  async findOne(id: string, tenantId: number): Promise<Maintenance> {
+  async findOne(id: string, tenantId: number, skipTenantCheck = false): Promise<Maintenance> {
+    const where: any = { id };
+
+    if (!skipTenantCheck) {
+      where.tenantId = tenantId;
+    }
+
     const maintenance = await this.maintenanceRepository.findOne({
-      where: { id, tenantId },
+      where,
       relations: ['vehicle'],
     });
 
@@ -75,8 +81,8 @@ export class MaintenanceService {
     return this.maintenanceRepository.save(maintenance);
   }
 
-  async remove(id: string, tenantId: number): Promise<void> {
-    const maintenance = await this.findOne(id, tenantId);
+  async remove(id: string, tenantId: number, skipTenantCheck = false): Promise<void> {
+    const maintenance = await this.findOne(id, tenantId, skipTenantCheck);
     await this.maintenanceRepository.remove(maintenance);
   }
 

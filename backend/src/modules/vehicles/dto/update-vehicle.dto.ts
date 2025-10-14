@@ -87,4 +87,15 @@ export class UpdateVehicleDto {
   @IsOptional()
   @IsDateString()
   nextTechnicalInspection?: string;
+
+  @ApiProperty({ description: 'Current value of the vehicle', required: false })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  currentValue?: number;
+
+  @ApiProperty({ description: 'Date when the vehicle was sold', required: false })
+  @IsOptional()
+  @IsDateString()
+  soldDate?: string;
 }

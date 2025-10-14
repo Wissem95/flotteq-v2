@@ -21,6 +21,7 @@ import { UsersModule } from './modules/users/users.module';
 import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OnboardingModule } from './core/onboarding/onboarding.module';
+import { AuditModule } from './modules/audit/audit.module';
 // import { StripeModule } from './stripe/stripe.module';
 // import stripeConfig from './config/stripe.config';
 
@@ -59,6 +60,7 @@ import { OnboardingModule } from './core/onboarding/onboarding.module';
     AuthModule,
     OnboardingModule,
     // StripeModule,  // Temporairement désactivé - nécessite clé Stripe valide
+    AuditModule,
     SubscriptionsModule,
     UsersModule,
     MaintenanceModule,
@@ -93,7 +95,7 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(TenantMiddleware)
-      .exclude('/api/auth/(.*)', '/auth/(.*)', '/health', '/api/docs(.*)', '/api/tenants(.*)', '/api/onboarding/(.*)')
+      .exclude('/api/auth/(.*)', '/auth/(.*)', '/health', '/api/docs(.*)', '/api/tenants(.*)', '/api/onboarding/(.*)', '/api/stripe/webhook')
       .forRoutes('*');
   }
 }

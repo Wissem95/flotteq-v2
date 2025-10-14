@@ -4,6 +4,8 @@ import Stripe from 'stripe';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant } from '../entities/tenant.entity';
+import { SubscriptionPlan } from '../entities/subscription-plan.entity';
+import { Subscription } from '../entities/subscription.entity';
 import stripeConfig from '../config/stripe.config';
 
 @Injectable()
@@ -16,6 +18,10 @@ export class StripeService {
     private config: ConfigType<typeof stripeConfig>,
     @InjectRepository(Tenant)
     private tenantRepository: Repository<Tenant>,
+    @InjectRepository(SubscriptionPlan)
+    private subscriptionPlanRepository: Repository<SubscriptionPlan>,
+    @InjectRepository(Subscription)
+    private subscriptionRepository: Repository<Subscription>,
   ) {
     this.stripe = new Stripe(this.config.secretKey, {
       apiVersion: '2025-09-30.clover',
@@ -137,6 +143,10 @@ export class StripeService {
 
     try {
       switch (event.type) {
+        case 'checkout.session.completed':
+          await this.handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+          break;
+
         case 'customer.subscription.created':
           await this.handleSubscriptionCreated(event.data.object as Stripe.Subscription);
           break;
@@ -163,6 +173,77 @@ export class StripeService {
     } catch (error) {
       this.logger.error(`Error processing webhook event ${event.type}`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Handler pour checkout.session.completed
+   * Déclenché après un paiement réussi via Checkout
+   */
+  private async handleCheckoutCompleted(session: Stripe.Checkout.Session): Promise<void> {
+    this.logger.log(`Checkout completed: ${session.id}`);
+
+    const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
+
+    if (!customerId || !subscriptionId) {
+      this.logger.warn(`Missing customer or subscription in checkout session ${session.id}`);
+      return;
+    }
+
+    const tenant = await this.findTenantByCustomerId(customerId);
+
+    if (!tenant) {
+      this.logger.warn(`Tenant not found for customer ${customerId}`);
+      return;
+    }
+
+    // Récupérer les détails de la subscription depuis Stripe
+    try {
+      const subscription = await this.stripe.subscriptions.retrieve(subscriptionId, {
+        expand: ['items.data.price'],
+      });
+
+      // Récupérer le price_id de la subscription
+      const priceId = subscription.items.data[0]?.price?.id;
+
+      if (priceId) {
+        // Trouver le plan correspondant au price_id
+        const plan = await this.subscriptionPlanRepository.findOne({
+          where: { stripePriceId: priceId },
+        });
+
+        if (plan) {
+          tenant.planId = plan.id;
+          this.logger.log(`Plan ${plan.name} (ID: ${plan.id}) assigned to tenant ${tenant.id}`);
+
+          // Mettre à jour la subscription dans la table subscriptions
+          const dbSubscription = await this.subscriptionRepository.findOne({
+            where: { tenantId: tenant.id },
+          });
+
+          if (dbSubscription) {
+            dbSubscription.planId = plan.id;
+            dbSubscription.stripeSubscriptionId = subscription.id;
+            dbSubscription.status = 'active' as any;
+            await this.subscriptionRepository.save(dbSubscription);
+            this.logger.log(`Subscription in DB updated with plan ${plan.name} for tenant ${tenant.id}`);
+          } else {
+            this.logger.warn(`No subscription found in DB for tenant ${tenant.id}`);
+          }
+        } else {
+          this.logger.warn(`No plan found for price ${priceId}`);
+        }
+      }
+
+      tenant.stripeSubscriptionId = subscription.id;
+      tenant.subscriptionStatus = subscription.status as any;
+      tenant.subscriptionStartedAt = new Date(subscription.created * 1000);
+
+      await this.tenantRepository.save(tenant);
+      this.logger.log(`Checkout completed - Subscription activated for tenant ${tenant.id}`);
+    } catch (error) {
+      this.logger.error(`Failed to retrieve subscription ${subscriptionId} after checkout`, error);
     }
   }
 
@@ -257,5 +338,124 @@ export class StripeService {
     return this.tenantRepository.findOne({
       where: { stripeSubscriptionId: subscriptionId },
     });
+  }
+
+  /**
+   * Créer une session Checkout pour upgrade de plan
+   */
+  async createCheckoutSession(
+    customerId: string,
+    priceId: string,
+    successUrl: string,
+    cancelUrl: string,
+  ): Promise<string> {
+    try {
+      const session = await this.stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        allow_promotion_codes: true,
+      });
+
+      this.logger.log(`Checkout session created: ${session.id} for customer ${customerId}`);
+      return session.url || '';
+    } catch (error) {
+      this.logger.error(`Failed to create checkout session for customer ${customerId}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupérer la liste des factures d'un client
+   */
+  async getInvoices(customerId: string, limit: number = 100): Promise<any[]> {
+    try {
+      const invoices = await this.stripe.invoices.list({
+        customer: customerId,
+        limit,
+      });
+
+      return invoices.data.map(inv => ({
+        id: inv.id,
+        amountPaid: inv.amount_paid,
+        currency: inv.currency,
+        status: inv.status,
+        pdfUrl: inv.invoice_pdf,
+        number: inv.number,
+        created: new Date(inv.created * 1000),
+        periodStart: inv.period_start ? new Date(inv.period_start * 1000) : null,
+        periodEnd: inv.period_end ? new Date(inv.period_end * 1000) : null,
+      }));
+    } catch (error) {
+      this.logger.error(`Failed to get invoices for customer ${customerId}`, error);
+      return [];
+    }
+  }
+
+  /**
+   * Récupérer une facture spécifique
+   */
+  async getInvoice(invoiceId: string): Promise<any> {
+    try {
+      const invoice = await this.stripe.invoices.retrieve(invoiceId);
+      return {
+        id: invoice.id,
+        amountPaid: invoice.amount_paid,
+        currency: invoice.currency,
+        status: invoice.status,
+        pdfUrl: invoice.invoice_pdf,
+        number: invoice.number,
+        created: new Date(invoice.created * 1000),
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get invoice ${invoiceId}`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Récupérer la méthode de paiement par défaut d'un client
+   */
+  async getPaymentMethod(customerId: string): Promise<any | null> {
+    try {
+      const customer = await this.stripe.customers.retrieve(customerId);
+
+      if (!customer || customer.deleted) {
+        return null;
+      }
+
+      const defaultPaymentMethodId = customer.invoice_settings?.default_payment_method;
+
+      if (!defaultPaymentMethodId) {
+        return null;
+      }
+
+      const paymentMethod = await this.stripe.paymentMethods.retrieve(
+        defaultPaymentMethodId as string
+      );
+
+      if (paymentMethod.type === 'card' && paymentMethod.card) {
+        return {
+          id: paymentMethod.id,
+          brand: paymentMethod.card.brand,
+          last4: paymentMethod.card.last4,
+          expMonth: paymentMethod.card.exp_month,
+          expYear: paymentMethod.card.exp_year,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.error(`Failed to get payment method for customer ${customerId}`, error);
+      return null;
+    }
   }
 }

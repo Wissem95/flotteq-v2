@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, UserX, UserCheck, Mail, Pencil, Trash2, Users as UsersIcon } from 'lucide-react';
+import { Plus, UserX, UserCheck, Mail, Pencil, Trash2, Users as UsersIcon, Search, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { usersService } from '../../api/services/users.service';
 import { UserRole } from '../../types/user.types';
 import type { User } from '../../types/user.types';
 import { AddUserModal } from '../../components/users/AddUserModal';
 import { InviteUserModal } from '../../components/users/InviteUserModal';
 import { ProtectedButton } from '../../components/common/ProtectedButton';
+import { Pagination } from '../../components/common/Pagination';
 
 export const UsersPage: React.FC = () => {
   const queryClient = useQueryClient();
@@ -15,18 +17,26 @@ export const UsersPage: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [roleFilter, setRoleFilter] = useState<UserRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(20);
 
-  // Query: Get all users
-  const { data: users = [], isLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: usersService.getAll,
+  // Query: Get all users with pagination
+  const { data: paginatedData, isLoading } = useQuery({
+    queryKey: ['users', currentPage, itemsPerPage],
+    queryFn: () => usersService.getAll(currentPage, itemsPerPage),
   });
+
+  const users = paginatedData?.data || [];
+  const paginationMeta = paginatedData?.meta;
 
   // Mutation: Toggle active status
   const toggleActiveMutation = useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) =>
       isActive ? usersService.deactivate(id) : usersService.activate(id),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      const action = variables.isActive ? 'désactivé' : 'activé';
+      toast.success(`Utilisateur ${action} avec succès`);
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
@@ -35,15 +45,35 @@ export const UsersPage: React.FC = () => {
   const deleteMutation = useMutation({
     mutationFn: usersService.delete,
     onSuccess: () => {
+      toast.success('Utilisateur supprimé avec succès');
       queryClient.invalidateQueries({ queryKey: ['users'] });
     },
   });
 
   // Filters
   const filteredUsers = users.filter((user) => {
+    // Filtre rôle
     if (roleFilter !== 'all' && user.role !== roleFilter) return false;
+
+    // Filtre statut
     if (statusFilter === 'active' && !user.isActive) return false;
     if (statusFilter === 'inactive' && user.isActive) return false;
+
+    // Filtre recherche
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase().trim();
+      const searchableFields = [
+        user.email,
+        user.firstName,
+        user.lastName,
+        `${user.firstName} ${user.lastName}`,
+      ].join(' ').toLowerCase();
+
+      if (!searchableFields.includes(query)) {
+        return false;
+      }
+    }
+
     return true;
   });
 
@@ -164,6 +194,32 @@ export const UsersPage: React.FC = () => {
             </div>
             <UsersIcon className="w-8 h-8 text-gray-400" />
           </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Rechercher un utilisateur
+        </label>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Rechercher par nom, prénom ou email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              aria-label="Effacer la recherche"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -301,6 +357,18 @@ export const UsersPage: React.FC = () => {
             <p>Aucun utilisateur trouvé</p>
           </div>
         )}
+
+        {/* Pagination */}
+        {paginationMeta && filteredUsers.length > 0 && (
+          <Pagination
+            currentPage={paginationMeta.page}
+            totalPages={paginationMeta.totalPages}
+            total={paginationMeta.total}
+            onPageChange={setCurrentPage}
+            hasNextPage={paginationMeta.hasNextPage}
+            hasPreviousPage={paginationMeta.hasPreviousPage}
+          />
+        )}
       </div>
 
       {/* Modals */}
@@ -311,7 +379,10 @@ export const UsersPage: React.FC = () => {
           setSelectedUser(null);
         }}
         user={selectedUser}
-        onSuccess={() => queryClient.invalidateQueries({ queryKey: ['users'] })}
+        onSuccess={() => {
+          queryClient.invalidateQueries({ queryKey: ['users'] });
+          setCurrentPage(1); // Retour à la page 1 après création/édition
+        }}
       />
 
       <InviteUserModal

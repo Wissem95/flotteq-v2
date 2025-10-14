@@ -34,6 +34,7 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../entities/user.entity';
+import { Auditable } from '../../common/decorators/auditable.decorator';
 
 @ApiTags('vehicles')
 @ApiBearerAuth()
@@ -49,6 +50,7 @@ export class VehiclesController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('vehicles')
+  @Auditable('Vehicle')
   @ApiOperation({ summary: 'Créer un nouveau véhicule' })
   @ApiResponse({
     status: 201,
@@ -111,6 +113,17 @@ export class VehiclesController {
     return this.vehiclesService.getCostAnalysis(id, tenantId);
   }
 
+  @Get(':id/mileage-history')
+  @ApiOperation({ summary: 'Récupérer l\'historique du kilométrage d\'un véhicule' })
+  @ApiResponse({ status: 200, description: 'Historique du kilométrage récupéré avec succès.' })
+  @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  getMileageHistory(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.getMileageHistory(id, tenantId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Récupérer un véhicule par ID' })
   @ApiResponse({ status: 200, description: 'Véhicule trouvé.' })
@@ -124,6 +137,7 @@ export class VehiclesController {
 
   @Patch(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Auditable('Vehicle')
   @ApiOperation({ summary: 'Mettre à jour un véhicule' })
   @ApiResponse({
     status: 200,
@@ -187,6 +201,7 @@ export class VehiclesController {
 
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Auditable('Vehicle')
   @ApiOperation({ summary: 'Supprimer un véhicule' })
   @ApiResponse({
     status: 200,
@@ -197,10 +212,11 @@ export class VehiclesController {
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: number,
+    @Req() req: any,
   ) {
-    const result = await this.vehiclesService.remove(id, tenantId);
-    // Décrémenter l'usage après suppression réussie
-    await this.subscriptionsService.updateUsage(tenantId, 'vehicles', -1);
-    return result;
+    // Super admins et support peuvent supprimer n'importe quel véhicule
+    const isSuperAdmin = req.user?.role === UserRole.SUPER_ADMIN || req.user?.role === UserRole.SUPPORT;
+    await this.vehiclesService.remove(id, tenantId, isSuperAdmin);
+    return { message: 'Vehicle deleted successfully' };
   }
 }

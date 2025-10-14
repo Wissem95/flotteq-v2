@@ -1,4 +1,4 @@
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
@@ -7,11 +7,21 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import { json } from 'express';
 import { AppModule } from './app.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { AuditService } from './modules/audit/audit.service';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    rawBody: true,
+  });
   const configService = app.get(ConfigService);
+
+  // Register global audit interceptor
+  const reflector = app.get(Reflector);
+  const auditService = app.get(AuditService);
+  app.useGlobalInterceptors(new AuditInterceptor(reflector, auditService));
 
   // Enable DI for class-validator (custom validators)
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
@@ -30,6 +40,17 @@ async function bootstrap() {
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Tenant-ID'],
   });
+
+  // JSON body parser - skip for Stripe webhook route
+  app.use(
+    json({
+      verify: (req: any, res, buf) => {
+        if (req.originalUrl === '/api/stripe/webhook') {
+          req.rawBody = buf;
+        }
+      },
+    }),
+  );
 
   // Global validation pipe
   app.useGlobalPipes(

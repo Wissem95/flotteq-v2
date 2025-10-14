@@ -97,7 +97,7 @@ export const DriversListPage = () => {
                 <TableHead>N° Permis</TableHead>
                 <TableHead>Expiration Permis</TableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Tenant ID</TableHead>
+                <TableHead>Tenant</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -128,7 +128,12 @@ export const DriversListPage = () => {
                       {getStatusLabel(driver.status)}
                     </Badge>
                   </TableCell>
-                  <TableCell>{driver.tenantId}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{driver.tenant?.name || 'N/A'}</span>
+                      <span className="text-xs text-muted-foreground">ID: {driver.tenantId}</span>
+                    </div>
+                  </TableCell>
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"

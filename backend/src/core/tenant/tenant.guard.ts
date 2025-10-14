@@ -33,8 +33,11 @@ export class TenantGuard implements CanActivate {
       return true;
     }
 
-    // Super admins → skip tenant filtering
+    // Super admins → skip tenant restrictions (accès global à tous les tenants)
     if (user && user.tenantId === 1 && ['super_admin', 'support'].includes(user.role)) {
+      // Supprimer tenantId complètement pour accès global
+      delete (request as any).tenantId;
+      (request as any).isSuperAdmin = true;
       return true;
     }
 
@@ -43,8 +46,8 @@ export class TenantGuard implements CanActivate {
       throw new ForbiddenException('Tenant ID is required');
     }
 
-    // Store tenantId in request for use by other components
-    (request as any).tenantId = user.tenantId;
+    // Store tenantId in request for use by other components (convertir en number)
+    (request as any).tenantId = parseInt((request as any).tenantId) || user.tenantId;
 
     return true;
   }

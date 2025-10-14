@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Copy, Check } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { usersService } from '../../api/services/users.service';
 import { UserRole } from '../../types/user.types';
 import type { InviteUserDto } from '../../types/user.types';
@@ -24,9 +25,12 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({ isOpen, onClos
     onSuccess: (data) => {
       setInvitationLink(data.invitationLink);
       setError('');
+      toast.success(`Invitation envoyée à ${formData.email}`);
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Erreur lors de la génération du lien');
+      const message = err.response?.data?.message || 'Erreur lors de la génération du lien';
+      setError(message);
+      toast.error(message);
     },
   });
 
@@ -41,9 +45,11 @@ export const InviteUserModal: React.FC<InviteUserModalProps> = ({ isOpen, onClos
     try {
       await navigator.clipboard.writeText(invitationLink);
       setCopied(true);
+      toast.success('Lien copié dans le presse-papier');
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+      toast.error('Erreur lors de la copie');
     }
   };
 

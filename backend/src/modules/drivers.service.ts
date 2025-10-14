@@ -20,16 +20,21 @@ export class DriversService {
     @Inject(REQUEST) private readonly request: Request,
   ) {}
 
-  private getTenantId(): number {
-    const tenantId = (this.request as any).tenantId;
-    if (!tenantId) {
-      throw new BadRequestException('Tenant ID is required');
+  private getTenantId(): number | null {
+    // Si super_admin, pas de filtre tenant
+    if ((this.request as any).isSuperAdmin) {
+      return null;
     }
-    return tenantId;
+    // Sinon, retourner tenantId (converti en number)
+    const tenantId = (this.request as any).tenantId;
+    return tenantId ? (typeof tenantId === 'string' ? parseInt(tenantId) : tenantId) : null;
   }
 
   async create(createDriverDto: CreateDriverDto): Promise<Driver> {
     const tenantId = this.getTenantId();
+    if (!tenantId) {
+      throw new BadRequestException('Tenant ID is required for creating drivers');
+    }
 
     // Vérifier si l'email existe déjà pour ce tenant
     const existingEmail = await this.driverRepository.findOne({
@@ -71,14 +76,18 @@ export class DriversService {
     const tenantId = this.getTenantId();
     const skip = (page - 1) * limit;
 
-    const where: any = { tenantId };
+    const where: any = {};
+    // Filtrer par tenantId seulement si présent (super_admin voit tous les tenants)
+    if (tenantId) {
+      where.tenantId = tenantId;
+    }
     if (status) {
       where.status = status;
     }
 
     const [data, total] = await this.driverRepository.findAndCount({
       where,
-      relations: ['vehicles'],
+      relations: ['vehicles', 'tenant'], // Ajouter la relation tenant
       skip,
       take: limit,
       order: { createdAt: 'DESC' },
@@ -89,8 +98,14 @@ export class DriversService {
 
   async findOne(id: string): Promise<Driver> {
     const tenantId = this.getTenantId();
+
+    const where: any = { id };
+    if (tenantId) {
+      where.tenantId = tenantId;
+    }
+
     const driver = await this.driverRepository.findOne({
-      where: { id, tenantId },
+      where,
       relations: ['vehicles'],
     });
 
@@ -102,8 +117,8 @@ export class DriversService {
   }
 
   async update(id: string, updateDriverDto: UpdateDriverDto): Promise<Driver> {
-    const tenantId = this.getTenantId();
     const driver = await this.findOne(id);
+    const tenantId = driver.tenantId; // Utiliser le tenantId du driver existant
 
     // Vérifier l'unicité de l'email si modifié
     if (updateDriverDto.email && updateDriverDto.email !== driver.email) {
@@ -133,10 +148,11 @@ export class DriversService {
 
   async remove(id: string): Promise<void> {
     const driver = await this.findOne(id);
+    const tenantId = driver.tenantId;
 
     // Vérifier qu'aucun véhicule n'est assigné
     const assignedVehicles = await this.vehicleRepository.count({
-      where: { assignedDriverId: id, tenantId: this.getTenantId() },
+      where: { assignedDriverId: id, tenantId },
     });
 
     if (assignedVehicles > 0) {
@@ -148,8 +164,8 @@ export class DriversService {
   }
 
   async assignVehicle(driverId: string, vehicleId: string): Promise<Driver> {
-    const tenantId = this.getTenantId();
     const driver = await this.findOne(driverId);
+    const tenantId = driver.tenantId;
 
     // Vérifier que le permis est valide
     const licenseExpiry = new Date(driver.licenseExpiryDate);
@@ -186,8 +202,8 @@ export class DriversService {
   }
 
   async unassignVehicle(driverId: string, vehicleId: string): Promise<Driver> {
-    const tenantId = this.getTenantId();
     const driver = await this.findOne(driverId);
+    const tenantId = driver.tenantId;
 
     // Vérifier que le véhicule existe et appartient au même tenant
     const vehicle = await this.vehicleRepository.findOne({
@@ -213,8 +229,8 @@ export class DriversService {
   }
 
   async getDriverVehicles(driverId: string): Promise<Vehicle[]> {
-    const tenantId = this.getTenantId();
-    await this.findOne(driverId); // Vérifier que le driver existe
+    const driver = await this.findOne(driverId);
+    const tenantId = driver.tenantId;
 
     return this.vehicleRepository.find({
       where: { assignedDriverId: driverId, tenantId },
@@ -227,22 +243,31 @@ export class DriversService {
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + days);
 
-    return this.driverRepository
+    const query = this.driverRepository
       .createQueryBuilder('driver')
-      .where('driver.tenantId = :tenantId', { tenantId })
-      .andWhere('driver.licenseExpiryDate > :today', { today })
+      .where('driver.licenseExpiryDate > :today', { today })
       .andWhere('driver.licenseExpiryDate <= :futureDate', { futureDate })
-      .andWhere('driver.status = :status', { status: DriverStatus.ACTIVE })
-      .orderBy('driver.licenseExpiryDate', 'ASC')
-      .getMany();
+      .andWhere('driver.status = :status', { status: DriverStatus.ACTIVE });
+
+    // Filtrer par tenant seulement si présent
+    if (tenantId) {
+      query.andWhere('driver.tenantId = :tenantId', { tenantId });
+    }
+
+    return query.orderBy('driver.licenseExpiryDate', 'ASC').getMany();
   }
 
   async getAvailableDrivers(): Promise<Driver[]> {
     const tenantId = this.getTenantId();
 
+    const where: any = { status: DriverStatus.ACTIVE };
+    if (tenantId) {
+      where.tenantId = tenantId;
+    }
+
     // Récupérer tous les drivers actifs
     const activeDrivers = await this.driverRepository.find({
-      where: { tenantId, status: DriverStatus.ACTIVE },
+      where,
       relations: ['vehicles'],
     });
 

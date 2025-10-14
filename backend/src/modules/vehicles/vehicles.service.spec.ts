@@ -8,6 +8,7 @@ import { Document, DocumentEntityType } from '../../entities/document.entity';
 import { Maintenance, MaintenanceStatus } from '../maintenance/entities/maintenance.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 describe('VehiclesService', () => {
   let service: VehiclesService;
@@ -44,6 +45,7 @@ describe('VehiclesService', () => {
     save: jest.fn(),
     findOne: jest.fn(),
     remove: jest.fn(),
+    softRemove: jest.fn(),
     count: jest.fn(),
     createQueryBuilder: jest.fn(),
   };
@@ -54,6 +56,13 @@ describe('VehiclesService', () => {
 
   const mockMaintenanceRepository = {
     find: jest.fn(),
+  };
+
+  const mockSubscriptionsService = {
+    updateUsage: jest.fn(),
+    checkLimit: jest.fn(),
+    enforceLimit: jest.fn(),
+    getCurrentSubscription: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -71,6 +80,10 @@ describe('VehiclesService', () => {
         {
           provide: getRepositoryToken(Maintenance),
           useValue: mockMaintenanceRepository,
+        },
+        {
+          provide: SubscriptionsService,
+          useValue: mockSubscriptionsService,
         },
       ],
     }).compile();
@@ -207,6 +220,7 @@ describe('VehiclesService', () => {
       expect(result).toEqual(mockVehicle);
       expect(mockRepository.findOne).toHaveBeenCalledWith({
         where: { id: mockVehicle.id, tenantId: 1 },
+        relations: ['assignedDriver'],
       });
     });
 
@@ -261,11 +275,11 @@ describe('VehiclesService', () => {
   describe('remove', () => {
     it('should remove a vehicle successfully', async () => {
       mockRepository.findOne.mockResolvedValue(mockVehicle);
-      mockRepository.remove.mockResolvedValue(mockVehicle);
+      mockRepository.softRemove.mockResolvedValue(mockVehicle);
 
       await service.remove(mockVehicle.id, 1);
 
-      expect(mockRepository.remove).toHaveBeenCalledWith(mockVehicle);
+      expect(mockRepository.softRemove).toHaveBeenCalledWith(mockVehicle);
     });
 
     it('should throw NotFoundException if vehicle not found', async () => {
@@ -351,13 +365,15 @@ describe('VehiclesService', () => {
         {
           id: 'maint-1',
           type: 'oil_change',
-          cost: 150,
+          actualCost: 150,
+          estimatedCost: 150,
           status: MaintenanceStatus.COMPLETED,
         },
         {
           id: 'maint-2',
           type: 'tire_change',
-          cost: 400,
+          actualCost: 400,
+          estimatedCost: 400,
           status: MaintenanceStatus.COMPLETED,
         },
       ];
@@ -388,13 +404,23 @@ describe('VehiclesService', () => {
     });
 
     it('should calculate cost per km correctly', async () => {
-      mockRepository.findOne.mockResolvedValue(mockVehicle);
+      // Créer un véhicule frais pour éviter toute mutation
+      const freshVehicle = {
+        ...mockVehicle,
+        purchasePrice: 15000.5,
+        initialMileage: 45000,
+        currentKm: 50000,
+      };
+
+      mockRepository.findOne.mockResolvedValue(freshVehicle);
       mockMaintenanceRepository.find.mockResolvedValue([]);
 
-      const result = await service.getCostAnalysis(mockVehicle.id, 1);
+      const result = await service.getCostAnalysis(freshVehicle.id, 1);
 
       // currentKm (50000) - initialMileage (45000) = 5000 km
       // totalOwnershipCost (15000.5) / 5000 = 3.0001
+      expect(result.purchasePrice).toBe(15000.5);
+      expect(result.totalOwnershipCost).toBe(15000.5);
       expect(result.costPerKm).toBeCloseTo(3.0001, 2);
     });
   });

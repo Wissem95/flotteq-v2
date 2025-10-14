@@ -1,9 +1,11 @@
 import api from '@/config/api';
-import type { User, CreateUserDto, UpdateUserDto, InviteUserDto, InvitationResponse } from '@/types/user.types';
+import type { User, CreateUserDto, UpdateUserDto, InviteUserDto, InvitationResponse, PaginatedResponse } from '@/types/user.types';
 
 export const usersService = {
-  getAll: async (): Promise<User[]> => {
-    const response = await api.get('/users');
+  getAll: async (page: number = 1, limit: number = 20): Promise<PaginatedResponse<User>> => {
+    const response = await api.get<PaginatedResponse<User>>('/users', {
+      params: { page, limit },
+    });
     return response.data;
   },
 

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { MaintenanceService } from './maintenance.service';
@@ -22,6 +23,7 @@ import { TenantId } from '../../core/tenant/tenant.decorator';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../entities/user.entity';
+import { Auditable } from '../../common/decorators/auditable.decorator';
 
 @ApiTags('Maintenance')
 @ApiBearerAuth()
@@ -35,6 +37,7 @@ export class MaintenanceController {
 
   @Post()
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Auditable('Maintenance')
   @ApiOperation({ summary: 'Create a new maintenance' })
   @ApiResponse({ status: 201, description: 'Maintenance created successfully' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
@@ -106,6 +109,7 @@ export class MaintenanceController {
 
   @Patch(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Auditable('Maintenance')
   @ApiOperation({ summary: 'Update a maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance updated successfully' })
   @ApiResponse({ status: 404, description: 'Maintenance not found' })
@@ -120,12 +124,19 @@ export class MaintenanceController {
 
   @Delete(':id')
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Auditable('Maintenance')
   @ApiOperation({ summary: 'Delete a maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance deleted successfully' })
   @ApiResponse({ status: 404, description: 'Maintenance not found' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
-  remove(@Param('id') id: string, @TenantId() tenantId: number) {
-    return this.maintenanceService.remove(id, tenantId);
+  async remove(
+    @Param('id') id: string,
+    @TenantId() tenantId: number,
+    @Req() req: any,
+  ) {
+    const isSuperAdmin = req.user?.role === UserRole.SUPER_ADMIN || req.user?.role === UserRole.SUPPORT;
+    await this.maintenanceService.remove(id, tenantId, isSuperAdmin);
+    return { message: 'Maintenance deleted successfully' };
   }
 
   // ========== TEMPLATES ENDPOINTS ==========

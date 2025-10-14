@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   UserCog,
+  CreditCard,
 } from 'lucide-react';
 
 interface TenantLayoutProps {
@@ -58,6 +59,11 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
       icon: UserCog,
       label: 'Utilisateurs',
       path: '/users',
+    },
+    {
+      icon: CreditCard,
+      label: 'Facturation',
+      path: '/billing',
     },
   ];
 

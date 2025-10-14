@@ -755,7 +755,8 @@ export class DashboardService {
     });
 
     for (const sub of recentSubChanges) {
-      if (sub.status === SubscriptionStatus.CANCELED) {
+      // Vérifier que tenant existe avant d'y accéder
+      if (sub.status === SubscriptionStatus.CANCELED && sub.tenant) {
         activities.push({
           id: `sub-cancelled-${sub.id}`,
           type: 'SUBSCRIPTION_CANCELLED',
@@ -776,39 +777,59 @@ export class DashboardService {
   }
 
   async getRecentTenants(limit: number): Promise<RecentTenantDto[]> {
-    const tenants = await this.tenantRepository.find({
-      relations: ['users', 'vehicles'],
-      order: { createdAt: 'DESC' },
-      take: limit,
-    });
+    try {
+      const tenants = await this.tenantRepository.find({
+        relations: ['users', 'vehicles'],
+        order: { createdAt: 'DESC' },
+        take: limit,
+      });
 
-    // Fetch subscriptions for these tenants
-    const tenantIds = tenants.map(t => t.id);
-    const subscriptions = await this.subscriptionRepository.find({
-      where: { tenantId: In(tenantIds) },
-      relations: ['plan'],
-    });
+      // Fetch subscriptions for these tenants
+      const tenantIds = tenants.map(t => t.id);
 
-    const subscriptionMap = new Map(
-      subscriptions.map(sub => [sub.tenantId, sub])
-    );
+      if (tenantIds.length === 0) {
+        return [];
+      }
 
-    return tenants.map((tenant) => ({
-      id: tenant.id,
-      name: tenant.name,
-      email: tenant.email,
-      status: tenant.status,
-      createdAt: tenant.createdAt,
-      plan: {
-        name: subscriptionMap.get(tenant.id)?.plan?.name || 'Aucun',
-        price: subscriptionMap.get(tenant.id)?.plan?.price || 0,
-      },
-      vehiclesCount: tenant.vehicles?.length || 0,
-      usersCount: tenant.users?.length || 0,
-      daysActive: Math.floor(
-        (Date.now() - tenant.createdAt.getTime()) / (1000 * 60 * 60 * 24),
-      ),
-    }));
+      const subscriptions = await this.subscriptionRepository.find({
+        where: { tenantId: In(tenantIds) },
+        relations: ['plan'],
+      });
+
+      const subscriptionMap = new Map(
+        subscriptions.map(sub => [sub.tenantId, sub])
+      );
+
+      const result = tenants.map((tenant) => {
+        const usersCount = tenant.users?.length || 0;
+        const vehiclesCount = tenant.vehicles?.length || 0;
+
+        // Debug log
+        console.log(`[getRecentTenants] Tenant ${tenant.name} (ID: ${tenant.id}): users=${usersCount}, vehicles=${vehiclesCount}`);
+
+        return {
+          id: tenant.id,
+          name: tenant.name,
+          email: tenant.email,
+          status: tenant.status,
+          createdAt: tenant.createdAt,
+          plan: {
+            name: subscriptionMap.get(tenant.id)?.plan?.name || 'Aucun',
+            price: subscriptionMap.get(tenant.id)?.plan?.price || 0,
+          },
+          vehiclesCount,
+          usersCount,
+          daysActive: Math.floor(
+            (Date.now() - tenant.createdAt.getTime()) / (1000 * 60 * 60 * 24),
+          ),
+        };
+      });
+
+      return result;
+    } catch (error) {
+      console.error('Error in getRecentTenants:', error);
+      return [];
+    }
   }
 
   async getSubscriptionUsage(tenantId: number): Promise<SubscriptionUsageDto> {

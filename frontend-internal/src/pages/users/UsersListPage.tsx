@@ -145,10 +145,10 @@ export const UsersListPage = () => {
                 <TableHead>Nom</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Rôle</TableHead>
-                <TableHead>Tenant ID</TableHead>
+                <TableHead>Tenant</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Créé le</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,7 +161,12 @@ export const UsersListPage = () => {
                   <TableCell>
                     <Badge className={getRoleBadgeColor(user.role)}>{user.role}</Badge>
                   </TableCell>
-                  <TableCell>{user.tenantId}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{user.tenant?.name || 'N/A'}</span>
+                      <span className="text-xs text-muted-foreground">ID: {user.tenantId}</span>
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={user.isActive ? 'default' : 'secondary'}>
                       {user.isActive ? 'Actif' : 'Inactif'}

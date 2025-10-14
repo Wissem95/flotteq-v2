@@ -9,14 +9,16 @@ import type {
 
 export const usersApi = {
   getAll: async (params?: UsersQueryParams): Promise<UsersListResponse> => {
-    const response = await apiClient.get<User[]>('/users');
-    // Le backend retourne un array directement pour users (pas de pagination)
-    const data = Array.isArray(response.data) ? response.data : [];
+    const response = await apiClient.get<any>('/users', { params });
+    // Le backend retourne { data: [], meta: { total, page, limit, totalPages } }
+    const backendData = response.data;
+
+    // Adapter au format attendu par le frontend
     return {
-      data,
-      total: data.length,
-      page: params?.page || 1,
-      limit: params?.limit || 20,
+      data: backendData.data || [],
+      total: backendData.meta?.total || 0,
+      page: backendData.meta?.page || 1,
+      limit: backendData.meta?.limit || 20,
     };
   },
 

@@ -17,6 +17,7 @@ import { SubscriptionPlan } from '../../../entities/subscription-plan.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { EmailQueueService } from '../../../modules/notifications/email-queue.service';
+import { StripeService } from '../../../stripe/stripe.service';
 
 @Injectable()
 export class AuthService {
@@ -32,6 +33,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailQueueService: EmailQueueService,
+    private stripeService: StripeService,
     private dataSource: DataSource,
   ) {}
 
@@ -76,6 +78,16 @@ export class AuthService {
         email: dto.email,
       });
       await queryRunner.manager.save(tenant);
+
+      // 4a-bis. Créer Stripe customer
+      try {
+        const stripeCustomerId = await this.stripeService.createCustomer(tenant, dto.email);
+        tenant.stripeCustomerId = stripeCustomerId;
+        await queryRunner.manager.save(tenant);
+      } catch (stripeError) {
+        // Log l'erreur mais ne pas bloquer l'inscription si Stripe échoue
+        console.error('Failed to create Stripe customer:', stripeError.message);
+      }
 
       // 4b. Créer user
       const hashedPassword = await bcrypt.hash(dto.password, 12);

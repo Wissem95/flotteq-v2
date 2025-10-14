@@ -19,6 +19,7 @@ export enum VehicleStatus {
   IN_USE = 'in_use',
   MAINTENANCE = 'maintenance',
   OUT_OF_SERVICE = 'out_of_service',
+  SOLD = 'sold',
 }
 
 export enum TransmissionType {
@@ -83,6 +84,12 @@ export class Vehicle {
 
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   purchasePrice: number | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'current_value' })
+  currentValue: number | null;
+
+  @Column({ type: 'date', nullable: true, name: 'sold_date' })
+  soldDate: Date | null;
 
   @Column({ type: 'timestamp', nullable: true, name: 'lastTechnicalInspection' })
   lastTechnicalInspection: Date | null;

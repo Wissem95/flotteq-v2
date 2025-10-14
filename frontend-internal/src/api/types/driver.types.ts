@@ -23,6 +23,11 @@ export interface Driver {
   emergencyPhone?: string;
   notes?: string;
   tenantId: number;
+  tenant?: {
+    id: number;
+    name: string;
+    email: string;
+  };
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;

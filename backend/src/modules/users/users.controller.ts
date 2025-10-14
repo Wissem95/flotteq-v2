@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   BadRequestException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -20,6 +21,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User, UserRole } from '../../entities/user.entity';
 import { SubscriptionLimitGuard, CheckLimit } from '../../common/guards/subscription-limit.guard';
+import { Auditable } from '../../common/decorators/auditable.decorator';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -31,6 +33,7 @@ export class UsersController {
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('users')
+  @Auditable('User')
   create(@Body() createUserDto: CreateUserDto, @CurrentUser() currentUser: User) {
     return this.usersService.create(createUserDto, currentUser);
   }
@@ -46,8 +49,20 @@ export class UsersController {
   }
 
   @Get()
-  findAll(@CurrentUser() currentUser: User) {
-    return this.usersService.findAll(currentUser.tenantId, currentUser);
+  findAll(
+    @CurrentUser() currentUser: User,
+    @Query('page') page: string = '1',
+    @Query('limit') limit: string = '20',
+  ) {
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+
+    return this.usersService.findAllPaginated(
+      currentUser.tenantId,
+      currentUser,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get('stats')
@@ -101,6 +116,7 @@ export class UsersController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
+  @Auditable('User')
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
@@ -112,6 +128,7 @@ export class UsersController {
   @Delete(':id')
   @UseGuards(RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
+  @Auditable('User')
   remove(@Param('id') id: string, @CurrentUser() currentUser: User) {
     return this.usersService.remove(id, currentUser);
   }

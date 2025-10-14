@@ -15,6 +15,7 @@ import {
   NotFoundException,
   ParseIntPipe,
   DefaultValuePipe,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -180,8 +181,10 @@ export class DocumentsController {
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: number,
+    @Req() req: any,
   ) {
-    await this.documentsService.remove(id, tenantId);
+    const isSuperAdmin = req.user?.role === UserRole.SUPER_ADMIN || req.user?.role === UserRole.SUPPORT;
+    await this.documentsService.remove(id, tenantId, isSuperAdmin);
     return { message: 'Document supprimé' };
   }
 }

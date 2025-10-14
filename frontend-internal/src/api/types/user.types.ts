@@ -14,6 +14,11 @@ export interface User {
   lastName: string;
   role: UserRole;
   tenantId: number;
+  tenant?: {
+    id: number;
+    name: string;
+    email: string;
+  };
   isActive: boolean;
   phone?: string;
   lastLoginAt?: Date;

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { usersService } from '../../api/services/users.service';
 import { UserRole } from '../../types/user.types';
 import type { User, CreateUserDto, UpdateUserDto } from '../../types/user.types';
@@ -57,12 +58,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
   const createMutation = useMutation({
     mutationFn: usersService.create,
     onSuccess: () => {
+      toast.success('Utilisateur créé avec succès');
       onSuccess();
       onClose();
       setError('');
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Erreur lors de la création');
+      const message = err.response?.data?.message || 'Erreur lors de la création';
+      setError(message);
+      toast.error(message);
     },
   });
 
@@ -70,12 +74,15 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserDto }) =>
       usersService.update(id, data),
     onSuccess: () => {
+      toast.success('Utilisateur modifié avec succès');
       onSuccess();
       onClose();
       setError('');
     },
     onError: (err: any) => {
-      setError(err.response?.data?.message || 'Erreur lors de la modification');
+      const message = err.response?.data?.message || 'Erreur lors de la modification';
+      setError(message);
+      toast.error(message);
     },
   });
 

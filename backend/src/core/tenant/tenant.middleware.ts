@@ -35,6 +35,7 @@ export class TenantMiddleware implements NestMiddleware {
       '/api/tenants',
       '/api/dashboard/internal',
       '/api/subscriptions/plans', // Public pour l'inscription
+      '/api/stripe/webhook', // Webhook Stripe (validation via signature)
     ];
     const isSkippedRoute = skipRoutes.some(route => path.startsWith(route));
 

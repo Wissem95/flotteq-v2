@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import TenantLayout from './layouts/TenantLayout';
@@ -19,6 +20,8 @@ import MaintenanceCalendarPage from './pages/maintenance/MaintenanceCalendarPage
 import MaintenanceCalendarDnDPage from './pages/maintenance/MaintenanceCalendarDnDPage';
 import { DocumentsPage } from './pages/documents/DocumentsPage';
 import { UsersPage } from './pages/users/UsersPage';
+import BillingPage from './pages/billing/BillingPage';
+import CheckoutSuccessPage from './pages/billing/CheckoutSuccessPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,6 +36,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <Toaster position="top-right" richColors closeButton />
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
@@ -72,6 +76,8 @@ function App() {
               <Route path="maintenances/calendar-interactive" element={<MaintenanceCalendarDnDPage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="users" element={<UsersPage />} />
+              <Route path="billing" element={<BillingPage />} />
+              <Route path="billing/success" element={<CheckoutSuccessPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

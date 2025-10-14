@@ -26,6 +26,8 @@ import {
   VehicleCostAnalysisDto,
   MaintenanceCostByTypeDto,
 } from './dto/vehicle-cost-analysis.dto';
+import { MileageHistoryItemDto } from './dto/mileage-history.dto';
+import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
 export class VehiclesService {
@@ -38,6 +40,7 @@ export class VehiclesService {
     private readonly documentRepository: Repository<Document>,
     @InjectRepository(Maintenance)
     private readonly maintenanceRepository: Repository<Maintenance>,
+    private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
   private getMaintenanceTypeLabel(type: string): string {
@@ -91,6 +94,15 @@ export class VehiclesService {
     const savedVehicle = await this.vehicleRepository.save(vehicle) as unknown as Vehicle;
     this.logger.log(`Vehicle ${savedVehicle.id} created for tenant ${tenantId}`);
 
+    // Mettre à jour l'usage de la subscription
+    try {
+      await this.subscriptionsService.updateUsage(tenantId, 'vehicles', 1);
+      this.logger.log(`Updated subscription usage for tenant ${tenantId}: +1 vehicle`);
+    } catch (error) {
+      this.logger.warn(`Failed to update subscription usage for tenant ${tenantId}`, error);
+      // Don't fail vehicle creation if subscription update fails
+    }
+
     return savedVehicle;
   }
 
@@ -140,6 +152,9 @@ export class VehiclesService {
       });
     }
 
+    // Charger la relation tenant
+    queryBuilder.leftJoinAndSelect('vehicle.tenant', 'tenant');
+
     // Pagination
     queryBuilder.skip(skip).take(limit);
 
@@ -156,9 +171,16 @@ export class VehiclesService {
     };
   }
 
-  async findOne(id: string, tenantId: number): Promise<Vehicle> {
+  async findOne(id: string, tenantId: number, skipTenantCheck = false): Promise<Vehicle> {
+    const where: any = { id };
+
+    // Si skipTenantCheck est false, on filtre par tenant
+    if (!skipTenantCheck) {
+      where.tenantId = tenantId;
+    }
+
     const vehicle = await this.vehicleRepository.findOne({
-      where: { id, tenantId },
+      where,
       relations: ['assignedDriver'],
     });
 
@@ -254,10 +276,18 @@ export class VehiclesService {
     return updatedVehicle!;
   }
 
-  async remove(id: string, tenantId: number): Promise<void> {
-    const vehicle = await this.findOne(id, tenantId);
+  async remove(id: string, tenantId: number, skipTenantCheck = false): Promise<void> {
+    const vehicle = await this.findOne(id, tenantId, skipTenantCheck);
     await this.vehicleRepository.softRemove(vehicle);
-    this.logger.log(`Vehicle ${id} soft deleted for tenant ${tenantId}`);
+    this.logger.log(`Vehicle ${id} soft deleted for tenant ${vehicle.tenantId}`);
+
+    // Décrémenter l'usage de la subscription (utiliser le vrai tenant du véhicule)
+    try {
+      await this.subscriptionsService.updateUsage(vehicle.tenantId, 'vehicles', -1);
+      this.logger.log(`Updated subscription usage for tenant ${vehicle.tenantId}: -1 vehicle`);
+    } catch (error) {
+      this.logger.warn(`Failed to update subscription usage for tenant ${vehicle.tenantId}`, error);
+    }
   }
 
   async count(tenantId: number): Promise<number> {
@@ -582,5 +612,63 @@ export class VehiclesService {
 
     this.logger.log(`Photo removed from vehicle ${vehicleId}`);
     return updatedVehicle;
+  }
+
+  async getMileageHistory(
+    vehicleId: string,
+    tenantId: number,
+  ): Promise<MileageHistoryItemDto[]> {
+    const vehicle = await this.findOne(vehicleId, tenantId);
+
+    const history: MileageHistoryItemDto[] = [];
+
+    // Point de départ : création du véhicule avec kilométrage initial
+    if (vehicle.initialMileage !== null) {
+      history.push({
+        date: vehicle.purchaseDate || vehicle.createdAt,
+        mileage: vehicle.initialMileage,
+        source: 'creation',
+        change: 0,
+        description: 'Kilométrage initial à l\'achat',
+      });
+    }
+
+    // Récupérer les maintenances qui ont un kilométrage de prochaine maintenance
+    const maintenances = await this.maintenanceRepository.find({
+      where: { vehicleId, tenantId },
+      order: { scheduledDate: 'ASC' },
+    });
+
+    // Ajouter les maintenances avec leur kilométrage
+    maintenances.forEach((m) => {
+      if (m.nextMaintenanceKm) {
+        history.push({
+          date: m.scheduledDate,
+          mileage: m.nextMaintenanceKm,
+          source: 'maintenance',
+          change: 0, // Sera calculé plus tard
+          description: `Maintenance: ${m.description}`,
+        });
+      }
+    });
+
+    // Point actuel : kilométrage actuel du véhicule
+    history.push({
+      date: new Date(),
+      mileage: vehicle.currentKm,
+      source: 'current',
+      change: 0, // Sera calculé plus tard
+      description: 'Kilométrage actuel',
+    });
+
+    // Trier par date
+    history.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    // Calculer les changements entre chaque point
+    for (let i = 1; i < history.length; i++) {
+      history[i].change = history[i].mileage - history[i - 1].mileage;
+    }
+
+    return history;
   }
 }
