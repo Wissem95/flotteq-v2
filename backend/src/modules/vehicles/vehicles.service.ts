@@ -94,14 +94,7 @@ export class VehiclesService {
     const savedVehicle = await this.vehicleRepository.save(vehicle) as unknown as Vehicle;
     this.logger.log(`Vehicle ${savedVehicle.id} created for tenant ${tenantId}`);
 
-    // Mettre à jour l'usage de la subscription
-    try {
-      await this.subscriptionsService.updateUsage(tenantId, 'vehicles', 1);
-      this.logger.log(`Updated subscription usage for tenant ${tenantId}: +1 vehicle`);
-    } catch (error) {
-      this.logger.warn(`Failed to update subscription usage for tenant ${tenantId}`, error);
-      // Don't fail vehicle creation if subscription update fails
-    }
+    // Note: L'incrémentation de l'usage est faite dans le controller après création réussie
 
     return savedVehicle;
   }

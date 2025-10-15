@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { vehiclesService } from '../../api/services/vehicles.service';
 import { VehicleStatus, TransmissionType, FuelType, type CreateVehicleData } from '../../types/vehicle.types';
+import { type ApiError } from '@/types/api.types';
 
 interface AddVehicleModalProps {
   isOpen: boolean;
@@ -296,11 +298,19 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
             </div>
           </div>
 
-          {createMutation.isError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-              {createMutation.error instanceof Error ? createMutation.error.message : 'Une erreur est survenue'}
-            </div>
-          )}
+          {createMutation.isError && (() => {
+            const error = createMutation.error as AxiosError<ApiError>;
+            const errorCode = error?.response?.data?.code;
+            const errorMessage = errorCode === 'LIMIT_REACHED'
+              ? 'Limite de véhicules atteinte pour votre plan. Veuillez upgrader votre abonnement.'
+              : error?.response?.data?.message || 'Une erreur est survenue lors de la création du véhicule.';
+
+            return (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+                {errorMessage}
+              </div>
+            );
+          })()}
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button

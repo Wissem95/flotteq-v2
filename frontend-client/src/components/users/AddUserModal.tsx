@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
+import { AxiosError } from 'axios';
 import { toast } from 'sonner';
 import { usersService } from '../../api/services/users.service';
 import { UserRole } from '../../types/user.types';
 import type { User, CreateUserDto, UpdateUserDto } from '../../types/user.types';
+import { type ApiError } from '@/types/api.types';
 
 interface AddUserModalProps {
   isOpen: boolean;
@@ -63,8 +65,11 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
       onClose();
       setError('');
     },
-    onError: (err: any) => {
-      const message = err.response?.data?.message || 'Erreur lors de la création';
+    onError: (err: AxiosError<ApiError>) => {
+      const errorCode = err.response?.data?.code;
+      const message = errorCode === 'LIMIT_REACHED'
+        ? 'Limite d\'utilisateurs atteinte pour votre plan. Veuillez upgrader votre abonnement.'
+        : err.response?.data?.message || 'Erreur lors de la création';
       setError(message);
       toast.error(message);
     },
