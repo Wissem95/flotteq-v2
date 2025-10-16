@@ -22,6 +22,8 @@ import { DocumentsModule } from './documents/documents.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OnboardingModule } from './core/onboarding/onboarding.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { PartnersModule } from './modules/partners/partners.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 // import { StripeModule } from './stripe/stripe.module';
 // import stripeConfig from './config/stripe.config';
 
@@ -61,6 +63,8 @@ import { AuditModule } from './modules/audit/audit.module';
     OnboardingModule,
     // StripeModule,  // Temporairement désactivé - nécessite clé Stripe valide
     AuditModule,
+    PartnersModule,
+    BookingsModule,
     SubscriptionsModule,
     UsersModule,
     MaintenanceModule,

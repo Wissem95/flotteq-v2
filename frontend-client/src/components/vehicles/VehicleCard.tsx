@@ -21,7 +21,8 @@ const statusLabels = {
 
 export default function VehicleCard({ vehicle }: VehicleCardProps) {
   const hasPhoto = vehicle.photos && vehicle.photos.length > 0;
-  const photoUrl = vehicle.photos?.[0];
+  // Utiliser le thumbnail s'il existe, sinon fallback sur la photo originale
+  const photoUrl = vehicle.photoThumbnails?.[0] || vehicle.photos?.[0];
 
   return (
     <Link

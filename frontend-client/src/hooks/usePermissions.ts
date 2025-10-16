@@ -20,6 +20,7 @@ export type Permission =
   | 'maintenances.create'
   | 'maintenances.update'
   | 'maintenances.delete'
+  | 'maintenances.export'
   // Conducteurs
   | 'drivers.create'
   | 'drivers.update'
@@ -32,7 +33,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'vehicles.create', 'vehicles.update', 'vehicles.delete', 'vehicles.view',
     'users.create', 'users.update', 'users.delete', 'users.invite',
     'documents.create', 'documents.update', 'documents.delete',
-    'maintenances.create', 'maintenances.update', 'maintenances.delete',
+    'maintenances.create', 'maintenances.update', 'maintenances.delete', 'maintenances.export',
     'drivers.create', 'drivers.update', 'drivers.delete',
   ],
   [UserRole.SUPPORT]: [
@@ -40,7 +41,7 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'vehicles.create', 'vehicles.update', 'vehicles.delete', 'vehicles.view',
     'users.create', 'users.update', 'users.delete', 'users.invite',
     'documents.create', 'documents.update', 'documents.delete',
-    'maintenances.create', 'maintenances.update', 'maintenances.delete',
+    'maintenances.create', 'maintenances.update', 'maintenances.delete', 'maintenances.export',
     'drivers.create', 'drivers.update', 'drivers.delete',
   ],
   [UserRole.TENANT_ADMIN]: [
@@ -48,14 +49,14 @@ const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'vehicles.create', 'vehicles.update', 'vehicles.delete', 'vehicles.view',
     'users.create', 'users.update', 'users.delete', 'users.invite',
     'documents.create', 'documents.update', 'documents.delete',
-    'maintenances.create', 'maintenances.update', 'maintenances.delete',
+    'maintenances.create', 'maintenances.update', 'maintenances.delete', 'maintenances.export',
     'drivers.create', 'drivers.update', 'drivers.delete',
   ],
   [UserRole.MANAGER]: [
     // Manager peut gérer véhicules, documents et maintenances
     'vehicles.create', 'vehicles.update', 'vehicles.delete', 'vehicles.view',
     'documents.create', 'documents.update', 'documents.delete',
-    'maintenances.create', 'maintenances.update', 'maintenances.delete',
+    'maintenances.create', 'maintenances.update', 'maintenances.delete', 'maintenances.export',
     'drivers.create', 'drivers.update', 'drivers.delete',
   ],
   [UserRole.DRIVER]: [

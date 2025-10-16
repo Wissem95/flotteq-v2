@@ -33,6 +33,8 @@ export class TenantMiddleware implements NestMiddleware {
       '/health',
       '/api/docs',
       '/api/tenants',
+      '/api/partners',
+      '/api/partners/auth',
       '/api/dashboard/internal',
       '/api/subscriptions/plans', // Public pour l'inscription
       '/api/stripe/webhook', // Webhook Stripe (validation via signature)

@@ -113,6 +113,17 @@ export class VehiclesController {
     return this.vehiclesService.getCostAnalysis(id, tenantId);
   }
 
+  @Get(':id/tco')
+  @ApiOperation({ summary: 'Calcul du TCO (Total Cost of Ownership)' })
+  @ApiResponse({ status: 200, description: 'TCO calculé avec succès.' })
+  @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
+  getTCO(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: number,
+  ) {
+    return this.vehiclesService.calculateTCO(id, tenantId);
+  }
+
   @Get(':id/mileage-history')
   @ApiOperation({ summary: 'Récupérer l\'historique du kilométrage d\'un véhicule' })
   @ApiResponse({ status: 200, description: 'Historique du kilométrage récupéré avec succès.' })

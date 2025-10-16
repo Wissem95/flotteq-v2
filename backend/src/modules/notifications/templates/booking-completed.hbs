@@ -1,0 +1,33 @@
+<h2>🎉 Intervention terminée !</h2>
+
+<p>Bonjour {{tenantName}},</p>
+
+<p>L'intervention sur votre véhicule est terminée avec succès.</p>
+
+<div style="background-color: #d4edda; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #155724;">📋 Détails de l'intervention</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Réservation :</strong> #{{bookingData.bookingId}}</p>
+  <p style="margin: 8px 0;"><strong>Partenaire :</strong> {{bookingData.partnerName}}</p>
+  <p style="margin: 8px 0;"><strong>Service :</strong> {{bookingData.serviceName}}</p>
+</div>
+
+<div style="background-color: #e7f3ff; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #004085;">📝 Notes du partenaire</h3>
+  <p style="margin: 8px 0;">{{bookingData.notes}}</p>
+</div>
+
+<h3>💰 Montant de l'intervention</h3>
+<p style="font-size: 18px; font-weight: bold; color: #28a745;">{{bookingData.price}} € TTC</p>
+
+<a href="{{appUrl}}/bookings/{{bookingData.bookingId}}" class="button">Voir les détails</a>
+
+<div style="margin-top: 30px; padding: 15px; background-color: #fff3cd; border-radius: 6px;">
+  <h3 style="margin-top: 0; color: #856404;">⭐ Votre avis compte !</h3>
+  <p style="margin: 8px 0;">Aidez-nous à améliorer notre service en évaluant votre expérience avec ce partenaire.</p>
+  <a href="{{appUrl}}/bookings/{{bookingData.bookingId}}/review" class="button" style="background-color: #ffc107; border-color: #ffc107;">Laisser un avis</a>
+</div>
+
+<p style="color: #666; font-size: 14px; margin-top: 30px;">
+  Pour toute question ou réclamation, contactez-nous à support@flotteq.com
+</p>

@@ -121,4 +121,216 @@ export class EmailQueueService {
       throw error;
     }
   }
+
+  // Partner-related emails
+  async queuePartnerWelcomeEmail(email: string, firstName: string, companyName: string) {
+    try {
+      await this.emailQueue.add(
+        'partner-welcome',
+        {
+          email,
+          firstName,
+          companyName,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Partner welcome email queued for ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue partner welcome email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async queuePartnerApprovedEmail(email: string, firstName: string, companyName: string) {
+    try {
+      await this.emailQueue.add(
+        'partner-approved',
+        {
+          email,
+          firstName,
+          companyName,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Partner approved email queued for ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue partner approved email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async queuePartnerRejectedEmail(
+    email: string,
+    firstName: string,
+    companyName: string,
+    reason: string,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'partner-rejected',
+        {
+          email,
+          firstName,
+          companyName,
+          reason,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Partner rejected email queued for ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue partner rejected email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  // Booking-related emails
+  async queuePartnerBookingNew(
+    email: string,
+    companyName: string,
+    bookingData: any,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'partner-booking-new',
+        {
+          email,
+          companyName,
+          bookingData,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`New booking email queued for partner ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue partner booking new email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async queuePartnerBookingCancelled(
+    email: string,
+    companyName: string,
+    bookingData: any,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'partner-booking-cancelled',
+        {
+          email,
+          companyName,
+          bookingData,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Booking cancelled email queued for partner ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue partner booking cancelled email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async queueBookingConfirmed(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'booking-confirmed',
+        {
+          email,
+          tenantName,
+          bookingData,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Booking confirmed email queued for tenant ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue booking confirmed email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async queueBookingRejected(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'booking-rejected',
+        {
+          email,
+          tenantName,
+          bookingData,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Booking rejected email queued for tenant ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue booking rejected email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  async queueBookingCompleted(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'booking-completed',
+        {
+          email,
+          tenantName,
+          bookingData,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Booking completed email queued for tenant ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue booking completed email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
 }

@@ -1,0 +1,47 @@
+<h2>❌ Réservation annulée</h2>
+
+<p>Bonjour {{companyName}},</p>
+
+<p>Une réservation a été annulée sur FlotteQ.</p>
+
+<div style="background-color: #f8d7da; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #721c24;">📋 Réservation annulée</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Réservation :</strong> #{{bookingId}}</p>
+  <p style="margin: 8px 0;"><strong>Service :</strong> {{serviceName}}</p>
+  <p style="margin: 8px 0;"><strong>Date prévue :</strong> {{bookingDate}}</p>
+  <p style="margin: 8px 0;"><strong>Heure prévue :</strong> {{bookingTime}}</p>
+  <p style="margin: 8px 0;"><strong>Montant :</strong> {{price}} € TTC</p>
+</div>
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #856404;">ℹ️ Raison de l'annulation</h3>
+
+  <p style="margin: 8px 0;"><strong>Annulé par :</strong> {{cancelledBy}}</p>
+  <p style="margin: 8px 0;"><strong>Date d'annulation :</strong> {{cancellationDate}}</p>
+  <p style="margin: 8px 0;"><strong>Raison :</strong> {{cancellationReason}}</p>
+</div>
+
+<h3>📊 Impact financier</h3>
+<p style="color: #666;">
+  {{#if refundAmount}}
+    Un remboursement de <strong>{{refundAmount}} €</strong> sera effectué selon nos conditions générales.
+  {{else}}
+    Aucun remboursement n'est prévu pour cette annulation (délai dépassé ou cas particulier).
+  {{/if}}
+</p>
+
+<a href="{{appUrl}}/partner/bookings/{{bookingId}}" class="button">Voir les détails</a>
+
+<p style="margin-top: 30px; color: #666; font-size: 14px;">
+  <strong>Client :</strong> {{tenantName}}<br>
+  <strong>Véhicule :</strong> {{vehicleBrand}} {{vehicleModel}} ({{vehicleRegistration}})
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Ce créneau horaire est maintenant disponible pour une nouvelle réservation.
+</p>
+
+<p style="margin-top: 20px; padding: 12px; background-color: #e7f3ff; border-radius: 6px; color: #004085;">
+  💡 <strong>Astuce :</strong> Vous pouvez mettre à jour vos disponibilités pour maximiser vos réservations.
+</p>

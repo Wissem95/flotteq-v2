@@ -4,6 +4,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehiclesService } from '../../api/services/vehicles.service';
 import VehicleTimeline from '../../components/vehicles/VehicleTimeline';
 import VehicleCosts from '../../components/vehicles/VehicleCosts';
+import VehicleTCO from '../../components/vehicles/VehicleTCO';
+import MileageHistoryTimeline from '../../components/vehicles/MileageHistoryTimeline';
 import VehiclePhotos from '../../components/vehicles/VehiclePhotos';
 import { EntityDocumentsTab } from '../../components/documents/EntityDocumentsTab';
 import { DocumentEntityType } from '../../types/document.types';
@@ -13,7 +15,7 @@ import { ProtectedButton } from '@/components/common/ProtectedButton';
 
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState<'info' | 'photos' | 'timeline' | 'costs' | 'documents'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'photos' | 'timeline' | 'km' | 'costs' | 'documents'>('info');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const queryClient = useQueryClient();
@@ -183,6 +185,16 @@ export default function VehicleDetailPage() {
             Historique
           </button>
           <button
+            onClick={() => setActiveTab('km')}
+            className={`py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'km'
+                ? 'border-flotteq-blue text-flotteq-blue'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Kilométrage
+          </button>
+          <button
             onClick={() => setActiveTab('costs')}
             className={`py-4 px-1 border-b-2 font-medium text-sm ${
               activeTab === 'costs'
@@ -326,7 +338,14 @@ export default function VehicleDetailPage() {
 
       {activeTab === 'timeline' && <VehicleTimeline vehicleId={vehicle.id} />}
 
-      {activeTab === 'costs' && <VehicleCosts vehicleId={vehicle.id} />}
+      {activeTab === 'km' && <MileageHistoryTimeline vehicleId={vehicle.id} />}
+
+      {activeTab === 'costs' && (
+        <div className="space-y-6">
+          <VehicleTCO vehicleId={vehicle.id} />
+          <VehicleCosts vehicleId={vehicle.id} />
+        </div>
+      )}
 
       {activeTab === 'documents' && (
         <div className="bg-white rounded-lg shadow-sm p-6">

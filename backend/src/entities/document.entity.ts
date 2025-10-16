@@ -16,6 +16,8 @@ export enum DocumentEntityType {
   VEHICLE = 'vehicle',
   DRIVER = 'driver',
   MAINTENANCE = 'maintenance',
+  PARTNER = 'partner',
+  PARTNER_SERVICE = 'partner_service',
 }
 
 export enum DocumentType {
@@ -25,6 +27,9 @@ export enum DocumentType {
   CONTROLE_TECHNIQUE = 'controle_technique',
   FACTURE = 'facture',
   CONTRAT = 'contrat',
+  SIRET = 'siret',
+  INSURANCE_CERTIFICATE = 'insurance_certificate',
+  LOGO = 'logo',
   AUTRE = 'autre',
 }
 

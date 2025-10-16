@@ -1,0 +1,31 @@
+<h2>✅ Réservation confirmée !</h2>
+
+<p>Bonjour {{tenantName}},</p>
+
+<p>Bonne nouvelle ! Votre réservation a été confirmée par le partenaire.</p>
+
+<div style="background-color: #d4edda; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #155724;">📋 Détails de la réservation</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Réservation :</strong> #{{bookingData.bookingId}}</p>
+  <p style="margin: 8px 0;"><strong>Partenaire :</strong> {{bookingData.partnerName}}</p>
+  <p style="margin: 8px 0;"><strong>Service :</strong> {{bookingData.serviceName}}</p>
+  <p style="margin: 8px 0;"><strong>Date :</strong> {{bookingData.scheduledDate}}</p>
+  <p style="margin: 8px 0;"><strong>Heure :</strong> {{bookingData.scheduledTime}}</p>
+</div>
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <p style="margin: 0; color: #856404;">
+    📍 <strong>Adresse :</strong> {{bookingData.partnerAddress}}
+  </p>
+</div>
+
+<a href="{{appUrl}}/bookings/{{bookingData.bookingId}}" class="button">Voir ma réservation</a>
+
+<p style="margin-top: 30px; padding: 12px; background-color: #d1ecf1; border-radius: 6px; color: #0c5460;">
+  💡 <strong>Conseil :</strong> Pensez à arriver 10 minutes en avance pour faciliter la prise en charge.
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Pour toute question, contactez-nous à support@flotteq.com
+</p>

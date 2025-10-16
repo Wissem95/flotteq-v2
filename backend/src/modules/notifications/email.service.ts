@@ -36,7 +36,18 @@ export class EmailService {
 
   private loadTemplates() {
     const templatesDir = path.join(__dirname, 'templates');
-    const templateFiles = ['welcome', 'maintenance-reminder', 'document-expiring', 'password-reset', 'driver-welcome'];
+    const templateFiles = [
+      'welcome',
+      'maintenance-reminder',
+      'document-expiring',
+      'password-reset',
+      'driver-welcome',
+      'partner-welcome',
+      'partner-approved',
+      'partner-rejected',
+      'partner-booking-new',
+      'partner-booking-cancelled',
+    ];
 
     try {
       // Load layout

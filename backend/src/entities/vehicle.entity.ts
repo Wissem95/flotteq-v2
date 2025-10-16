@@ -100,6 +100,9 @@ export class Vehicle {
   @Column({ type: 'simple-array', nullable: true })
   photos: string[] | null;
 
+  @Column({ type: 'simple-array', nullable: true, name: 'photo_thumbnails' })
+  photoThumbnails: string[] | null;
+
   @Column({ type: String, name: 'assigned_driver_id', nullable: true })
   assignedDriverId: string | null;
 

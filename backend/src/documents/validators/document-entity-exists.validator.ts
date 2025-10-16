@@ -36,14 +36,19 @@ export class DocumentEntityExistsConstraint
     }
 
     // Map entityType vers nom d'entity
-    const entityMap = {
+    const entityMap: Record<DocumentEntityType, string | null> = {
       [DocumentEntityType.VEHICLE]: 'Vehicle',
       [DocumentEntityType.DRIVER]: 'Driver',
       [DocumentEntityType.MAINTENANCE]: 'Maintenance',
+      [DocumentEntityType.PARTNER]: null, // Partners will be validated in Sprint 2
+      [DocumentEntityType.PARTNER_SERVICE]: null, // Partner services will be validated in Sprint 2
     };
 
     const entityName = entityMap[entityType];
-    if (!entityName) return false;
+    if (!entityName) {
+      // For partner entities, skip validation (will be implemented in Sprint 2)
+      return entityType === DocumentEntityType.PARTNER || entityType === DocumentEntityType.PARTNER_SERVICE;
+    }
 
     try {
       const repository = this.dataSource.getRepository(entityName);

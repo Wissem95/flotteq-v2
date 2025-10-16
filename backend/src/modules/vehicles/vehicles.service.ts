@@ -13,6 +13,7 @@ import { Repository } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Document, DocumentEntityType } from '../../entities/document.entity';
 import { Maintenance, MaintenanceStatus } from '../maintenance/entities/maintenance.entity';
+import { MileageHistory, MileageSource } from '../../entities/mileage-history.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { QueryVehicleDto } from './dto/query-vehicle.dto';
@@ -27,6 +28,7 @@ import {
   MaintenanceCostByTypeDto,
 } from './dto/vehicle-cost-analysis.dto';
 import { MileageHistoryItemDto } from './dto/mileage-history.dto';
+import { VehicleTCODto } from './dto/vehicle-tco.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
 @Injectable()
@@ -40,6 +42,8 @@ export class VehiclesService {
     private readonly documentRepository: Repository<Document>,
     @InjectRepository(Maintenance)
     private readonly maintenanceRepository: Repository<Maintenance>,
+    @InjectRepository(MileageHistory)
+    private readonly mileageHistoryRepository: Repository<MileageHistory>,
     private readonly subscriptionsService: SubscriptionsService,
   ) {}
 
@@ -184,6 +188,96 @@ export class VehiclesService {
     return vehicle;
   }
 
+  /**
+   * Calcule le TCO (Total Cost of Ownership) d'un véhicule
+   */
+  async calculateTCO(id: string, tenantId: number): Promise<VehicleTCODto> {
+    const vehicle = await this.findOne(id, tenantId);
+
+    // Récupérer le coût total des maintenances
+    const maintenanceResult = await this.maintenanceRepository
+      .createQueryBuilder('m')
+      .select('COALESCE(SUM(m.actualCost), 0)', 'totalCost')
+      .where('m.vehicleId = :vehicleId', { vehicleId: id })
+      .andWhere('m.tenantId = :tenantId', { tenantId })
+      .andWhere('m.status = :status', { status: MaintenanceStatus.COMPLETED })
+      .getRawOne();
+
+    const totalMaintenanceCosts = parseFloat(maintenanceResult?.totalCost || '0');
+
+    // Calculer les kilomètres parcourus
+    const initialMileage = vehicle.initialMileage || 0;
+    const currentKm = vehicle.currentKm || 0;
+    const kmTraveled = Math.max(0, currentKm - initialMileage);
+
+    // Estimer le coût de carburant (0.08 €/km)
+    const FUEL_COST_PER_KM = 0.08;
+    const estimatedFuelCosts = kmTraveled * FUEL_COST_PER_KM;
+
+    // Prix d'achat et valeur actuelle
+    const purchasePrice = parseFloat(vehicle.purchasePrice?.toString() || '0');
+    const currentValue = parseFloat(vehicle.currentValue?.toString() || '0');
+
+    // Calcul du TCO
+    const totalTCO = purchasePrice + totalMaintenanceCosts + estimatedFuelCosts - currentValue;
+
+    // TCO par km (éviter division par zéro)
+    const tcoPerKm = kmTraveled > 0 ? totalTCO / kmTraveled : 0;
+
+    return {
+      vehicleId: vehicle.id,
+      purchasePrice,
+      currentValue,
+      totalMaintenanceCosts,
+      estimatedFuelCosts: parseFloat(estimatedFuelCosts.toFixed(2)),
+      totalTCO: parseFloat(totalTCO.toFixed(2)),
+      kmTraveled,
+      tcoPerKm: parseFloat(tcoPerKm.toFixed(4)),
+    };
+  }
+
+  /**
+   * Enregistre un relevé de kilométrage dans l'historique
+   */
+  async recordMileage(
+    vehicleId: string,
+    newMileage: number,
+    source: MileageSource,
+    tenantId: number,
+    notes?: string,
+  ): Promise<MileageHistory> {
+    // Récupérer le dernier relevé
+    const latestMileage = await this.mileageHistoryRepository.findOne({
+      where: { vehicleId, tenantId },
+      order: { recordedAt: 'DESC' },
+    });
+
+    const previousMileage = latestMileage?.mileage || 0;
+    const difference = Math.max(0, newMileage - previousMileage);
+
+    const history = this.mileageHistoryRepository.create({
+      vehicleId,
+      mileage: newMileage,
+      previousMileage,
+      difference,
+      source,
+      notes,
+      tenantId,
+    });
+
+    return this.mileageHistoryRepository.save(history);
+  }
+
+  /**
+   * Récupère l'historique complet du kilométrage d'un véhicule
+   */
+  async getMileageHistory(vehicleId: string, tenantId: number): Promise<MileageHistory[]> {
+    return this.mileageHistoryRepository.find({
+      where: { vehicleId, tenantId },
+      order: { recordedAt: 'DESC' },
+    });
+  }
+
   async update(
     id: string,
     updateVehicleDto: UpdateVehicleDto,
@@ -226,8 +320,27 @@ export class VehiclesService {
       }
     }
 
+    // Vérifier si le kilométrage a changé pour enregistrer dans l'historique
+    const kmChanged = updateVehicleDto.currentKm &&
+                      updateVehicleDto.currentKm !== vehicle.currentKm &&
+                      updateVehicleDto.currentKm > 0;
+
     Object.assign(vehicle, updateVehicleDto);
     const updatedVehicle = await this.vehicleRepository.save(vehicle);
+
+    // Enregistrer le changement de kilométrage
+    if (kmChanged) {
+      try {
+        await this.recordMileage(
+          vehicle.id,
+          updateVehicleDto.currentKm!,
+          MileageSource.MANUAL,
+          tenantId,
+        );
+      } catch (error) {
+        this.logger.warn(`Failed to record mileage history for vehicle ${id}`, error);
+      }
+    }
 
     this.logger.log(`Vehicle ${id} updated for tenant ${tenantId}`);
     return updatedVehicle;
@@ -558,8 +671,12 @@ export class VehiclesService {
       }
     }
 
-    // Mettre à jour le véhicule avec les nouvelles URLs
+    // Mettre à jour le véhicule avec les nouvelles URLs (photos + thumbnails)
+    const currentThumbnails = vehicle.photoThumbnails || [];
+    const thumbnailUrls = photoUrls.map(url => url.replace(/\/([^/]+)$/, '/thumb-$1'));
+
     vehicle.photos = [...currentPhotos, ...photoUrls];
+    vehicle.photoThumbnails = [...currentThumbnails, ...thumbnailUrls];
     const updatedVehicle = await this.vehicleRepository.save(vehicle);
 
     this.logger.log(`${photoUrls.length} photo(s) added to vehicle ${vehicleId}`);
@@ -599,69 +716,14 @@ export class VehiclesService {
       // Continue quand même pour nettoyer la DB
     }
 
-    // Retirer l'URL du tableau
+    // Retirer l'URL du tableau (et son thumbnail)
     vehicle.photos.splice(photoIndex, 1);
+    if (vehicle.photoThumbnails && vehicle.photoThumbnails.length > photoIndex) {
+      vehicle.photoThumbnails.splice(photoIndex, 1);
+    }
     const updatedVehicle = await this.vehicleRepository.save(vehicle);
 
     this.logger.log(`Photo removed from vehicle ${vehicleId}`);
     return updatedVehicle;
-  }
-
-  async getMileageHistory(
-    vehicleId: string,
-    tenantId: number,
-  ): Promise<MileageHistoryItemDto[]> {
-    const vehicle = await this.findOne(vehicleId, tenantId);
-
-    const history: MileageHistoryItemDto[] = [];
-
-    // Point de départ : création du véhicule avec kilométrage initial
-    if (vehicle.initialMileage !== null) {
-      history.push({
-        date: vehicle.purchaseDate || vehicle.createdAt,
-        mileage: vehicle.initialMileage,
-        source: 'creation',
-        change: 0,
-        description: 'Kilométrage initial à l\'achat',
-      });
-    }
-
-    // Récupérer les maintenances qui ont un kilométrage de prochaine maintenance
-    const maintenances = await this.maintenanceRepository.find({
-      where: { vehicleId, tenantId },
-      order: { scheduledDate: 'ASC' },
-    });
-
-    // Ajouter les maintenances avec leur kilométrage
-    maintenances.forEach((m) => {
-      if (m.nextMaintenanceKm) {
-        history.push({
-          date: m.scheduledDate,
-          mileage: m.nextMaintenanceKm,
-          source: 'maintenance',
-          change: 0, // Sera calculé plus tard
-          description: `Maintenance: ${m.description}`,
-        });
-      }
-    });
-
-    // Point actuel : kilométrage actuel du véhicule
-    history.push({
-      date: new Date(),
-      mileage: vehicle.currentKm,
-      source: 'current',
-      change: 0, // Sera calculé plus tard
-      description: 'Kilométrage actuel',
-    });
-
-    // Trier par date
-    history.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    // Calculer les changements entre chaque point
-    for (let i = 1; i < history.length; i++) {
-      history[i].change = history[i].mileage - history[i - 1].mileage;
-    }
-
-    return history;
   }
 }

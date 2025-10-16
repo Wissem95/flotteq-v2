@@ -1,0 +1,35 @@
+<h2>❌ Réservation refusée</h2>
+
+<p>Bonjour {{tenantName}},</p>
+
+<p>Malheureusement, votre réservation a été refusée par le partenaire.</p>
+
+<div style="background-color: #f8d7da; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #721c24;">📋 Détails de la réservation</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Réservation :</strong> #{{bookingData.bookingId}}</p>
+  <p style="margin: 8px 0;"><strong>Partenaire :</strong> {{bookingData.partnerName}}</p>
+  <p style="margin: 8px 0;"><strong>Service :</strong> {{bookingData.serviceName}}</p>
+</div>
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #856404;">💬 Motif du refus</h3>
+  <p style="margin: 8px 0;">{{bookingData.reason}}</p>
+</div>
+
+<p>Nous vous invitons à :</p>
+<ul>
+  <li>Choisir une autre date disponible</li>
+  <li>Contacter directement le partenaire</li>
+  <li>Rechercher un autre partenaire dans votre région</li>
+</ul>
+
+<a href="{{appUrl}}/partners" class="button">Rechercher un partenaire</a>
+
+<p style="margin-top: 30px; padding: 12px; background-color: #d1ecf1; border-radius: 6px; color: #0c5460;">
+  💡 <strong>Besoin d'aide ?</strong> Notre équipe est disponible pour vous aider à trouver un créneau alternatif.
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Contactez-nous à support@flotteq.com
+</p>

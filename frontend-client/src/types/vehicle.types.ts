@@ -42,6 +42,7 @@ export interface Vehicle {
   currentKm?: number;
   status: VehicleStatus;
   photos: string[] | null;
+  photoThumbnails: string[] | null;
   assignedDriverId: string | null;
   assignedDriver?: {
     id: string;
@@ -133,4 +134,28 @@ export interface CreateVehicleData {
 
 export interface UpdateVehicleData extends Partial<CreateVehicleData> {
   assignedDriverId?: string | null;
+}
+
+export interface VehicleTCO {
+  vehicleId: string;
+  purchasePrice: number;
+  currentValue: number;
+  totalMaintenanceCosts: number;
+  estimatedFuelCosts: number;
+  totalTCO: number;
+  kmTraveled: number;
+  tcoPerKm: number;
+}
+
+export type MileageSource = 'manual' | 'maintenance' | 'inspection';
+
+export interface MileageHistory {
+  id: string;
+  vehicleId: string;
+  mileage: number;
+  previousMileage: number | null;
+  difference: number;
+  source: MileageSource;
+  notes: string | null;
+  recordedAt: string;
 }

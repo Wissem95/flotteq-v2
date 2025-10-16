@@ -1,0 +1,47 @@
+<h2>🔔 Nouvelle réservation !</h2>
+
+<p>Bonjour {{companyName}},</p>
+
+<p>Vous avez reçu une nouvelle demande de réservation sur FlotteQ.</p>
+
+<div style="background-color: #d1ecf1; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #0c5460;">📋 Détails de la réservation</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Réservation :</strong> #{{bookingId}}</p>
+  <p style="margin: 8px 0;"><strong>Service :</strong> {{serviceName}}</p>
+  <p style="margin: 8px 0;"><strong>Date :</strong> {{bookingDate}}</p>
+  <p style="margin: 8px 0;"><strong>Heure :</strong> {{bookingTime}}</p>
+  <p style="margin: 8px 0;"><strong>Durée estimée :</strong> {{estimatedDuration}}</p>
+</div>
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #856404;">🚗 Véhicule</h3>
+
+  <p style="margin: 8px 0;"><strong>Marque/Modèle :</strong> {{vehicleBrand}} {{vehicleModel}}</p>
+  <p style="margin: 8px 0;"><strong>Immatriculation :</strong> {{vehicleRegistration}}</p>
+  <p style="margin: 8px 0;"><strong>Année :</strong> {{vehicleYear}}</p>
+  <p style="margin: 8px 0;"><strong>Kilométrage :</strong> {{vehicleKm}} km</p>
+</div>
+
+<div style="background-color: #e7f3ff; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #004085;">👤 Client</h3>
+
+  <p style="margin: 8px 0;"><strong>Entreprise :</strong> {{tenantName}}</p>
+  <p style="margin: 8px 0;"><strong>Contact :</strong> {{contactName}}</p>
+  <p style="margin: 8px 0;"><strong>Email :</strong> {{contactEmail}}</p>
+  <p style="margin: 8px 0;"><strong>Téléphone :</strong> {{contactPhone}}</p>
+</div>
+
+<h3>💰 Montant</h3>
+<p style="font-size: 18px; font-weight: bold; color: #28a745;">{{price}} € TTC</p>
+<p style="color: #666; font-size: 14px;">Votre commission : {{partnerCommission}} €</p>
+
+<a href="{{appUrl}}/partner/bookings/{{bookingId}}" class="button">Voir la réservation</a>
+
+<p style="margin-top: 30px; padding: 12px; background-color: #fff3cd; border-radius: 6px; color: #856404;">
+  ⚠️ <strong>Action requise :</strong> Veuillez accepter ou refuser cette réservation dans les 24 heures.
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Pour toute question, contactez-nous à support@flotteq.com
+</p>

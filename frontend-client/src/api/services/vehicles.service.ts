@@ -6,6 +6,8 @@ import type {
   VehicleStats,
   VehicleTimeline,
   VehicleCostAnalysis,
+  VehicleTCO,
+  MileageHistory,
   CreateVehicleData,
   UpdateVehicleData,
 } from '../../types/vehicle.types';
@@ -51,6 +53,16 @@ export const vehiclesService = {
 
   async getVehicleCostAnalysis(id: string): Promise<VehicleCostAnalysis> {
     const response = await api.get(`/vehicles/${id}/costs`);
+    return response.data;
+  },
+
+  async getVehicleTCO(id: string): Promise<VehicleTCO> {
+    const response = await api.get(`/vehicles/${id}/tco`);
+    return response.data;
+  },
+
+  async getMileageHistory(id: string): Promise<MileageHistory[]> {
+    const response = await api.get(`/vehicles/${id}/mileage-history`);
     return response.data;
   },
 
