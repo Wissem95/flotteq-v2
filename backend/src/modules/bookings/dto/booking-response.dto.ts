@@ -14,6 +14,12 @@ export class BookingResponseDto {
   @ApiProperty()
   tenantId: number;
 
+  @ApiProperty()
+  tenantName: string;
+
+  @ApiPropertyOptional()
+  tenantEmail: string | null;
+
   @ApiProperty({ format: 'uuid' })
   vehicleId: string;
 

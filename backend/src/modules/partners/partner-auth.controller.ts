@@ -2,14 +2,14 @@ import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PartnerAuthService } from './partner-auth.service';
 import { PartnersService } from './partners.service';
-import { PartnerAuthGuard } from './auth/guards/partner-auth.guard';
+import { HybridAuthGuard } from '../../core/auth/guards/hybrid-auth.guard';
 import { CurrentPartner } from './decorators/current-partner.decorator';
 import { PartnerLoginDto } from './dto/partner-login.dto';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('partners-auth')
-@Controller('partners')
+@Controller('partners/auth')
 export class PartnerAuthController {
   constructor(
     private readonly partnerAuthService: PartnerAuthService,
@@ -17,7 +17,7 @@ export class PartnerAuthController {
   ) {}
 
   @Public()
-  @Post()
+  @Post('register')
   @ApiOperation({ summary: 'Register a new partner (public)' })
   @ApiResponse({
     status: 201,
@@ -29,7 +29,7 @@ export class PartnerAuthController {
   }
 
   @Public()
-  @Post('auth/login')
+  @Post('login')
   @ApiOperation({ summary: 'Partner user login' })
   @ApiResponse({
     status: 200,
@@ -43,8 +43,8 @@ export class PartnerAuthController {
     return this.partnerAuthService.login(loginDto);
   }
 
-  @Get('auth/profile')
-  @UseGuards(PartnerAuthGuard)
+  @Get('profile')
+  @UseGuards(HybridAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get partner profile (authenticated)' })
   @ApiResponse({

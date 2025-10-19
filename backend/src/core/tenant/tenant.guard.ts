@@ -41,7 +41,14 @@ export class TenantGuard implements CanActivate {
       return true;
     }
 
-    // Vérifier tenantId pour les autres
+    // Partners → skip tenant restrictions (ils ont partnerId au lieu de tenantId)
+    if (user && user.type === 'partner' && user.partnerId) {
+      (request as any).isPartner = true;
+      (request as any).partnerId = user.partnerId;
+      return true;
+    }
+
+    // Vérifier tenantId pour les autres (tenants normaux)
     if (!user || !user.tenantId) {
       throw new ForbiddenException('Tenant ID is required');
     }

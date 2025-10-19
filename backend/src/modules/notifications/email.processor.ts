@@ -91,4 +91,143 @@ export class EmailProcessor {
       throw error;
     }
   }
+
+  @Process('partner-welcome')
+  async handlePartnerWelcomeEmail(job: Job<{ email: string; firstName: string; companyName: string }>) {
+    this.logger.debug(`Processing partner welcome email job ${job.id}`);
+
+    try {
+      await this.emailService.sendPartnerWelcomeEmail(
+        job.data.email,
+        job.data.firstName,
+        job.data.companyName,
+      );
+      this.logger.log(`Partner welcome email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send partner welcome email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('partner-approved')
+  async handlePartnerApprovedEmail(job: Job<{ email: string; firstName: string; companyName: string }>) {
+    this.logger.debug(`Processing partner approved email job ${job.id}`);
+
+    try {
+      await this.emailService.sendPartnerApprovedEmail(
+        job.data.email,
+        job.data.firstName,
+        job.data.companyName,
+      );
+      this.logger.log(`Partner approved email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send partner approved email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('partner-rejected')
+  async handlePartnerRejectedEmail(
+    job: Job<{ email: string; firstName: string; companyName: string; reason: string }>,
+  ) {
+    this.logger.debug(`Processing partner rejected email job ${job.id}`);
+
+    try {
+      await this.emailService.sendPartnerRejectedEmail(
+        job.data.email,
+        job.data.firstName,
+        job.data.companyName,
+        job.data.reason,
+      );
+      this.logger.log(`Partner rejected email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send partner rejected email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('partner-booking-new')
+  async handlePartnerBookingNew(job: Job<{ email: string; companyName: string; bookingData: any }>) {
+    this.logger.debug(`Processing partner booking new email job ${job.id}`);
+
+    try {
+      await this.emailService.sendPartnerBookingNew(
+        job.data.email,
+        job.data.companyName,
+        job.data.bookingData,
+      );
+      this.logger.log(`Partner booking new email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send partner booking new email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('partner-booking-cancelled')
+  async handlePartnerBookingCancelled(job: Job<{ email: string; companyName: string; bookingData: any }>) {
+    this.logger.debug(`Processing partner booking cancelled email job ${job.id}`);
+
+    try {
+      await this.emailService.sendPartnerBookingCancelled(
+        job.data.email,
+        job.data.companyName,
+        job.data.bookingData,
+      );
+      this.logger.log(`Partner booking cancelled email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send partner booking cancelled email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('booking-confirmed')
+  async handleBookingConfirmed(job: Job<{ email: string; tenantName: string; bookingData: any }>) {
+    this.logger.debug(`Processing booking confirmed email job ${job.id}`);
+
+    try {
+      await this.emailService.sendBookingConfirmed(
+        job.data.email,
+        job.data.tenantName,
+        job.data.bookingData,
+      );
+      this.logger.log(`Booking confirmed email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send booking confirmed email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('booking-rejected')
+  async handleBookingRejected(job: Job<{ email: string; tenantName: string; bookingData: any }>) {
+    this.logger.debug(`Processing booking rejected email job ${job.id}`);
+
+    try {
+      await this.emailService.sendBookingRejected(
+        job.data.email,
+        job.data.tenantName,
+        job.data.bookingData,
+      );
+      this.logger.log(`Booking rejected email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send booking rejected email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  @Process('booking-completed')
+  async handleBookingCompleted(job: Job<{ email: string; tenantName: string; bookingData: any }>) {
+    this.logger.debug(`Processing booking completed email job ${job.id}`);
+
+    try {
+      await this.emailService.sendBookingCompleted(
+        job.data.email,
+        job.data.tenantName,
+        job.data.bookingData,
+      );
+      this.logger.log(`Booking completed email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send booking completed email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
 }

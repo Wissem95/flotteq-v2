@@ -11,7 +11,7 @@ import { TenantMiddleware } from './core/tenant/tenant.middleware';
 import { TenantGuard } from './core/tenant/tenant.guard';
 import { TenantInterceptor } from './core/tenant/tenant.interceptor';
 import { AuthModule } from './core/auth/auth.module';
-import { JwtAuthGuard } from './core/auth/guards/jwt-auth.guard';
+import { HybridAuthGuard } from './core/auth/guards/hybrid-auth.guard';
 import { MaintenanceModule } from './modules/maintenance/maintenance.module';
 import { VehiclesModule } from './modules/vehicles/vehicles.module';
 import { DriversModule } from './modules/drivers.module';
@@ -24,6 +24,8 @@ import { OnboardingModule } from './core/onboarding/onboarding.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { PartnersModule } from './modules/partners/partners.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
+import { CommissionsModule } from './modules/commissions/commissions.module';
+import { AvailabilitiesModule } from './modules/availabilities/availabilities.module';
 // import { StripeModule } from './stripe/stripe.module';
 // import stripeConfig from './config/stripe.config';
 
@@ -65,6 +67,8 @@ import { BookingsModule } from './modules/bookings/bookings.module';
     AuditModule,
     PartnersModule,
     BookingsModule,
+    CommissionsModule,
+    AvailabilitiesModule,
     SubscriptionsModule,
     UsersModule,
     MaintenanceModule,
@@ -83,7 +87,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
     },
     {
       provide: APP_GUARD,
-      useClass: JwtAuthGuard, // Auth d'abord
+      useClass: HybridAuthGuard, // Auth d'abord (accepte tenant ET partner tokens)
     },
     {
       provide: APP_GUARD,
@@ -99,7 +103,17 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(TenantMiddleware)
-      .exclude('/api/auth/(.*)', '/auth/(.*)', '/health', '/api/docs(.*)', '/api/tenants(.*)', '/api/onboarding/(.*)', '/api/stripe/webhook')
+      .exclude(
+        '/api/auth/(.*)',
+        '/auth/(.*)',
+        '/health',
+        '/api/docs(.*)',
+        '/api/tenants(.*)',
+        '/api/onboarding/(.*)',
+        '/api/stripe/webhook',
+        '/api/availabilities/:partnerId',          // Public: voir schedule partner
+        '/api/availabilities/:partnerId/slots',    // Public: rechercher créneaux
+      )
       .forRoutes('*');
   }
 }

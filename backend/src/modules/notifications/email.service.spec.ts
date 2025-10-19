@@ -49,6 +49,14 @@ describe('EmailService', () => {
     expect(service['templates'].has('welcome')).toBe(true);
     expect(service['templates'].has('maintenance-reminder')).toBe(true);
     expect(service['templates'].has('document-expiring')).toBe(true);
+    expect(service['templates'].has('partner-welcome')).toBe(true);
+    expect(service['templates'].has('partner-approved')).toBe(true);
+    expect(service['templates'].has('partner-rejected')).toBe(true);
+    expect(service['templates'].has('partner-booking-new')).toBe(true);
+    expect(service['templates'].has('partner-booking-cancelled')).toBe(true);
+    expect(service['templates'].has('booking-confirmed')).toBe(true);
+    expect(service['templates'].has('booking-rejected')).toBe(true);
+    expect(service['templates'].has('booking-completed')).toBe(true);
   });
 
   it('should have a layout template', () => {
@@ -171,6 +179,214 @@ describe('EmailService', () => {
           firstName: 'John',
           daysUntil: 30,
           ...documentData,
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendPartnerWelcomeEmail', () => {
+    it('should prepare partner welcome email with correct context', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      await service.sendPartnerWelcomeEmail('partner@example.com', 'Jean', 'Garage Dupont');
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'partner@example.com',
+        subject: 'Bienvenue Garage Dupont sur FlotteQ',
+        template: 'partner-welcome',
+        context: expect.objectContaining({
+          firstName: 'Jean',
+          companyName: 'Garage Dupont',
+          email: 'partner@example.com',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendPartnerApprovedEmail', () => {
+    it('should prepare partner approved email with correct context', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      await service.sendPartnerApprovedEmail('partner@example.com', 'Jean', 'Garage Dupont');
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'partner@example.com',
+        subject: 'Garage Dupont - Votre compte partenaire est approuvé !',
+        template: 'partner-approved',
+        context: expect.objectContaining({
+          firstName: 'Jean',
+          companyName: 'Garage Dupont',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendPartnerRejectedEmail', () => {
+    it('should prepare partner rejected email with rejection reason', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      await service.sendPartnerRejectedEmail(
+        'partner@example.com',
+        'Jean',
+        'Garage Dupont',
+        'Documents incomplets',
+      );
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'partner@example.com',
+        subject: 'Garage Dupont - Mise à jour de votre demande de partenariat',
+        template: 'partner-rejected',
+        context: expect.objectContaining({
+          firstName: 'Jean',
+          companyName: 'Garage Dupont',
+          rejectionReason: 'Documents incomplets',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendPartnerBookingNew', () => {
+    it('should prepare new booking email for partner with booking details', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      const bookingData = {
+        bookingId: 'BK-123',
+        serviceName: 'Vidange complète',
+        scheduledDate: '2025-10-20',
+        scheduledTime: '14:00',
+        vehicleRegistration: 'AB-123-CD',
+        tenantName: 'FleetCorp',
+        price: 89.99,
+      };
+
+      await service.sendPartnerBookingNew('partner@example.com', 'Garage Dupont', bookingData);
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'partner@example.com',
+        subject: 'Nouvelle réservation #BK-123',
+        template: 'partner-booking-new',
+        context: expect.objectContaining({
+          companyName: 'Garage Dupont',
+          bookingId: 'BK-123',
+          serviceName: 'Vidange complète',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendPartnerBookingCancelled', () => {
+    it('should prepare booking cancellation email for partner', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      const bookingData = {
+        bookingId: 'BK-456',
+        serviceName: 'Révision',
+        reason: 'Client a annulé',
+        price: 150.0,
+      };
+
+      await service.sendPartnerBookingCancelled('partner@example.com', 'Garage Dupont', bookingData);
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'partner@example.com',
+        subject: 'Réservation annulée #BK-456',
+        template: 'partner-booking-cancelled',
+        context: expect.objectContaining({
+          companyName: 'Garage Dupont',
+          bookingId: 'BK-456',
+          serviceName: 'Révision',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendBookingConfirmed', () => {
+    it('should prepare booking confirmed email for tenant', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      const bookingData = {
+        bookingId: 'BK-789',
+        partnerName: 'Garage Dupont',
+        serviceName: 'Vidange',
+      };
+
+      await service.sendBookingConfirmed('tenant@example.com', 'FleetCorp', bookingData);
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'tenant@example.com',
+        subject: 'Réservation confirmée #BK-789',
+        template: 'booking-confirmed',
+        context: expect.objectContaining({
+          tenantName: 'FleetCorp',
+          bookingId: 'BK-789',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendBookingRejected', () => {
+    it('should prepare booking rejected email for tenant', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      const bookingData = {
+        bookingId: 'BK-999',
+        partnerName: 'Garage Dupont',
+        serviceName: 'Révision',
+        reason: 'Créneau non disponible',
+      };
+
+      await service.sendBookingRejected('tenant@example.com', 'FleetCorp', bookingData);
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'tenant@example.com',
+        subject: 'Réservation refusée #BK-999',
+        template: 'booking-rejected',
+        context: expect.objectContaining({
+          tenantName: 'FleetCorp',
+          bookingId: 'BK-999',
+        }),
+      });
+
+      sendEmailSpy.mockRestore();
+    });
+  });
+
+  describe('sendBookingCompleted', () => {
+    it('should prepare booking completed email for tenant', async () => {
+      const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
+
+      const bookingData = {
+        bookingId: 'BK-111',
+        partnerName: 'Garage Dupont',
+        serviceName: 'Vidange',
+        price: 89.99,
+        notes: 'Service effectué avec succès',
+      };
+
+      await service.sendBookingCompleted('tenant@example.com', 'FleetCorp', bookingData);
+
+      expect(sendEmailSpy).toHaveBeenCalledWith({
+        to: 'tenant@example.com',
+        subject: 'Service terminé #BK-111',
+        template: 'booking-completed',
+        context: expect.objectContaining({
+          tenantName: 'FleetCorp',
+          bookingId: 'BK-111',
+          price: 89.99,
         }),
       });
 

@@ -19,7 +19,7 @@ import { UpdateBookingDto } from './dto/update-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { BookingFilterDto } from './dto/booking-filter.dto';
 import { BookingResponseDto, BookingListResponseDto } from './dto/booking-response.dto';
-import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { HybridAuthGuard } from '../../core/auth/guards/hybrid-auth.guard';
 import { TenantGuard } from '../../core/tenant/tenant.guard';
 
 interface RequestWithUser {
@@ -31,8 +31,8 @@ interface RequestWithUser {
 }
 
 @ApiTags('Bookings')
-@Controller('api/bookings')
-@UseGuards(JwtAuthGuard, TenantGuard)
+@Controller('bookings')
+@UseGuards(HybridAuthGuard, TenantGuard)
 @ApiBearerAuth()
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
@@ -55,9 +55,15 @@ export class BookingsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all bookings for tenant with filters' })
+  @ApiOperation({ summary: 'Get all bookings for tenant or partner with filters' })
   @ApiResponse({ status: 200, description: 'Bookings retrieved successfully', type: BookingListResponseDto })
   async findAll(@Query() filters: BookingFilterDto, @Request() req: RequestWithUser): Promise<BookingListResponseDto> {
+    // If partner, use findByPartner method
+    if (req.user.partnerId) {
+      return this.bookingsService.findByPartner(req.user.partnerId, filters);
+    }
+
+    // If tenant, use tenantId
     const tenantId = req.user.tenantId;
     return this.bookingsService.findAll(tenantId, filters);
   }

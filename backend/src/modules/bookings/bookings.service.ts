@@ -19,6 +19,7 @@ import { BookingResponseDto, BookingListResponseDto } from './dto/booking-respon
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../../entities/audit-log.entity';
+import { CommissionsService } from '../commissions/commissions.service';
 
 @Injectable()
 export class BookingsService {
@@ -35,6 +36,7 @@ export class BookingsService {
     private vehicleRepository: Repository<Vehicle>,
     private emailQueueService: EmailQueueService,
     private auditService: AuditService,
+    private commissionsService: CommissionsService,
   ) {}
 
   async create(createBookingDto: CreateBookingDto, tenantId: number, userId: string): Promise<Booking> {
@@ -203,11 +205,11 @@ export class BookingsService {
 
     const query = this.bookingRepository
       .createQueryBuilder('booking')
-      .leftJoinAndSelect('booking.partner', 'partner')
       .leftJoinAndSelect('booking.service', 'service')
       .leftJoinAndSelect('booking.vehicle', 'vehicle')
       .leftJoinAndSelect('booking.driver', 'driver')
-      .leftJoinAndSelect('booking.tenant', 'tenant')
+      .leftJoin('booking.tenant', 'tenant')
+      .addSelect(['tenant.id', 'tenant.name', 'tenant.email'])
       .where('booking.partner_id = :partnerId', { partnerId });
 
     if (status) {
@@ -221,12 +223,14 @@ export class BookingsService {
       });
     }
 
-    query.orderBy('booking.scheduled_date', 'DESC');
-
     const total = await query.getCount();
     const totalPages = Math.ceil(total / limit);
 
-    query.skip((page - 1) * limit).take(limit);
+    query
+      .orderBy('booking.scheduledDate', 'DESC')  // Property name (camelCase)
+      .addOrderBy('booking.scheduledTime', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
 
     const bookings = await query.getMany();
 
@@ -492,6 +496,16 @@ export class BookingsService {
 
     this.logger.log(`Booking ${id} completed by partner ${partnerId}. Commission: ${commissionAmount}€`);
 
+    // Create commission record
+    try {
+      await this.commissionsService.createFromBooking(updatedBooking);
+      this.logger.log(`Commission created for booking ${id}`);
+    } catch (error) {
+      this.logger.error(`Failed to create commission for booking ${id}`, error);
+      // Don't fail the booking completion if commission creation fails
+      // This can be handled manually later
+    }
+
     return updatedBooking;
   }
 
@@ -554,6 +568,8 @@ export class BookingsService {
       partnerId: booking.partnerId,
       partnerName: booking.partner?.companyName || 'Unknown',
       tenantId: booking.tenantId,
+      tenantName: booking.tenant?.name || 'Unknown',
+      tenantEmail: booking.tenant?.email || null,
       vehicleId: booking.vehicleId,
       vehicleRegistration: booking.vehicle?.registration || 'Unknown',
       driverId: booking.driverId,

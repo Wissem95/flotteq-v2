@@ -8,11 +8,14 @@ import { PartnerUser } from '../../entities/partner-user.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { PartnersService } from './partners.service';
 import { PartnerAuthService } from './partner-auth.service';
+import { SearchService } from './search.service';
 import { PartnersController } from './partners.controller';
 import { PartnerAuthController } from './partner-auth.controller';
 import { PartnerJwtStrategy } from './auth/strategies/partner-jwt.strategy';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AuditModule } from '../audit/audit.module';
+import { AvailabilitiesModule } from '../availabilities/availabilities.module';
+import { SimpleCacheService } from '../../common/cache/simple-cache.service';
 
 @Module({
   imports: [
@@ -30,9 +33,10 @@ import { AuditModule } from '../audit/audit.module';
     }),
     NotificationsModule,
     AuditModule,
+    AvailabilitiesModule,
   ],
   controllers: [PartnersController, PartnerAuthController],
-  providers: [PartnersService, PartnerAuthService, PartnerJwtStrategy],
+  providers: [PartnersService, PartnerAuthService, SearchService, PartnerJwtStrategy, SimpleCacheService],
   exports: [PartnersService, PartnerAuthService],
 })
 export class PartnersModule {}

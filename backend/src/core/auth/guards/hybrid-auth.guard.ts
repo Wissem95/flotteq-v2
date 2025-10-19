@@ -1,10 +1,14 @@
 import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from '../../../../common/decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../../../common/decorators/public.decorator';
 
+/**
+ * Hybrid Auth Guard that accepts both tenant JWT and partner JWT tokens
+ * Tries 'jwt' strategy first, then falls back to 'partner-jwt' strategy
+ */
 @Injectable()
-export class PartnerAuthGuard extends AuthGuard('partner-jwt') {
+export class HybridAuthGuard extends AuthGuard(['jwt', 'partner-jwt']) {
   constructor(private reflector: Reflector) {
     super();
   }
@@ -23,14 +27,10 @@ export class PartnerAuthGuard extends AuthGuard('partner-jwt') {
     return super.canActivate(context);
   }
 
-  handleRequest(err: any, user: any, info: any) {
+  handleRequest(err: any, user: any, info: any, context: ExecutionContext) {
+    // If both strategies failed, throw unauthorized
     if (err || !user) {
-      throw err || new UnauthorizedException('Invalid partner credentials');
-    }
-
-    // Additional check to ensure this is a partner token
-    if (user.type !== 'partner') {
-      throw new UnauthorizedException('This endpoint requires partner authentication');
+      throw err || new UnauthorizedException('Invalid credentials');
     }
 
     return user;

@@ -11,23 +11,75 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
+import { SearchService } from './search.service';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
+import { HybridAuthGuard } from '../../core/auth/guards/hybrid-auth.guard';
 import { TenantGuard } from '../../core/tenant/tenant.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { User } from '../../entities/user.entity';
 import { UserRole } from '../../entities/user.entity';
 import { Auditable } from '../../common/decorators/auditable.decorator';
 import { AuditAction } from '../../entities/audit-log.entity';
-import { PartnerAuthGuard } from './auth/guards/partner-auth.guard';
 import { CurrentPartner } from './decorators/current-partner.decorator';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { SearchPartnersDto } from './dto/search-partners.dto';
 
 @ApiTags('partners')
 @Controller('partners')
 export class PartnersController {
-  constructor(private readonly partnersService: PartnersService) {}
+  constructor(
+    private readonly partnersService: PartnersService,
+    private readonly searchService: SearchService,
+  ) {}
+
+  // Tenant search endpoint - Authenticated users only
+  @UseGuards(JwtAuthGuard, TenantGuard)
+  @ApiBearerAuth()
+  @Post('search')
+  @ApiOperation({
+    summary: 'Search partners by geolocation (Tenant)',
+    description: 'Authenticated tenant users can search for approved partners within a specified radius, with optional filters for type, services, price, rating, and availability'
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Partners search results with pagination.',
+    schema: {
+      example: {
+        data: [
+          {
+            id: 'uuid',
+            companyName: 'Garage Martin',
+            type: 'garage',
+            distance: 3.2,
+            rating: 4.5,
+            services: [{ name: 'Vidange', price: 80 }],
+            hasAvailability: true,
+            relevanceScore: 87.5
+          }
+        ],
+        meta: {
+          total: 15,
+          page: 1,
+          limit: 20,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPreviousPage: false
+        }
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Invalid search parameters.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Authentication required.' })
+  async searchPartners(
+    @CurrentUser() user: User,
+    @Body() searchPartnersDto: SearchPartnersDto,
+  ) {
+    return this.searchService.searchPartners(searchPartnersDto);
+  }
 
   // Admin endpoints (tenant users with admin roles)
   @Get()
@@ -109,7 +161,7 @@ export class PartnersController {
 
   // Partner-authenticated endpoints (for partner users managing their own data)
   @Patch('me')
-  @UseGuards(PartnerAuthGuard)
+  @UseGuards(HybridAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update own partner profile (partner user)' })
   @ApiResponse({ status: 200, description: 'Partner profile updated.' })
@@ -121,16 +173,21 @@ export class PartnersController {
   }
 
   @Get('me/services')
-  @UseGuards(PartnerAuthGuard)
+  @UseGuards(HybridAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get own partner services (partner user)' })
   @ApiResponse({ status: 200, description: 'Services retrieved.' })
   async getOwnServices(@CurrentPartner('partnerId') partnerId: string) {
-    return this.partnersService.getPartnerServices(partnerId);
+    const services = await this.partnersService.getPartnerServices(partnerId);
+    return {
+      message: 'Services retrieved successfully',
+      count: services.length,
+      services,
+    };
   }
 
   @Post('me/services')
-  @UseGuards(PartnerAuthGuard)
+  @UseGuards(HybridAuthGuard)
   @Auditable({ entityType: 'partner_service', action: AuditAction.CREATE })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Add service to own partner (partner user)' })
@@ -144,7 +201,7 @@ export class PartnersController {
   }
 
   @Patch('services/:serviceId')
-  @UseGuards(PartnerAuthGuard)
+  @UseGuards(HybridAuthGuard)
   @Auditable({ entityType: 'partner_service', action: AuditAction.UPDATE })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update partner service (partner user)' })
@@ -158,7 +215,7 @@ export class PartnersController {
   }
 
   @Delete('services/:serviceId')
-  @UseGuards(PartnerAuthGuard)
+  @UseGuards(HybridAuthGuard)
   @Auditable({ entityType: 'partner_service', action: AuditAction.DELETE })
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete partner service (partner user)' })

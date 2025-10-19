@@ -47,6 +47,9 @@ export class EmailService {
       'partner-rejected',
       'partner-booking-new',
       'partner-booking-cancelled',
+      'booking-confirmed',
+      'booking-rejected',
+      'booking-completed',
     ];
 
     try {
@@ -177,6 +180,119 @@ export class EmailService {
         tenantName,
         email,
         tempPassword,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendPartnerWelcomeEmail(email: string, firstName: string, companyName: string) {
+    await this.sendEmail({
+      to: email,
+      subject: `Bienvenue ${companyName} sur FlotteQ`,
+      template: 'partner-welcome',
+      context: {
+        firstName,
+        companyName,
+        email,
+        siret: '', // Will be populated from context
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendPartnerApprovedEmail(email: string, firstName: string, companyName: string) {
+    await this.sendEmail({
+      to: email,
+      subject: `${companyName} - Votre compte partenaire est approuvé !`,
+      template: 'partner-approved',
+      context: {
+        firstName,
+        companyName,
+        commissionRate: '15', // Default, will be overridden if provided in context
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendPartnerRejectedEmail(
+    email: string,
+    firstName: string,
+    companyName: string,
+    rejectionReason: string,
+  ) {
+    await this.sendEmail({
+      to: email,
+      subject: `${companyName} - Mise à jour de votre demande de partenariat`,
+      template: 'partner-rejected',
+      context: {
+        firstName,
+        companyName,
+        rejectionReason,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendPartnerBookingNew(email: string, companyName: string, bookingData: any) {
+    await this.sendEmail({
+      to: email,
+      subject: `Nouvelle réservation #${bookingData.bookingId || 'N/A'}`,
+      template: 'partner-booking-new',
+      context: {
+        companyName,
+        ...bookingData,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendPartnerBookingCancelled(email: string, companyName: string, bookingData: any) {
+    await this.sendEmail({
+      to: email,
+      subject: `Réservation annulée #${bookingData.bookingId || 'N/A'}`,
+      template: 'partner-booking-cancelled',
+      context: {
+        companyName,
+        ...bookingData,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendBookingConfirmed(email: string, tenantName: string, bookingData: any) {
+    await this.sendEmail({
+      to: email,
+      subject: `Réservation confirmée #${bookingData.bookingId || 'N/A'}`,
+      template: 'booking-confirmed',
+      context: {
+        tenantName,
+        ...bookingData,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendBookingRejected(email: string, tenantName: string, bookingData: any) {
+    await this.sendEmail({
+      to: email,
+      subject: `Réservation refusée #${bookingData.bookingId || 'N/A'}`,
+      template: 'booking-rejected',
+      context: {
+        tenantName,
+        ...bookingData,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendBookingCompleted(email: string, tenantName: string, bookingData: any) {
+    await this.sendEmail({
+      to: email,
+      subject: `Service terminé #${bookingData.bookingId || 'N/A'}`,
+      template: 'booking-completed',
+      context: {
+        tenantName,
+        ...bookingData,
         appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
       },
     });
