@@ -15,6 +15,7 @@ import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { EmailQueueService } from '../notifications/email-queue.service';
+import { StripeService } from '../../stripe/stripe.service';
 
 @Injectable()
 export class PartnersService {
@@ -29,6 +30,7 @@ export class PartnersService {
     private partnerServiceRepository: Repository<PartnerService>,
     private emailQueueService: EmailQueueService,
     private dataSource: DataSource,
+    private stripeService: StripeService,
   ) {}
 
   async create(createPartnerDto: CreatePartnerDto): Promise<Partner> {
@@ -266,5 +268,126 @@ export class PartnersService {
       where: { partnerId, isActive: true },
       order: { name: 'ASC' },
     });
+  }
+
+  /**
+   * Créer un compte Stripe Connect pour le partner
+   */
+  async createStripeConnectAccount(partnerId: string): Promise<{ url: string }> {
+    const partner = await this.partnerRepository.findOne({
+      where: { id: partnerId },
+    });
+
+    if (!partner) {
+      throw new NotFoundException('Partner not found');
+    }
+
+    if (partner.stripeAccountId) {
+      throw new BadRequestException('Stripe account already exists');
+    }
+
+    // Créer compte Stripe Connect (Express type)
+    const account = await this.stripeService.stripe.accounts.create({
+      type: 'express',
+      country: 'FR',
+      email: partner.email,
+      capabilities: {
+        transfers: { requested: true },
+      },
+      business_profile: {
+        name: partner.companyName,
+        support_email: partner.email,
+      },
+      metadata: {
+        partnerId: partner.id,
+        partnerType: partner.type,
+      },
+    });
+
+    // Sauvegarder stripeAccountId
+    partner.stripeAccountId = account.id;
+    await this.partnerRepository.save(partner);
+
+    this.logger.log(
+      `Stripe Connect account created for partner ${partnerId}: ${account.id}`,
+    );
+
+    // Créer lien d'onboarding
+    const frontendUrl = process.env.PARTNER_FRONTEND_URL || 'http://localhost:5175';
+
+    const accountLink = await this.stripeService.stripe.accountLinks.create({
+      account: account.id,
+      refresh_url: `${frontendUrl}/settings?stripe=refresh`,
+      return_url: `${frontendUrl}/settings?stripe=success`,
+      type: 'account_onboarding',
+    });
+
+    return { url: accountLink.url };
+  }
+
+  /**
+   * Vérifier le statut d'onboarding Stripe du partner
+   */
+  async getStripeOnboardingStatus(partnerId: string): Promise<{
+    completed: boolean;
+    accountId?: string;
+    chargesEnabled?: boolean;
+    payoutsEnabled?: boolean;
+  }> {
+    const partner = await this.partnerRepository.findOne({
+      where: { id: partnerId },
+    });
+
+    if (!partner) {
+      throw new NotFoundException('Partner not found');
+    }
+
+    if (!partner.stripeAccountId) {
+      return { completed: false };
+    }
+
+    // Récupérer infos compte Stripe
+    const account = await this.stripeService.stripe.accounts.retrieve(
+      partner.stripeAccountId,
+    );
+
+    const completed = account.charges_enabled && account.payouts_enabled;
+
+    // Mettre à jour statut en DB si changé
+    if (completed !== partner.stripeOnboardingCompleted) {
+      partner.stripeOnboardingCompleted = completed;
+      await this.partnerRepository.save(partner);
+    }
+
+    return {
+      completed,
+      accountId: partner.stripeAccountId,
+      chargesEnabled: account.charges_enabled,
+      payoutsEnabled: account.payouts_enabled,
+    };
+  }
+
+  /**
+   * Créer un nouveau lien d'onboarding (si expiré)
+   */
+  async refreshStripeOnboardingLink(partnerId: string): Promise<{ url: string }> {
+    const partner = await this.partnerRepository.findOne({
+      where: { id: partnerId },
+    });
+
+    if (!partner?.stripeAccountId) {
+      throw new BadRequestException('No Stripe account found');
+    }
+
+    const frontendUrl = process.env.PARTNER_FRONTEND_URL || 'http://localhost:5175';
+
+    const accountLink = await this.stripeService.stripe.accountLinks.create({
+      account: partner.stripeAccountId,
+      refresh_url: `${frontendUrl}/settings?stripe=refresh`,
+      return_url: `${frontendUrl}/settings?stripe=success`,
+      type: 'account_onboarding',
+    });
+
+    return { url: accountLink.url };
   }
 }

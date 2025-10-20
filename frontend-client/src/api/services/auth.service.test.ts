@@ -44,7 +44,8 @@ describe('authService', () => {
 
       const result = await authService.register(registerData);
 
-      expect(result.checkoutUrl).toBe('https://stripe.com/checkout');
+      // checkoutUrl removed from AuthResponse type
+      expect(result.access_token).toBeDefined();
       expect(api.post).toHaveBeenCalledWith('/auth/register', registerData);
     });
   });

@@ -1,4 +1,5 @@
 import { Injectable, Inject, Logger } from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import { ConfigType } from '@nestjs/config';
 import Stripe from 'stripe';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -10,7 +11,7 @@ import stripeConfig from '../config/stripe.config';
 
 @Injectable()
 export class StripeService {
-  private stripe: Stripe;
+  public stripe: Stripe;
   private readonly logger = new Logger(StripeService.name);
 
   constructor(
@@ -22,6 +23,7 @@ export class StripeService {
     private subscriptionPlanRepository: Repository<SubscriptionPlan>,
     @InjectRepository(Subscription)
     private subscriptionRepository: Repository<Subscription>,
+    private moduleRef: ModuleRef,
   ) {
     this.stripe = new Stripe(this.config.secretKey, {
       apiVersion: '2025-09-30.clover',
@@ -165,6 +167,14 @@ export class StripeService {
 
         case 'invoice.payment_failed':
           await this.handlePaymentFailed(event.data.object as Stripe.Invoice);
+          break;
+
+        case 'payment_intent.succeeded':
+          await this.handlePaymentIntentSucceeded(event);
+          break;
+
+        case 'account.updated':
+          await this.handleAccountUpdated(event);
           break;
 
         default:
@@ -457,5 +467,55 @@ export class StripeService {
       this.logger.error(`Failed to get payment method for customer ${customerId}`, error);
       return null;
     }
+  }
+
+  /**
+   * Handler pour payment_intent.succeeded (Bookings Payment)
+   */
+  private async handlePaymentIntentSucceeded(event: Stripe.Event): Promise<void> {
+    const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+    const type = paymentIntent.metadata?.type;
+    const bookingId = paymentIntent.metadata?.bookingId;
+
+    if (type !== 'booking_payment' || !bookingId) {
+      this.logger.log('PaymentIntent without booking metadata, skipping');
+      return;
+    }
+
+    try {
+      // Utiliser ModuleRef pour éviter circular dependency
+      const { BookingsPaymentService } = await import('../modules/bookings/bookings-payment.service');
+      const bookingsPaymentService = this.moduleRef.get(BookingsPaymentService, { strict: false });
+
+      await bookingsPaymentService.handlePaymentSuccess(paymentIntent.id);
+
+      this.logger.log(`✅ Booking ${bookingId} payment processed successfully`);
+    } catch (error) {
+      this.logger.error(`Error processing payment for booking ${bookingId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handler pour account.updated (Stripe Connect Partner Onboarding)
+   */
+  private async handleAccountUpdated(event: Stripe.Event): Promise<void> {
+    const account = event.data.object as Stripe.Account;
+    const partnerId = account.metadata?.partnerId;
+
+    if (!partnerId) {
+      this.logger.log('Account updated without partnerId metadata, skipping');
+      return;
+    }
+
+    const completed = account.charges_enabled && account.payouts_enabled;
+
+    this.logger.log(
+      `Partner ${partnerId} Stripe account updated. Charges: ${account.charges_enabled}, Payouts: ${account.payouts_enabled}, Completed: ${completed}`
+    );
+
+    // Optionnel : Mettre à jour partner en DB si nécessaire
+    // Pour l'instant, le statut est vérifié à la demande via getStripeOnboardingStatus
   }
 }

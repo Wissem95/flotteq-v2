@@ -12,13 +12,21 @@ interface CommissionsFilters {
   endDate?: string;
 }
 
+interface CommissionListResponse {
+  data: Commission[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 export const useCommissions = (filters?: CommissionsFilters) => {
   const user = useAuthStore((state) => state.user);
   const partnerId = user?.partnerId;
 
   return useQuery({
     queryKey: ['commissions', partnerId, filters],
-    queryFn: async (): Promise<Commission[]> => {
+    queryFn: async (): Promise<CommissionListResponse> => {
       if (!partnerId) throw new Error('Partner ID not found');
 
       // Backend extrait partnerId du JWT automatiquement
@@ -27,7 +35,7 @@ export const useCommissions = (filters?: CommissionsFilters) => {
         params: filters,
       });
 
-      return response.data.commissions || [];
+      return response.data;
     },
     enabled: !!partnerId,
     staleTime: 1000 * 60 * 5, // 5 minutes
@@ -58,7 +66,7 @@ export const useWeeklyRevenue = () => {
         },
       });
 
-      const commissions: Commission[] = response.data.commissions || [];
+      const commissions: Commission[] = response.data.data || [];
 
       // Group by week
       const weeklyData = new Map<string, { amount: number; count: number }>();
@@ -174,7 +182,7 @@ export const useMonthlyRevenue = () => {
         },
       });
 
-      const commissions: Commission[] = response.data.commissions || [];
+      const commissions: Commission[] = response.data.data || [];
 
       // Group by month
       const monthlyData = new Map<string, { amount: number; count: number }>();

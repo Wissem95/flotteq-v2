@@ -1,8 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import QuickCreateMaintenanceModal from './QuickCreateMaintenanceModal';
-import { MaintenanceType } from '../../types/maintenance.types';
 
 // Mock hooks
 vi.mock('../../hooks/useMaintenance', () => ({

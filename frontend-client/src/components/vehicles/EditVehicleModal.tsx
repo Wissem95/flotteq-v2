@@ -27,7 +27,7 @@ export default function EditVehicleModal({ isOpen, onClose, vehicle }: EditVehic
         transmission: vehicle.transmission,
         fuelType: vehicle.fuelType,
         currentKm: vehicle.currentKm || vehicle.mileage,
-        initialMileage: vehicle.initialMileage,
+        initialMileage: vehicle.initialMileage ?? undefined,
         purchaseDate: vehicle.purchaseDate ? new Date(vehicle.purchaseDate).toISOString().split('T')[0] : undefined,
         purchasePrice: vehicle.purchasePrice,
         lastTechnicalInspection: vehicle.lastTechnicalInspection ? new Date(vehicle.lastTechnicalInspection).toISOString().split('T')[0] : undefined,

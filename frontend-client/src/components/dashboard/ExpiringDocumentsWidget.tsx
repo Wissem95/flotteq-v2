@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, Calendar, FileText, ChevronRight } from 'lucide-react';
+import { AlertTriangle, Calendar, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useExpiringDocuments } from '../../api/services/documents.service';

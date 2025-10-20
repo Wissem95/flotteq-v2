@@ -208,8 +208,7 @@ export class BookingsService {
       .leftJoinAndSelect('booking.service', 'service')
       .leftJoinAndSelect('booking.vehicle', 'vehicle')
       .leftJoinAndSelect('booking.driver', 'driver')
-      .leftJoin('booking.tenant', 'tenant')
-      .addSelect(['tenant.id', 'tenant.name', 'tenant.email'])
+      .leftJoinAndSelect('booking.tenant', 'tenant')
       .where('booking.partner_id = :partnerId', { partnerId });
 
     if (status) {

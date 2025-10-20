@@ -26,8 +26,12 @@ export default function InvoicesTable() {
     }
   };
 
-  const handleDownload = (invoiceId: string) => {
-    billingService.downloadInvoice(invoiceId);
+  const handleDownload = async (invoiceId: string) => {
+    try {
+      await billingService.downloadInvoice(invoiceId);
+    } catch (err) {
+      console.error('Failed to download invoice:', err);
+    }
   };
 
   const formatAmount = (amount: number, currency: string) => {
@@ -122,7 +126,7 @@ export default function InvoicesTable() {
                     {getStatusBadge(invoice.status)}
                   </td>
                   <td className="py-4 px-4 text-right">
-                    {invoice.pdfUrl && (
+                    {invoice.pdfUrl ? (
                       <a
                         href={invoice.pdfUrl}
                         target="_blank"
@@ -132,6 +136,14 @@ export default function InvoicesTable() {
                         <Download className="h-4 w-4" />
                         Voir PDF
                       </a>
+                    ) : (
+                      <button
+                        onClick={() => handleDownload(invoice.id)}
+                        className="inline-flex items-center gap-2 text-flotteq-blue hover:text-flotteq-navy transition-colors text-sm font-medium"
+                      >
+                        <Download className="h-4 w-4" />
+                        Télécharger
+                      </button>
                     )}
                   </td>
                 </tr>

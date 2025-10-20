@@ -14,6 +14,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
+import { BookingsPaymentService } from './bookings-payment.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
@@ -35,7 +36,10 @@ interface RequestWithUser {
 @UseGuards(HybridAuthGuard, TenantGuard)
 @ApiBearerAuth()
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingsService: BookingsService,
+    private readonly bookingsPaymentService: BookingsPaymentService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new booking (Tenant)' })
@@ -271,5 +275,15 @@ export class BookingsController {
   async remove(@Param('id') id: string, @Request() req: RequestWithUser): Promise<void> {
     const tenantId = req.user.tenantId;
     await this.bookingsService.remove(id, tenantId);
+  }
+
+  @Post(':id/payment')
+  @ApiOperation({ summary: 'Create payment intent for booking' })
+  @ApiParam({ name: 'id', format: 'uuid' })
+  @ApiResponse({ status: 200, description: 'Payment intent created' })
+  @ApiResponse({ status: 400, description: 'Booking cannot be paid' })
+  @ApiResponse({ status: 403, description: 'Not your booking' })
+  async createPayment(@Param('id') id: string, @Request() req: RequestWithUser): Promise<any> {
+    return this.bookingsPaymentService.createPaymentIntent(id, req.user.tenantId);
   }
 }

@@ -16,6 +16,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { AuditModule } from '../audit/audit.module';
 import { AvailabilitiesModule } from '../availabilities/availabilities.module';
 import { SimpleCacheService } from '../../common/cache/simple-cache.service';
+import { StripeModule } from '../../stripe/stripe.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { SimpleCacheService } from '../../common/cache/simple-cache.service';
     NotificationsModule,
     AuditModule,
     AvailabilitiesModule,
+    StripeModule,
   ],
   controllers: [PartnersController, PartnerAuthController],
   providers: [PartnersService, PartnerAuthService, SearchService, PartnerJwtStrategy, SimpleCacheService],

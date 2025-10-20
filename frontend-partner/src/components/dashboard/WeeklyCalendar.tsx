@@ -30,33 +30,35 @@ export default function WeeklyCalendar() {
   const weekStart = formatDate(startOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
   const weekEnd = formatDate(endOfWeek(new Date(), { weekStartsOn: 1 }), 'yyyy-MM-dd');
 
-  const { data: bookings, isLoading } = useBookings({
+  const { data, isLoading } = useBookings({
     status: 'confirmed',
     startDate: weekStart,
     endDate: weekEnd,
   });
 
   const events: CalendarEvent[] = useMemo(() => {
-    if (!bookings) return [];
+    if (!data?.data) return [];
 
-    return bookings.map((booking) => {
-      const [hours, minutes] = booking.scheduledTime.split(':');
-      const start = new Date(booking.scheduledDate);
-      start.setHours(parseInt(hours), parseInt(minutes), 0);
+    return data.data
+      .filter((booking) => booking.vehicle && booking.service) // Filter out bookings without required data
+      .map((booking) => {
+        const [hours, minutes] = booking.scheduledTime.split(':');
+        const start = new Date(booking.scheduledDate);
+        start.setHours(parseInt(hours), parseInt(minutes), 0);
 
-      // Estimate 1 hour duration (can be adjusted based on service)
-      const end = new Date(start);
-      end.setHours(start.getHours() + 1);
+        // Estimate 1 hour duration (can be adjusted based on service)
+        const end = new Date(start);
+        end.setHours(start.getHours() + 1);
 
-      return {
-        id: booking.id,
-        title: `${booking.vehicle.brand} ${booking.vehicle.model} - ${booking.service.name}`,
-        start,
-        end,
-        resource: booking,
-      };
-    });
-  }, [bookings]);
+        return {
+          id: booking.id,
+          title: `${booking.vehicle.brand} ${booking.vehicle.model} - ${booking.service.name}`,
+          start,
+          end,
+          resource: booking,
+        };
+      });
+  }, [data]);
 
   if (isLoading) {
     return (

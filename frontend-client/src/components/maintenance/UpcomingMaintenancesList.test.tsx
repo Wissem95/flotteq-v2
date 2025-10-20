@@ -3,7 +3,6 @@ import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import UpcomingMaintenancesList from './UpcomingMaintenancesList';
-import { MaintenanceType, MaintenanceStatus } from '../../types/maintenance.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {

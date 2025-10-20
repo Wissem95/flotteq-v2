@@ -29,13 +29,14 @@ export default function UsageAlertBanner({ stats, onUpgrade }: UsageAlertBannerP
     return 'conducteurs';
   };
 
+  const getBorderColor = () => {
+    if (isCritical) return 'bg-red-50 border-red-500';
+    if (isWarning) return 'bg-yellow-50 border-yellow-500';
+    return 'bg-yellow-50 border-yellow-500';
+  };
+
   return (
-    <div
-      className={`rounded-lg border-l-4 p-4 mb-6 ${
-        isCritical
-          ? 'bg-red-50 border-red-500'
-          : 'bg-yellow-50 border-yellow-500'
-      }`}
+    <div className={`rounded-lg border-l-4 p-4 mb-6 ${getBorderColor()}`}
     >
       <div className="flex items-start gap-3">
         <AlertTriangle

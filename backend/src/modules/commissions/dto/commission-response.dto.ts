@@ -34,6 +34,13 @@ export class CommissionResponseDto {
 
   @ApiProperty()
   updatedAt: Date;
+
+  @ApiPropertyOptional({ description: 'Booking details (tenant, vehicle, service)' })
+  booking?: {
+    tenant?: { id: number; name: string };
+    vehicle?: { id: string; registration: string; brand: string; model: string };
+    service?: { id: string; name: string };
+  };
 }
 
 export class CommissionListResponseDto {

@@ -47,15 +47,12 @@ export default function FinancePage() {
     endDate: filters.endDate,
   });
 
-  const commissions = data || [];
-  const total = commissions.length;
-  const totalPages = Math.ceil(total / filters.limit);
+  const commissions = data?.data || [];
+  const total = data?.total || 0;
+  const totalPages = data?.totalPages || 1;
 
-  // Paginate frontend
-  const paginatedCommissions = commissions.slice(
-    (filters.page - 1) * filters.limit,
-    filters.page * filters.limit
-  );
+  // Pas besoin de pagination frontend car le backend pagine déjà
+  const paginatedCommissions = commissions;
 
   // Calculate KPIs
   const dailyTotal = dailyStats.data?.find(s => s.status === 'paid')?.totalAmount || 0;

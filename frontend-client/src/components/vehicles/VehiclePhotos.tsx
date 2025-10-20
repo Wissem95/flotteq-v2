@@ -74,7 +74,9 @@ export default function VehiclePhotos({ vehicleId }: VehiclePhotosProps) {
       {showUpload && (
         <div className="mb-6">
           <PhotoUploadZone
-            onUpload={(files) => uploadMutation.mutateAsync(files)}
+            onUpload={async (files) => {
+              await uploadMutation.mutateAsync(files);
+            }}
             maxPhotos={maxPhotos}
             currentCount={photos.length}
           />

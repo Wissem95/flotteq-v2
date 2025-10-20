@@ -128,6 +128,15 @@ export class Booking {
   @Column({ type: 'timestamp', nullable: true, name: 'completed_at' })
   completedAt: Date | null;
 
+  @ApiPropertyOptional({ enum: ['pending', 'paid', 'refunded'] })
+  @Column({
+    type: 'enum',
+    enum: ['pending', 'paid', 'refunded'],
+    default: 'pending',
+    name: 'payment_status',
+  })
+  paymentStatus: 'pending' | 'paid' | 'refunded';
+
   @ApiPropertyOptional()
   @Column({ type: 'timestamp', nullable: true, name: 'paid_at' })
   paidAt: Date | null;

@@ -82,44 +82,30 @@ export class CommissionsService {
   ): Promise<CommissionListResponseDto> {
     const { status, startDate, endDate, page = 1, limit = 20 } = filters;
 
-    const query = this.commissionRepository
-      .createQueryBuilder('commission')
-      .leftJoinAndSelect('commission.partner', 'partner')
-      .leftJoinAndSelect('commission.booking', 'booking')
-      .leftJoinAndSelect('booking.tenant', 'tenant')       // Nécessaire pour booking.tenant.name
-      .leftJoinAndSelect('booking.vehicle', 'vehicle')     // Utile pour infos véhicule
-      .leftJoinAndSelect('booking.service', 'service');    // Utile pour infos service
+    // Build WHERE clause
+    const where: any = {};
 
-    // Filter by partnerId (from filters or current partner)
     if (filters.partnerId) {
-      query.andWhere('commission.partner_id = :partnerId', { partnerId: filters.partnerId });
+      where.partnerId = filters.partnerId;
     } else if (partnerId) {
-      query.andWhere('commission.partner_id = :partnerId', { partnerId });
+      where.partnerId = partnerId;
     }
 
     if (status) {
-      query.andWhere('commission.status = :status', { status });
+      where.status = status;
     }
 
-    if (startDate && endDate) {
-      query.andWhere('commission.created_at BETWEEN :startDate AND :endDate', {
-        startDate: new Date(startDate),
-        endDate: new Date(endDate),
-      });
-    } else if (startDate) {
-      query.andWhere('commission.created_at >= :startDate', { startDate: new Date(startDate) });
-    } else if (endDate) {
-      query.andWhere('commission.created_at <= :endDate', { endDate: new Date(endDate) });
-    }
+    // Utiliser find() avec relations au lieu de queryBuilder
+    const commissions = await this.commissionRepository.find({
+      where,
+      relations: ['partner', 'booking', 'booking.tenant', 'booking.vehicle', 'booking.service'],
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
 
-    query.orderBy('commission.created_at', 'DESC');
-
-    const total = await query.getCount();
+    const total = await this.commissionRepository.count({ where });
     const totalPages = Math.ceil(total / limit);
-
-    query.skip((page - 1) * limit).take(limit);
-
-    const commissions = await query.getMany();
 
     const data: CommissionResponseDto[] = commissions.map((commission) =>
       this.toResponseDto(commission),
@@ -146,7 +132,7 @@ export class CommissionsService {
 
     const commission = await this.commissionRepository.findOne({
       where: query,
-      relations: ['partner', 'booking'],
+      relations: ['partner', 'booking', 'booking.tenant', 'booking.vehicle', 'booking.service'],
     });
 
     if (!commission) {
@@ -239,7 +225,7 @@ export class CommissionsService {
   async getPendingCommissions(): Promise<Commission[]> {
     return this.commissionRepository.find({
       where: { status: CommissionStatus.PENDING },
-      relations: ['partner', 'booking'],
+      relations: ['partner', 'booking', 'booking.tenant', 'booking.vehicle', 'booking.service'],
       order: { createdAt: 'DESC' },
     });
   }
@@ -253,9 +239,7 @@ export class CommissionsService {
       .createQueryBuilder('commission')
       .leftJoinAndSelect('commission.partner', 'partner')
       .leftJoinAndSelect('commission.booking', 'booking')
-      .leftJoinAndSelect('booking.tenant', 'tenant')       // Nécessaire pour booking.tenant.name
-      .leftJoinAndSelect('booking.vehicle', 'vehicle')     // Utile pour infos véhicule
-      .leftJoinAndSelect('booking.service', 'service');    // Utile pour infos service
+      .withDeleted();  // Inclure les entités soft-deleted
 
     if (filters.partnerId) {
       query.andWhere('commission.partner_id = :partnerId', { partnerId: filters.partnerId });
@@ -357,6 +341,22 @@ export class CommissionsService {
       paymentReference: commission.paymentReference,
       createdAt: commission.createdAt,
       updatedAt: commission.updatedAt,
+      booking: commission.booking ? {
+        tenant: commission.booking.tenant ? {
+          id: commission.booking.tenant.id,
+          name: commission.booking.tenant.name,
+        } : undefined,
+        vehicle: commission.booking.vehicle ? {
+          id: commission.booking.vehicle.id,
+          registration: commission.booking.vehicle.registration,
+          brand: commission.booking.vehicle.brand,
+          model: commission.booking.vehicle.model,
+        } : undefined,
+        service: commission.booking.service ? {
+          id: commission.booking.service.id,
+          name: commission.booking.service.name,
+        } : undefined,
+      } : undefined,
     };
   }
 }

@@ -17,16 +17,26 @@ export default function MaintenanceDetailPage() {
   const updateMutation = useUpdateMaintenance();
   const createMutation = useCreateMaintenance();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    vehicleId: string;
+    type: MaintenanceType;
+    description: string;
+    scheduledDate: string;
+    estimatedCost: number;
+    actualCost?: number;
+    status: MaintenanceStatus;
+    performedBy: string;
+    nextMaintenanceKm?: number;
+  }>({
     vehicleId: '',
     type: MaintenanceType.PREVENTIVE,
     description: '',
     scheduledDate: '',
     estimatedCost: 0,
-    actualCost: undefined as number | undefined,
+    actualCost: undefined,
     status: MaintenanceStatus.SCHEDULED,
     performedBy: '',
-    nextMaintenanceKm: undefined as number | undefined,
+    nextMaintenanceKm: undefined,
   });
 
   useEffect(() => {

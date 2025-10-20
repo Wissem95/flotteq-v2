@@ -79,6 +79,14 @@ export class Partner {
   @Column({ type: 'decimal', precision: 5, scale: 2, default: 10, name: 'commission_rate' })
   commissionRate: number;
 
+  @ApiPropertyOptional({ example: 'acct_1234567890', description: 'Stripe Connect Account ID' })
+  @Column({ type: 'varchar', length: 255, nullable: true, name: 'stripe_account_id' })
+  stripeAccountId?: string;
+
+  @ApiProperty({ example: false, description: 'Stripe onboarding completed' })
+  @Column({ type: 'boolean', default: false, name: 'stripe_onboarding_completed' })
+  stripeOnboardingCompleted: boolean;
+
   @ApiPropertyOptional({ example: 'Spécialiste réparation véhicules utilitaires' })
   @Column({ type: 'text', nullable: true })
   description: string | null;

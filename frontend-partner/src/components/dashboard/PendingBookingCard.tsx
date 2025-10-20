@@ -16,6 +16,11 @@ export default function PendingBookingCard({ booking }: PendingBookingCardProps)
   const confirmMutation = useConfirmBooking();
   const rejectMutation = useRejectBooking();
 
+  // Safety check: if booking doesn't have required data, don't render
+  if (!booking?.vehicle || !booking?.service || !booking?.tenant) {
+    return null;
+  }
+
   const handleConfirm = () => {
     confirmMutation.mutate(booking.id);
   };

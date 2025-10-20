@@ -18,7 +18,12 @@ export default function QuickCreateMaintenanceModal({
   const { data: vehicles = [] } = useVehicles();
   const createMutation = useCreateMaintenance();
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    vehicleId: string;
+    type: MaintenanceType;
+    description: string;
+    estimatedCost: number;
+  }>({
     vehicleId: '',
     type: MaintenanceType.PREVENTIVE,
     description: '',

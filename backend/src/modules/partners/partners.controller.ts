@@ -27,6 +27,16 @@ import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { SearchPartnersDto } from './dto/search-partners.dto';
+import { Request, BadRequestException } from '@nestjs/common';
+
+interface RequestWithUser extends Request {
+  user: {
+    userId: string;
+    partnerId?: string;
+    role: string;
+    type?: string;
+  };
+}
 
 @ApiTags('partners')
 @Controller('partners')
@@ -90,6 +100,46 @@ export class PartnersController {
   @ApiResponse({ status: 200, description: 'Partners list retrieved.' })
   async findAll() {
     return this.partnersService.findAll();
+  }
+
+  // Partner Stripe Connect Endpoints (must be before :id routes)
+  @Post('me/stripe/onboard')
+  @UseGuards(HybridAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create Stripe Connect account for partner' })
+  @ApiResponse({ status: 200, description: 'Onboarding URL created' })
+  async createStripeAccount(@Request() req: RequestWithUser) {
+    const partnerId = req.user.partnerId;
+    if (!partnerId) {
+      throw new BadRequestException('Partner ID not found');
+    }
+    return this.partnersService.createStripeConnectAccount(partnerId);
+  }
+
+  @Get('me/stripe/status')
+  @UseGuards(HybridAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get Stripe onboarding status' })
+  @ApiResponse({ status: 200, description: 'Stripe status retrieved' })
+  async getStripeStatus(@Request() req: RequestWithUser) {
+    const partnerId = req.user.partnerId;
+    if (!partnerId) {
+      throw new BadRequestException('Partner ID not found');
+    }
+    return this.partnersService.getStripeOnboardingStatus(partnerId);
+  }
+
+  @Post('me/stripe/refresh')
+  @UseGuards(HybridAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Refresh Stripe onboarding link' })
+  @ApiResponse({ status: 200, description: 'New onboarding link created' })
+  async refreshStripeLink(@Request() req: RequestWithUser) {
+    const partnerId = req.user.partnerId;
+    if (!partnerId) {
+      throw new BadRequestException('Partner ID not found');
+    }
+    return this.partnersService.refreshStripeOnboardingLink(partnerId);
   }
 
   @Get(':id')

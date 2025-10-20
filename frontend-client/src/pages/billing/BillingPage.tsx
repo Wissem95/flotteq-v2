@@ -151,6 +151,11 @@ export default function BillingPage() {
         </div>
       </div>
 
+      {/* Payment Method Section - Temporairement commenté */}
+      {/* <div className="mb-6">
+        <PaymentMethodCard />
+      </div> */}
+
       {/* Invoices Table */}
       <InvoicesTable />
 

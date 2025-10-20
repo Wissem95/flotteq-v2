@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar as BigCalendar, momentLocalizer } from 'react-big-calendar';
 import type { View, SlotInfo } from 'react-big-calendar';
 import moment from 'moment';
-import 'moment/locale/fr';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+
+// Set moment locale to French
+moment.locale('fr');
 import '../../styles/calendar.css';
-import { useMaintenances, useUpdateMaintenance, useCreateMaintenance } from '../../hooks/useMaintenance';
-import { useVehicles } from '../../hooks/useVehicles';
+import { useMaintenances } from '../../hooks/useMaintenance';
 import { MaintenanceStatus, MaintenanceType } from '../../types/maintenance.types';
 import type { Maintenance } from '../../types/maintenance.types';
 import { ArrowLeft, Plus, FileDown } from 'lucide-react';
@@ -28,9 +29,6 @@ interface CalendarEvent {
 export default function MaintenanceCalendarDnDPage() {
   const navigate = useNavigate();
   const { data: maintenances = [], isLoading } = useMaintenances();
-  const { data: vehicles = [] } = useVehicles();
-  const updateMutation = useUpdateMaintenance();
-  const createMutation = useCreateMaintenance();
 
   const [view, setView] = useState<View>('month');
   const [date, setDate] = useState(new Date());
@@ -58,43 +56,6 @@ export default function MaintenanceCalendarDnDPage() {
       };
     });
   }, [maintenances]);
-
-  // Gérer le déplacement d'un événement (drag & drop)
-  const handleEventDrop = useCallback(
-    async ({ event, start }: { event: CalendarEvent; start: Date }) => {
-      const maintenance = event.resource;
-
-      // Validation: empêcher de planifier dans le passé
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const startDate = new Date(start);
-      startDate.setHours(0, 0, 0, 0);
-
-      if (startDate < today && maintenance.status === MaintenanceStatus.SCHEDULED) {
-        alert('Impossible de planifier une maintenance dans le passé');
-        return;
-      }
-
-      // Validation: maintenances terminées ne peuvent pas être déplacées
-      if (maintenance.status === MaintenanceStatus.COMPLETED) {
-        alert('Une maintenance terminée ne peut pas être déplacée');
-        return;
-      }
-
-      try {
-        await updateMutation.mutateAsync({
-          id: maintenance.id,
-          dto: {
-            scheduledDate: start.toISOString().split('T')[0],
-          },
-        });
-      } catch (error) {
-        console.error('Error updating maintenance date:', error);
-        alert('Erreur lors du déplacement de la maintenance');
-      }
-    },
-    [updateMutation]
-  );
 
   // Gérer le clic sur un slot vide (créer nouvelle maintenance)
   const handleSelectSlot = useCallback((slotInfo: SlotInfo) => {
@@ -216,11 +177,8 @@ export default function MaintenanceCalendarDnDPage() {
             onNavigate={setDate}
             onSelectEvent={handleSelectEvent}
             onSelectSlot={handleSelectSlot}
-            onEventDrop={handleEventDrop}
             eventPropGetter={eventStyleGetter}
             selectable
-            resizable={false}
-            draggableAccessor={() => true}
           />
         </div>
       </div>
