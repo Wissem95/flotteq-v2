@@ -39,8 +39,8 @@ export default function DashboardPage() {
             iconBgColor="bg-emerald-50"
           />
           <StatsCard
-            title="Commissions en attente"
-            value={`${stats.pendingCommissions.toFixed(2)}€`}
+            title="Paiements en attente"
+            value={`${stats.pendingPayments.toFixed(2)}€`}
             icon={Clock}
             iconColor="text-orange-600"
             iconBgColor="bg-orange-50"

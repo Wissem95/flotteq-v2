@@ -64,7 +64,7 @@ export const MainLayout = () => {
       <aside className="w-64 flotteq-gradient flex flex-col shadow-xl">
         <div className="p-6 border-b border-white/20">
           <h1 className="text-2xl font-bold text-white">
-            FlotteQ
+            Flotteq
           </h1>
           <p className="text-sm text-white/80">Admin Dashboard</p>
         </div>

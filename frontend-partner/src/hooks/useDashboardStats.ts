@@ -7,7 +7,7 @@ import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-f
 interface DashboardStats {
   bookingsThisWeek: number;
   revenueThisMonth: number;
-  pendingCommissions: number;
+  pendingPayments: number;
   acceptanceRate: number;
 }
 
@@ -45,36 +45,52 @@ export const useDashboardStats = () => {
         },
       });
       const allBookings = allBookingsRes.data.bookings || [];
-      const confirmedCount = allBookings.filter((b: any) => b.status === 'confirmed').length;
+      const acceptedCount = allBookings.filter((b: any) =>
+        b.status === 'confirmed' || b.status === 'completed'
+      ).length;
       const acceptanceRate = allBookings.length > 0
-        ? Math.round((confirmedCount / allBookings.length) * 100)
+        ? Math.round((acceptedCount / allBookings.length) * 100)
         : 0;
 
-      // Fetch commission totals for this month
-      const commissionsRes = await axiosInstance.get(
-        `/api/commissions/totals/${partnerId}`,
-        {
-          params: {
-            startDate: monthStart,
-            endDate: monthEnd,
-          },
-        }
-      );
+      // Fetch bookings for this month to calculate PARTNER revenue
+      const bookingsMonthRes = await axiosInstance.get(API_CONFIG.ENDPOINTS.BOOKINGS, {
+        params: {
+          partnerId,
+          startDate: monthStart,
+          endDate: monthEnd,
+        },
+      });
 
-      const totals = commissionsRes.data.totals || [];
-      const revenueThisMonth = totals.reduce((sum: number, t: any) => {
-        if (t.status === 'pending' || t.status === 'paid') {
-          return sum + parseFloat(t.total || 0);
+      const bookingsMonth = bookingsMonthRes.data.bookings || [];
+
+      // Calculate PARTNER REVENUE = price - commission_amount
+      const revenueThisMonth = bookingsMonth.reduce((sum: number, b: any) => {
+        const price = parseFloat(b.price || 0);
+        const commission = parseFloat(b.commissionAmount || 0);
+        const partnerRevenue = price - commission;  // 90% of price (or based on commission rate)
+
+        if (b.paymentStatus === 'paid' || b.status === 'completed') {
+          return sum + partnerRevenue;
         }
         return sum;
       }, 0);
 
-      const pendingCommissions = totals.find((t: any) => t.status === 'pending')?.total || 0;
+      // PENDING PAYMENTS = Confirmed bookings not yet paid to partner
+      const pendingPayments = bookingsMonth.reduce((sum: number, b: any) => {
+        const price = parseFloat(b.price || 0);
+        const commission = parseFloat(b.commissionAmount || 0);
+        const partnerRevenue = price - commission;
+
+        if (b.status === 'confirmed' && b.paymentStatus !== 'paid') {
+          return sum + partnerRevenue;
+        }
+        return sum;
+      }, 0);
 
       return {
         bookingsThisWeek,
         revenueThisMonth,
-        pendingCommissions: parseFloat(pendingCommissions),
+        pendingPayments,
         acceptanceRate,
       };
     },

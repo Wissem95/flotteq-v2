@@ -214,7 +214,7 @@ export class CommissionsService {
 
     return results.map((result) => ({
       status: result.status,
-      totalAmount: parseFloat(result.totalAmount) || 0,
+      total: parseFloat(result.totalAmount) || 0,
       count: parseInt(result.count) || 0,
     }));
   }

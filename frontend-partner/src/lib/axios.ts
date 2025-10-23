@@ -11,10 +11,23 @@ const axiosInstance = axios.create({
 // Request interceptor to add JWT token
 axiosInstance.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('partner_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Don't add token to public routes (login/register)
+    const publicRoutes = [
+      '/api/partners/auth/login',
+      '/api/partners/auth/register'
+    ];
+
+    const isPublicRoute = publicRoutes.some(route =>
+      config.url?.includes(route)
+    );
+
+    if (!isPublicRoute) {
+      const token = localStorage.getItem('partner_token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
+
     return config;
   },
   (error) => {

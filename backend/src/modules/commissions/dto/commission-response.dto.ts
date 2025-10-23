@@ -61,12 +61,12 @@ export class CommissionListResponseDto {
 }
 
 export class CommissionTotalDto {
+  @ApiProperty({ example: 'pending', enum: ['pending', 'paid', 'cancelled'] })
+  status: 'pending' | 'paid' | 'cancelled';
+
   @ApiProperty({ example: 250.50, description: 'Total commission amount in EUR' })
-  totalAmount: number;
+  total: number;
 
   @ApiProperty({ example: 10 })
   count: number;
-
-  @ApiProperty({ enum: CommissionStatus })
-  status: CommissionStatus;
 }

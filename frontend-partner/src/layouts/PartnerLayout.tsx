@@ -36,32 +36,34 @@ export default function PartnerLayout() {
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar for desktop */}
       <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex flex-col flex-grow bg-white border-r border-gray-200 pt-5 pb-4 overflow-y-auto">
+        <div className="flex flex-col flex-grow flotteq-gradient pt-5 pb-4 overflow-y-auto shadow-xl">
           {/* Logo */}
-          <div className="flex items-center flex-shrink-0 px-4">
-            <h1 className="text-2xl font-bold text-primary-600">FlotteQ</h1>
-            <span className="ml-2 text-sm text-gray-500">Partner</span>
+          <div className="flex items-center flex-shrink-0 px-4 pb-5 border-b border-white/20">
+            <div>
+              <h1 className="text-2xl font-bold text-white">Flotteq</h1>
+              <p className="text-sm text-white/80">Espace partenaire</p>
+            </div>
           </div>
 
           {/* User info */}
           <div className="mt-6 px-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
-                  <User className="h-6 w-6 text-primary-600" />
+                <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+                  <User className="h-6 w-6 text-white" />
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-700">
+                <p className="text-sm font-medium text-white">
                   {user?.partner?.companyName || `${user?.firstName} ${user?.lastName}`}
                 </p>
-                <p className="text-xs text-gray-500">{user?.email}</p>
+                <p className="text-xs text-white/70">{user?.email}</p>
               </div>
             </div>
           </div>
 
           {/* Navigation */}
-          <nav className="mt-6 flex-1 px-2 space-y-1">
+          <nav className="mt-6 flex-1 px-3 space-y-1">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -70,18 +72,14 @@ export default function PartnerLayout() {
                   key={item.path}
                   to={item.path}
                   className={`
-                    group flex items-center px-2 py-2 text-sm font-medium rounded-md
+                    group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-colors
                     ${isActive
-                      ? 'bg-primary-50 text-primary-600'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-white/20 text-white font-semibold'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
                     }
                   `}
                 >
-                  <Icon
-                    className={`mr-3 h-5 w-5 ${
-                      isActive ? 'text-primary-600' : 'text-gray-400 group-hover:text-gray-500'
-                    }`}
-                  />
+                  <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
                   {item.label}
                 </Link>
               );
@@ -89,12 +87,12 @@ export default function PartnerLayout() {
           </nav>
 
           {/* Logout button */}
-          <div className="px-2 mt-auto">
+          <div className="px-3 mt-auto pt-4 border-t border-white/20">
             <button
               onClick={handleLogout}
-              className="group flex w-full items-center px-2 py-2 text-sm font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+              className="group flex w-full items-center px-3 py-2.5 text-sm font-medium rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
             >
-              <LogOut className="mr-3 h-5 w-5 text-gray-400 group-hover:text-gray-500" />
+              <LogOut className="mr-3 h-5 w-5" />
               Déconnexion
             </button>
           </div>
@@ -105,7 +103,7 @@ export default function PartnerLayout() {
       {sidebarOpen && (
         <div className="fixed inset-0 flex z-40 lg:hidden">
           <div className="fixed inset-0 bg-gray-600 bg-opacity-75" onClick={() => setSidebarOpen(false)} />
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white">
+          <div className="relative flex-1 flex flex-col max-w-xs w-full flotteq-gradient">
             <div className="absolute top-0 right-0 -mr-12 pt-2">
               <button
                 onClick={() => setSidebarOpen(false)}
@@ -116,11 +114,13 @@ export default function PartnerLayout() {
             </div>
             {/* Same content as desktop sidebar */}
             <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
-              <div className="flex items-center flex-shrink-0 px-4">
-                <h1 className="text-2xl font-bold text-primary-600">FlotteQ</h1>
-                <span className="ml-2 text-sm text-gray-500">Partner</span>
+              <div className="flex items-center flex-shrink-0 px-4 pb-5 border-b border-white/20">
+                <div>
+                  <h1 className="text-2xl font-bold text-white">Flotteq</h1>
+                  <p className="text-sm text-white/80">Espace partenaire</p>
+                </div>
               </div>
-              <nav className="mt-5 px-2 space-y-1">
+              <nav className="mt-5 px-3 space-y-1">
                 {menuItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
@@ -130,26 +130,26 @@ export default function PartnerLayout() {
                       to={item.path}
                       onClick={() => setSidebarOpen(false)}
                       className={`
-                        group flex items-center px-2 py-2 text-base font-medium rounded-md
+                        group flex items-center px-3 py-2.5 text-base font-medium rounded-lg transition-colors
                         ${isActive
-                          ? 'bg-primary-50 text-primary-600'
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-white/20 text-white font-semibold'
+                          : 'text-white/80 hover:bg-white/10 hover:text-white'
                         }
                       `}
                     >
-                      <Icon className={`mr-4 h-6 w-6 ${isActive ? 'text-primary-600' : 'text-gray-400'}`} />
+                      <Icon className="mr-4 h-6 w-6" />
                       {item.label}
                     </Link>
                   );
                 })}
               </nav>
             </div>
-            <div className="px-2 pb-4">
+            <div className="px-3 pb-4 border-t border-white/20">
               <button
                 onClick={handleLogout}
-                className="group flex w-full items-center px-2 py-2 text-base font-medium rounded-md text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                className="group flex w-full items-center px-3 py-2.5 text-base font-medium rounded-lg text-white/80 hover:bg-white/10 hover:text-white transition-colors"
               >
-                <LogOut className="mr-4 h-6 w-6 text-gray-400" />
+                <LogOut className="mr-4 h-6 w-6" />
                 Déconnexion
               </button>
             </div>

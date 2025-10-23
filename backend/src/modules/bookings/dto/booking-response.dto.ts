@@ -59,6 +59,9 @@ export class BookingResponseDto {
   @ApiProperty()
   commissionAmount: number;
 
+  @ApiProperty({ enum: ['pending', 'paid', 'refunded'] })
+  paymentStatus: 'pending' | 'paid' | 'refunded';
+
   @ApiPropertyOptional()
   customerNotes: string | null;
 
@@ -89,7 +92,7 @@ export class BookingResponseDto {
 
 export class BookingListResponseDto {
   @ApiProperty({ type: [BookingResponseDto] })
-  data: BookingResponseDto[];
+  bookings: BookingResponseDto[];
 
   @ApiProperty()
   total: number;

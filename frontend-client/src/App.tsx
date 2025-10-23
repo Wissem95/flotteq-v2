@@ -22,6 +22,7 @@ import { DocumentsPage } from './pages/documents/DocumentsPage';
 import { UsersPage } from './pages/users/UsersPage';
 import BillingPage from './pages/billing/BillingPage';
 import CheckoutSuccessPage from './pages/billing/CheckoutSuccessPage';
+import SettingsPage from './pages/settings/SettingsPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -78,6 +79,7 @@ function App() {
               <Route path="users" element={<UsersPage />} />
               <Route path="billing" element={<BillingPage />} />
               <Route path="billing/success" element={<CheckoutSuccessPage />} />
+              <Route path="settings" element={<SettingsPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

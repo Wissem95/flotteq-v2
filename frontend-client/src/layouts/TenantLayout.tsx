@@ -12,6 +12,7 @@ import {
   X,
   UserCog,
   CreditCard,
+  Settings,
 } from 'lucide-react';
 
 interface TenantLayoutProps {
@@ -65,6 +66,11 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
       label: 'Facturation',
       path: '/billing',
     },
+    {
+      icon: Settings,
+      label: 'Paramètres',
+      path: '/settings',
+    },
   ];
 
   const handleLogout = async () => {
@@ -85,7 +91,7 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
           {isSidebarOpen ? (
             <>
               <div>
-                <h1 className="text-2xl font-bold text-white">FlotteQ</h1>
+                <h1 className="text-2xl font-bold text-white">Flotteq</h1>
                 <p className="text-sm text-white/80">Gestion de flotte</p>
               </div>
               <button

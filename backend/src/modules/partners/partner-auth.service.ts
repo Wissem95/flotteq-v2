@@ -138,6 +138,7 @@ export class PartnerAuthService {
       lastName: partnerUser.lastName,
       role: partnerUser.role,
       isActive: partnerUser.isActive,
+      partnerId: partnerUser.partnerId,
       partner: {
         id: partnerUser.partner.id,
         companyName: partnerUser.partner.companyName,

@@ -58,28 +58,36 @@ export const useWeeklyRevenue = () => {
     queryFn: async (): Promise<WeeklyRevenue[]> => {
       if (!partnerId) throw new Error('Partner ID not found');
 
-      // Fetch commissions for last 4 weeks
-      // Backend extrait partnerId du JWT
-      const response = await axiosInstance.get(API_CONFIG.ENDPOINTS.COMMISSIONS, {
+      // Fetch BOOKINGS with payment_status = 'paid' instead of commissions
+      const response = await axiosInstance.get(API_CONFIG.ENDPOINTS.BOOKINGS, {
         params: {
-          status: 'paid', // Only count paid commissions
+          partnerId,
         },
       });
 
-      const commissions: Commission[] = response.data.data || [];
+      const bookings = response.data.bookings || [];
+
+      // Filter only paid bookings
+      const paidBookings = bookings.filter((b: any) => b.paymentStatus === 'paid');
 
       // Group by week
       const weeklyData = new Map<string, { amount: number; count: number }>();
 
-      commissions.forEach((commission) => {
-        const date = new Date(commission.createdAt);
+      paidBookings.forEach((booking: any) => {
+        const date = new Date(booking.paidAt || booking.createdAt);
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay() + 1); // Start on Monday
         const weekKey = weekStart.toISOString().split('T')[0];
 
         const existing = weeklyData.get(weekKey) || { amount: 0, count: 0 };
+
+        // Calculate PARTNER REVENUE = price - commission_amount
+        const price = parseFloat(booking.price || 0);
+        const commission = parseFloat(booking.commissionAmount || 0);
+        const partnerRevenue = price - commission;
+
         weeklyData.set(weekKey, {
-          amount: existing.amount + Number(commission.amount),
+          amount: existing.amount + partnerRevenue,
           count: existing.count + 1,
         });
       });
@@ -174,24 +182,32 @@ export const useMonthlyRevenue = () => {
     queryFn: async (): Promise<MonthlyRevenue[]> => {
       if (!partnerId) throw new Error('Partner ID not found');
 
-      // Fetch all paid commissions
-      // Backend extrait partnerId du JWT
-      const response = await axiosInstance.get(API_CONFIG.ENDPOINTS.COMMISSIONS, {
+      // Fetch BOOKINGS with payment_status = 'paid' instead of commissions
+      const response = await axiosInstance.get(API_CONFIG.ENDPOINTS.BOOKINGS, {
         params: {
-          status: 'paid',
+          partnerId,
         },
       });
 
-      const commissions: Commission[] = response.data.data || [];
+      const bookings = response.data.bookings || [];
+
+      // Filter only paid bookings
+      const paidBookings = bookings.filter((b: any) => b.paymentStatus === 'paid');
 
       // Group by month
       const monthlyData = new Map<string, { amount: number; count: number }>();
 
-      commissions.forEach((commission) => {
-        const month = format(new Date(commission.createdAt), 'yyyy-MM');
+      paidBookings.forEach((booking: any) => {
+        const month = format(new Date(booking.paidAt || booking.createdAt), 'yyyy-MM');
         const existing = monthlyData.get(month) || { amount: 0, count: 0 };
+
+        // Calculate PARTNER REVENUE = price - commission_amount
+        const price = parseFloat(booking.price || 0);
+        const commission = parseFloat(booking.commissionAmount || 0);
+        const partnerRevenue = price - commission;
+
         monthlyData.set(month, {
-          amount: existing.amount + Number(commission.amount),
+          amount: existing.amount + partnerRevenue,
           count: existing.count + 1,
         });
       });

@@ -179,7 +179,7 @@ export class BookingsService {
     const data: BookingResponseDto[] = bookings.map((booking) => this.toResponseDto(booking));
 
     return {
-      data,
+      bookings: data,
       total,
       page,
       limit,
@@ -236,7 +236,7 @@ export class BookingsService {
     const data: BookingResponseDto[] = bookings.map((booking) => this.toResponseDto(booking));
 
     return {
-      data,
+      bookings: data,
       total,
       page,
       limit,
@@ -582,6 +582,7 @@ export class BookingsService {
       status: booking.status,
       price: booking.price,
       commissionAmount: booking.commissionAmount,
+      paymentStatus: booking.paymentStatus,
       customerNotes: booking.customerNotes,
       partnerNotes: booking.partnerNotes,
       rejectionReason: booking.rejectionReason,

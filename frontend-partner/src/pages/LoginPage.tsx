@@ -49,7 +49,7 @@ export default function LoginPage() {
       }
 
       // Only login and redirect if status is approved
-      login(accessToken, { ...partnerUser, partner });
+      login(accessToken, partnerUser);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Échec de la connexion. Vérifiez vos identifiants.');

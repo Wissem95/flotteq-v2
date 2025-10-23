@@ -128,6 +128,7 @@ export class BookingsPaymentService {
 
   /**
    * Webhook handler - Marquer booking + commission payés
+   * IDEMPOTENT : Peut être appelé plusieurs fois sans effet secondaire
    */
   async handlePaymentSuccess(paymentIntentId: string) {
     this.logger.log(`Handling payment success for PaymentIntent ${paymentIntentId}`);
@@ -146,6 +147,17 @@ export class BookingsPaymentService {
       relations: ['partner'],
     });
 
+    if (!booking) {
+      this.logger.warn(`Booking ${bookingId} not found`);
+      return { success: false };
+    }
+
+    // IDEMPOTENCE : Si déjà payé, skip
+    if (booking.paymentStatus === 'paid') {
+      this.logger.log(`Booking ${bookingId} already marked as paid, skipping`);
+      return { success: true, alreadyProcessed: true };
+    }
+
     if (booking) {
       booking.paymentStatus = 'paid';
       booking.paidAt = new Date();
@@ -154,18 +166,36 @@ export class BookingsPaymentService {
       this.logger.log(`Booking ${bookingId} marked as paid`);
     }
 
-    // Marquer commission payée
-    const commission = await this.commissionRepository.findOne({
+    // Marquer commission payée (ou créer si n'existe pas)
+    let commission = await this.commissionRepository.findOne({
       where: { bookingId }
     });
 
-    if (commission) {
+    if (!commission) {
+      // Créer commission si elle n'existe pas (fallback si createPaymentIntent n'a pas été appelé)
+      const commissionAmount = Number(booking.commissionAmount || 0);
+
+      commission = this.commissionRepository.create({
+        bookingId: booking.id,
+        partnerId: booking.partnerId,
+        amount: commissionAmount,
+        status: CommissionStatus.PAID,
+        paidAt: new Date(),
+        paymentReference: paymentIntentId,
+      });
+
+      await this.commissionRepository.save(commission);
+      this.logger.log(`Commission created and marked as paid for booking ${booking.id}: ${commission.amount}€`);
+    } else if (commission.status !== CommissionStatus.PAID) {
+      // Mettre à jour commission existante
       commission.status = CommissionStatus.PAID;
       commission.paidAt = new Date();
       commission.paymentReference = paymentIntentId;
       await this.commissionRepository.save(commission);
 
       this.logger.log(`Commission ${commission.id} marked as paid. Amount: ${commission.amount}€`);
+    } else {
+      this.logger.log(`Commission ${commission.id} already marked as paid`);
     }
 
     return { success: true };
