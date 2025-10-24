@@ -231,6 +231,132 @@ export class CommissionsService {
   }
 
   /**
+   * Get commission statistics (Admin only)
+   */
+  async getStats(startDate?: string, endDate?: string): Promise<any> {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+
+    // Total commissions this month
+    const totalThisMonth = await this.commissionRepository
+      .createQueryBuilder('commission')
+      .select('COALESCE(SUM(commission.amount), 0)', 'total')
+      .where('commission.created_at >= :start AND commission.created_at <= :end', {
+        start: currentMonthStart,
+        end: currentMonthEnd,
+      })
+      .getRawOne();
+
+    // Pending commissions amount
+    const pendingAmount = await this.commissionRepository
+      .createQueryBuilder('commission')
+      .select('COALESCE(SUM(commission.amount), 0)', 'total')
+      .where('commission.status = :status', { status: CommissionStatus.PENDING })
+      .getRawOne();
+
+    // Active partners count
+    const activePartners = await this.partnerRepository
+      .createQueryBuilder('partner')
+      .where('partner.status = :status', { status: 'approved' })
+      .getCount();
+
+    // Platform revenue (sum of all bookings this month)
+    const platformRevenue = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .select('COALESCE(SUM(booking.price), 0)', 'total')
+      .where('booking.created_at >= :start AND booking.created_at <= :end', {
+        start: currentMonthStart,
+        end: currentMonthEnd,
+      })
+      .getRawOne();
+
+    // Commission evolution (last 12 months)
+    const evolutionData = [];
+    for (let i = 11; i >= 0; i--) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
+      const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
+
+      const monthCommissions = await this.commissionRepository
+        .createQueryBuilder('commission')
+        .select('COALESCE(SUM(commission.amount), 0)', 'commissions')
+        .where('commission.created_at >= :start AND commission.created_at <= :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
+        .getRawOne();
+
+      const monthRevenue = await this.bookingRepository
+        .createQueryBuilder('booking')
+        .select('COALESCE(SUM(booking.price), 0)', 'revenue')
+        .where('booking.created_at >= :start AND booking.created_at <= :end', {
+          start: monthStart,
+          end: monthEnd,
+        })
+        .getRawOne();
+
+      evolutionData.push({
+        month: monthDate.toLocaleString('fr-FR', { month: 'short', year: 'numeric' }),
+        commissions: parseFloat(monthCommissions.commissions) || 0,
+        revenue: parseFloat(monthRevenue.revenue) || 0,
+      });
+    }
+
+    // Top partners by revenue
+    const topPartners = await this.bookingRepository
+      .createQueryBuilder('booking')
+      .select('partner.id', 'partnerId')
+      .addSelect('partner.company_name', 'partnerName')
+      .addSelect('COUNT(booking.id)', 'bookingsCount')
+      .addSelect('COALESCE(SUM(booking.price), 0)', 'revenue')
+      .leftJoin('booking.partner', 'partner')
+      .where('booking.created_at >= :start AND booking.created_at <= :end', {
+        start: currentMonthStart,
+        end: currentMonthEnd,
+      })
+      .andWhere('partner.id IS NOT NULL')
+      .groupBy('partner.id')
+      .addGroupBy('partner.company_name')
+      .orderBy('revenue', 'DESC')
+      .limit(10)
+      .getRawMany();
+
+    // Calculate commissions for each top partner
+    const topPartnersWithCommissions = await Promise.all(
+      topPartners.map(async (partner, index) => {
+        const commissionsData = await this.commissionRepository
+          .createQueryBuilder('commission')
+          .select('COALESCE(SUM(commission.amount), 0)', 'total')
+          .where('commission.partner_id = :partnerId', { partnerId: partner.partnerId })
+          .andWhere('commission.created_at >= :start AND commission.created_at <= :end', {
+            start: currentMonthStart,
+            end: currentMonthEnd,
+          })
+          .getRawOne();
+
+        return {
+          rank: index + 1,
+          partnerId: partner.partnerId,
+          partnerName: partner.partnerName || 'Unknown',
+          bookingsCount: parseInt(partner.bookingsCount) || 0,
+          revenue: parseFloat(partner.revenue) || 0,
+          commissions: parseFloat(commissionsData.total) || 0,
+        };
+      })
+    );
+
+    return {
+      totalThisMonth: parseFloat(totalThisMonth.total) || 0,
+      pendingAmount: parseFloat(pendingAmount.total) || 0,
+      activePartners,
+      platformRevenue: parseFloat(platformRevenue.total) || 0,
+      evolution: evolutionData,
+      topPartners: topPartnersWithCommissions,
+    };
+  }
+
+  /**
    * Export commissions to Excel
    */
   async exportToExcel(filters: CommissionFilterDto, partnerId?: string): Promise<Buffer> {

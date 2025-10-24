@@ -14,11 +14,13 @@ interface StripeStatus {
 export default function SettingsPage() {
   const { user } = useAuthStore();
   const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
+  const [commissionRate, setCommissionRate] = useState<number>(10); // Default 10%
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     fetchStripeStatus();
+    fetchCommissionRate();
 
     // Gérer retour Stripe
     const params = new URLSearchParams(window.location.search);
@@ -40,6 +42,15 @@ export default function SettingsPage() {
       setStripeStatus(response.data);
     } catch (error) {
       console.error('Error fetching Stripe status:', error);
+    }
+  };
+
+  const fetchCommissionRate = async () => {
+    try {
+      const response = await axiosInstance.get('/api/partners/me/commission-rate');
+      setCommissionRate(response.data.commissionRate);
+    } catch (error) {
+      console.error('Error fetching commission rate:', error);
     }
   };
 
@@ -98,8 +109,8 @@ export default function SettingsPage() {
                   <span className="font-medium">Paiements activés</span>
                 </div>
                 <p className="text-sm text-gray-600">
-                  Vous recevrez automatiquement 90% du montant de chaque réservation payée par vos clients.
-                  FlotteQ prélève une commission de 10%.
+                  Vous recevrez automatiquement {100 - commissionRate}% du montant de chaque réservation payée par vos clients.
+                  FlotteQ prélève une commission de {commissionRate}%.
                 </p>
                 <div className="text-xs text-gray-500">
                   ID Compte: {stripeStatus.accountId}
@@ -133,8 +144,8 @@ export default function SettingsPage() {
                   <strong>Comment ça marche ?</strong>
                   <ul className="list-disc list-inside mt-2 space-y-1">
                     <li>Client paie 100€ pour un service</li>
-                    <li>Vous recevez automatiquement 90€</li>
-                    <li>FlotteQ garde 10€ de commission</li>
+                    <li>Vous recevez automatiquement {100 - commissionRate}€</li>
+                    <li>FlotteQ garde {commissionRate}€ de commission</li>
                     <li>Argent disponible sous 2-7 jours</li>
                   </ul>
                 </div>

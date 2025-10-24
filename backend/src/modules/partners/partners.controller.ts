@@ -8,6 +8,7 @@ import {
   Param,
   ParseUUIDPipe,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
@@ -27,6 +28,8 @@ import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { SearchPartnersDto } from './dto/search-partners.dto';
+import { GetPartnersQueryDto } from './dto/get-partners-query.dto';
+import { CreatePartnerDto } from './dto/create-partner.dto';
 import { Request, BadRequestException } from '@nestjs/common';
 
 interface RequestWithUser extends Request {
@@ -96,10 +99,58 @@ export class PartnersController {
   @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all partners (admin only)' })
-  @ApiResponse({ status: 200, description: 'Partners list retrieved.' })
-  async findAll() {
-    return this.partnersService.findAll();
+  @ApiOperation({ summary: 'Get all partners with pagination and filters (admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Partners list retrieved with pagination.',
+    schema: {
+      example: {
+        data: [],
+        total: 0,
+        page: 1,
+        limit: 10,
+      },
+    },
+  })
+  async findAll(@Query() query: GetPartnersQueryDto) {
+    return this.partnersService.findAll(query);
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT)
+  @Auditable({ entityType: 'partner', action: AuditAction.CREATE })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Create new partner (admin only)' })
+  @ApiResponse({ status: 201, description: 'Partner created successfully.' })
+  async createPartner(@Body() createPartnerDto: CreatePartnerDto) {
+    return this.partnersService.create(createPartnerDto);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN)
+  @Auditable({ entityType: 'partner', action: AuditAction.UPDATE })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update partner (admin only)' })
+  @ApiResponse({ status: 200, description: 'Partner updated successfully.' })
+  async updatePartner(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updatePartnerDto: UpdatePartnerDto,
+  ) {
+    return this.partnersService.update(id, updatePartnerDto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN)
+  @Auditable({ entityType: 'partner', action: AuditAction.DELETE })
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete partner (super admin only)' })
+  @ApiResponse({ status: 200, description: 'Partner deleted successfully.' })
+  async deletePartner(@Param('id', ParseUUIDPipe) id: string) {
+    await this.partnersService.remove(id);
+    return { message: 'Partner deleted successfully' };
   }
 
   // Partner Stripe Connect Endpoints (must be before :id routes)
@@ -127,6 +178,20 @@ export class PartnersController {
       throw new BadRequestException('Partner ID not found');
     }
     return this.partnersService.getStripeOnboardingStatus(partnerId);
+  }
+
+  @Get('me/commission-rate')
+  @UseGuards(HybridAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current commission rate for partner' })
+  @ApiResponse({ status: 200, description: 'Commission rate retrieved', schema: { example: { commissionRate: 10 } } })
+  async getOwnCommissionRate(@Request() req: RequestWithUser) {
+    const partnerId = req.user.partnerId;
+    if (!partnerId) {
+      throw new BadRequestException('Partner ID not found');
+    }
+    const partner = await this.partnersService.findOne(partnerId);
+    return { commissionRate: Number(partner.commissionRate) };
   }
 
   @Post('me/stripe/refresh')

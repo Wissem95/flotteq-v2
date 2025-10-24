@@ -12,6 +12,8 @@ import {
   CreditCard,
   ChevronDown,
   LogOut,
+  Handshake,
+  DollarSign,
 } from 'lucide-react';
 
 export const MainLayout = () => {
@@ -56,6 +58,16 @@ export const MainLayout = () => {
       label: 'Conducteurs',
       path: '/drivers',
     },
+    {
+      icon: Handshake,
+      label: 'Partenaires',
+      path: '/partners',
+    },
+    {
+      icon: DollarSign,
+      label: 'Commissions',
+      path: '/commissions',
+    },
   ];
 
   return (
@@ -76,17 +88,15 @@ export const MainLayout = () => {
                 onClick={() => {
                   if (item.hasSubmenu) {
                     setIsSubscriptionsOpen(!isSubscriptionsOpen);
-                  } else if (!item.disabled) {
+                  } else {
                     navigate(item.path);
                   }
                 }}
-                disabled={item.disabled}
                 className={cn(
                   'w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors',
                   location.pathname.startsWith(item.path)
                     ? 'bg-white/20 text-white font-semibold'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white',
-                  item.disabled && 'opacity-50 cursor-not-allowed text-white/40'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                 )}
               >
                 <item.icon className="h-5 w-5" />

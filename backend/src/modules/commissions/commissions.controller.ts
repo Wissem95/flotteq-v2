@@ -70,6 +70,30 @@ export class CommissionsController {
     return this.commissionsService.findAll(filters, partnerId);
   }
 
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Get commission statistics (Admin only)',
+    description: 'Returns global commission statistics for admin dashboard',
+  })
+  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
+  @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
+  async getStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Request() req?: RequestWithUser,
+  ): Promise<any> {
+    if (req && req.user.role !== 'super_admin') {
+      throw new ForbiddenException('Only administrators can access commission statistics');
+    }
+
+    const stats = await this.commissionsService.getStats(startDate, endDate);
+
+    return {
+      message: 'Statistics retrieved successfully',
+      stats,
+    };
+  }
+
   @Get('pending')
   @ApiOperation({
     summary: 'Get pending commissions (Admin only)',

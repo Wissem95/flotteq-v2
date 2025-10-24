@@ -14,6 +14,7 @@ import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
+import { GetPartnersQueryDto } from './dto/get-partners-query.dto';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { StripeService } from '../../stripe/stripe.service';
 
@@ -116,10 +117,52 @@ export class PartnersService {
     }
   }
 
-  async findAll(): Promise<Partner[]> {
-    return this.partnerRepository.find({
-      order: { createdAt: 'DESC' },
-    });
+  async findAll(query?: GetPartnersQueryDto): Promise<{
+    data: Partner[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const page = query?.page || 1;
+    const limit = query?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    const queryBuilder = this.partnerRepository.createQueryBuilder('partner');
+
+    // Search filter
+    if (query?.search) {
+      queryBuilder.where(
+        '(partner.companyName ILIKE :search OR partner.email ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+
+    // Type filter
+    if (query?.type) {
+      queryBuilder.andWhere('partner.type = :type', { type: query.type });
+    }
+
+    // Status filter
+    if (query?.status) {
+      queryBuilder.andWhere('partner.status = :status', { status: query.status });
+    }
+
+    // City filter
+    if (query?.city) {
+      queryBuilder.andWhere('partner.city ILIKE :city', { city: `%${query.city}%` });
+    }
+
+    // Order and pagination
+    queryBuilder.orderBy('partner.createdAt', 'DESC').skip(skip).take(limit);
+
+    const [data, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: string): Promise<Partner> {
@@ -140,6 +183,11 @@ export class PartnersService {
     Object.assign(partner, updatePartnerDto);
 
     return this.partnerRepository.save(partner);
+  }
+
+  async remove(id: string): Promise<void> {
+    const partner = await this.findOne(id);
+    await this.partnerRepository.softRemove(partner);
   }
 
   async approvePartner(id: string): Promise<Partner> {

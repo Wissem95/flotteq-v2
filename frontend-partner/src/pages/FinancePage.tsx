@@ -55,10 +55,10 @@ export default function FinancePage() {
   const paginatedCommissions = commissions;
 
   // Calculate KPIs
-  const dailyTotal = dailyStats.data?.find(s => s.status === 'paid')?.totalAmount || 0;
-  const weeklyTotal = weeklyStats.data?.find(s => s.status === 'paid')?.totalAmount || 0;
-  const monthlyTotal = monthlyStats.data?.find(s => s.status === 'paid')?.totalAmount || 0;
-  const pendingTotal = monthlyStats.data?.find(s => s.status === 'pending')?.totalAmount || 0;
+  const dailyTotal = dailyStats.data?.find(s => s.status === 'paid')?.total || 0;
+  const weeklyTotal = weeklyStats.data?.find(s => s.status === 'paid')?.total || 0;
+  const monthlyTotal = monthlyStats.data?.find(s => s.status === 'paid')?.total || 0;
+  const pendingTotal = monthlyStats.data?.find(s => s.status === 'pending')?.total || 0;
 
   // Export PDF
   const handleExportPDF = async () => {
@@ -121,28 +121,28 @@ export default function FinancePage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
         <StatsCard
           title="CA Aujourd'hui"
-          value={`${dailyTotal.toFixed(2)}€`}
+          value={`${Number(dailyTotal).toFixed(2)}€`}
           icon={TrendingUp}
           iconColor="text-green-600"
           iconBgColor="bg-green-50"
         />
         <StatsCard
           title="CA Semaine"
-          value={`${weeklyTotal.toFixed(2)}€`}
+          value={`${Number(weeklyTotal).toFixed(2)}€`}
           icon={Calendar}
           iconColor="text-blue-600"
           iconBgColor="bg-blue-50"
         />
         <StatsCard
           title="CA Mois"
-          value={`${monthlyTotal.toFixed(2)}€`}
+          value={`${Number(monthlyTotal).toFixed(2)}€`}
           icon={CheckCircle}
           iconColor="text-purple-600"
           iconBgColor="bg-purple-50"
         />
         <StatsCard
           title="En Attente"
-          value={`${pendingTotal.toFixed(2)}€`}
+          value={`${Number(pendingTotal).toFixed(2)}€`}
           icon={Clock}
           iconColor="text-orange-600"
           iconBgColor="bg-orange-50"
