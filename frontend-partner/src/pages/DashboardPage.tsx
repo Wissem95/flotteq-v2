@@ -23,36 +23,48 @@ export default function DashboardPage() {
           ))}
         </div>
       ) : stats ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          <StatsCard
-            title="RDV cette semaine"
-            value={stats.bookingsThisWeek}
-            icon={Calendar}
-            iconColor="text-blue-600"
-            iconBgColor="bg-blue-50"
-          />
-          <StatsCard
-            title="CA mois en cours"
-            value={`${stats.revenueThisMonth.toFixed(2)}€`}
-            icon={DollarSign}
-            iconColor="text-emerald-600"
-            iconBgColor="bg-emerald-50"
-          />
-          <StatsCard
-            title="Paiements en attente"
-            value={`${stats.pendingPayments.toFixed(2)}€`}
-            icon={Clock}
-            iconColor="text-orange-600"
-            iconBgColor="bg-orange-50"
-          />
-          <StatsCard
-            title="Taux d'acceptation"
-            value={`${stats.acceptanceRate}%`}
-            icon={TrendingUp}
-            iconColor="text-purple-600"
-            iconBgColor="bg-purple-50"
-          />
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="RDV cette semaine"
+              value={stats.bookingsThisWeek}
+              icon={Calendar}
+              iconColor="text-blue-600"
+              iconBgColor="bg-blue-50"
+            />
+            <StatsCard
+              title="CA mois en cours"
+              value={`${stats.revenueThisMonth.toFixed(2)}€`}
+              icon={DollarSign}
+              iconColor="text-emerald-600"
+              iconBgColor="bg-emerald-50"
+            />
+            <StatsCard
+              title="Paiements en attente"
+              value={`${stats.pendingPayments.toFixed(2)}€`}
+              icon={Clock}
+              iconColor="text-orange-600"
+              iconBgColor="bg-orange-50"
+            />
+            <StatsCard
+              title="Taux d'acceptation"
+              value={`${stats.acceptanceRate}%`}
+              icon={TrendingUp}
+              iconColor="text-purple-600"
+              iconBgColor="bg-purple-50"
+            />
+          </div>
+
+          {/* Empty state pour nouveau partenaire */}
+          {stats.bookingsThisWeek === 0 && (
+            <div className="col-span-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-blue-800 text-sm">
+                👋 Bienvenue ! Aucune réservation pour le moment.
+                Configurez vos <a href="/planning" className="underline font-medium hover:text-blue-900">horaires d'ouverture</a> pour commencer.
+              </p>
+            </div>
+          )}
+        </>
       ) : (
         <div className="text-center py-8 text-gray-500">
           Erreur de chargement des statistiques

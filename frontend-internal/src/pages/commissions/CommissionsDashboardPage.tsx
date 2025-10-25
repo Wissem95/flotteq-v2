@@ -74,12 +74,23 @@ export const CommissionsDashboardPage = () => {
 
       {/* KPIs */}
       {stats && (
-        <CommissionKPIs
-          totalThisMonth={stats.totalThisMonth}
-          pendingAmount={stats.pendingAmount}
-          activePartners={stats.activePartners}
-          platformRevenue={stats.platformRevenue}
-        />
+        <>
+          <CommissionKPIs
+            totalThisMonth={stats.totalThisMonth}
+            pendingAmount={stats.pendingAmount}
+            activePartners={stats.activePartners}
+            platformRevenue={stats.platformRevenue}
+          />
+
+          {/* Empty state pour nouveau déploiement */}
+          {stats.totalThisMonth === 0 && (
+            <Alert>
+              <AlertDescription>
+                Aucune commission ce mois-ci. Les commissions sont créées automatiquement lors de la complétion des réservations.
+              </AlertDescription>
+            </Alert>
+          )}
+        </>
       )}
 
       {/* Top Partners & Pending Commissions */}

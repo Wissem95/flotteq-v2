@@ -50,6 +50,7 @@ export class EmailService {
       'booking-confirmed',
       'booking-rejected',
       'booking-completed',
+      'booking-reminder',
     ];
 
     try {
@@ -290,6 +291,19 @@ export class EmailService {
       to: email,
       subject: `Service terminé #${bookingData.bookingId || 'N/A'}`,
       template: 'booking-completed',
+      context: {
+        tenantName,
+        ...bookingData,
+        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+      },
+    });
+  }
+
+  async sendBookingReminder(email: string, tenantName: string, bookingData: any) {
+    await this.sendEmail({
+      to: email,
+      subject: `Rappel : Rendez-vous demain - ${bookingData.partnerName}`,
+      template: 'booking-reminder',
       context: {
         tenantName,
         ...bookingData,

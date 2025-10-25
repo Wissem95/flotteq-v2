@@ -377,7 +377,7 @@ describe('SearchService', () => {
       // Close partner with high rating should score higher
       // Distance (0km) + rating (4.5/5) = high score
       expect(result.data[0].id).toBe('close-high-rating');
-      expect(result.data[0].relevanceScore).toBeGreaterThan(result.data[1].relevanceScore);
+      expect(result.data[0].relevanceScore).toBeGreaterThan(result.data[1].relevanceScore!);
     });
   });
 
@@ -469,7 +469,8 @@ describe('SearchService', () => {
       const result = await service.searchPartners(dto);
 
       expect(result.data.length).toBe(1);
-      expect(result.data[0].latitude).not.toBeNull();
+      // MarketplacePartnerDto doesn't include latitude (it only has city)
+      expect(result.data[0].city).toBeDefined();
     });
 
     it('should handle partners with no services', async () => {

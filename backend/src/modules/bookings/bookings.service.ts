@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { Booking, BookingStatus } from '../../entities/booking.entity';
 import { Partner, PartnerStatus } from '../../entities/partner.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
@@ -559,6 +560,73 @@ export class BookingsService {
     const booking = await this.findOne(id, tenantId);
     await this.bookingRepository.softRemove(booking);
     this.logger.log(`Booking ${id} soft deleted`);
+  }
+
+  /**
+   * CRON job running daily at 9 AM to send booking reminders
+   * Sends email reminders to tenants for bookings scheduled tomorrow
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_9AM)
+  async sendDailyBookingReminders() {
+    this.logger.log('🔔 Running daily booking reminder job...');
+
+    try {
+      // Calculate tomorrow's date range
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+
+      const dayAfterTomorrow = new Date(tomorrow);
+      dayAfterTomorrow.setDate(tomorrow.getDate() + 1);
+
+      // Find all confirmed bookings scheduled for tomorrow
+      const bookings = await this.bookingRepository.find({
+        where: {
+          scheduledDate: Between(tomorrow, dayAfterTomorrow),
+          status: BookingStatus.CONFIRMED,
+        },
+        relations: ['partner', 'service', 'vehicle', 'tenant'],
+      });
+
+      this.logger.log(`Found ${bookings.length} bookings scheduled for tomorrow`);
+
+      // Send reminder email for each booking
+      for (const booking of bookings) {
+        try {
+          await this.emailQueueService.queueBookingReminder(
+            booking.tenant.email,
+            booking.tenant.name,
+            {
+              bookingId: booking.id,
+              partnerName: booking.partner.companyName,
+              serviceName: booking.service.name,
+              scheduledDate: booking.scheduledDate.toLocaleDateString('fr-FR', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              }),
+              scheduledTime: booking.scheduledTime,
+              vehicleRegistration: booking.vehicle?.registration || null,
+              partnerAddress: booking.partner.address || 'Adresse non renseignée',
+              partnerPhone: booking.partner.phone || null,
+            },
+          );
+
+          this.logger.log(`✅ Reminder sent for booking ${booking.id} to ${booking.tenant.email}`);
+        } catch (error) {
+          this.logger.error(
+            `❌ Failed to send reminder for booking ${booking.id}: ${error.message}`,
+            error.stack,
+          );
+          // Continue with next booking even if one fails
+        }
+      }
+
+      this.logger.log(`✅ Booking reminder job completed. ${bookings.length} reminders sent.`);
+    } catch (error) {
+      this.logger.error(`❌ Error in booking reminder job: ${error.message}`, error.stack);
+    }
   }
 
   private toResponseDto(booking: Booking): BookingResponseDto {

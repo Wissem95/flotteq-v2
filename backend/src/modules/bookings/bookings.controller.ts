@@ -72,6 +72,17 @@ export class BookingsController {
     return this.bookingsService.findAll(tenantId, filters);
   }
 
+  @Get('my-bookings')
+  @ApiOperation({
+    summary: 'Get tenant bookings history (alias for GET /bookings)',
+    description: 'Returns all bookings for the authenticated tenant user. This is an alias endpoint for better API clarity - it calls the same underlying service as GET /bookings.'
+  })
+  @ApiResponse({ status: 200, description: 'Tenant bookings retrieved successfully', type: BookingListResponseDto })
+  async getMyBookings(@Query() filters: BookingFilterDto, @Request() req: RequestWithUser): Promise<BookingListResponseDto> {
+    // Reuse findAll method - it already filters by tenantId for tenant users
+    return this.findAll(filters, req);
+  }
+
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming bookings (next 7 days)' })
   @ApiResponse({ status: 200, description: 'Upcoming bookings retrieved successfully' })

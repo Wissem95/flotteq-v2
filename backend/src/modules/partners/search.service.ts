@@ -7,6 +7,7 @@ import { AvailabilitiesService } from '../availabilities/availabilities.service'
 import { SearchPartnersDto } from './dto/search-partners.dto';
 import { PaginatedResponse } from '../../common/dto/paginated-response.dto';
 import { SimpleCacheService } from '../../common/cache/simple-cache.service';
+import { MarketplacePartnerDto, MarketplaceServiceDto } from './dto/marketplace-partner.dto';
 import * as crypto from 'crypto';
 
 /**
@@ -48,14 +49,14 @@ export class SearchService {
     private cacheService: SimpleCacheService,
   ) {}
 
-  async searchPartners(dto: SearchPartnersDto): Promise<PaginatedResponse<PartnerSearchResult>> {
+  async searchPartners(dto: SearchPartnersDto): Promise<PaginatedResponse<MarketplacePartnerDto>> {
     const startTime = Date.now();
 
     // Generate cache key from search parameters
     const cacheKey = this.generateCacheKey(dto);
 
     // Try to get from cache first
-    const cached = await this.cacheService.get<PaginatedResponse<PartnerSearchResult>>(cacheKey);
+    const cached = await this.cacheService.get<PaginatedResponse<MarketplacePartnerDto>>(cacheKey);
     if (cached) {
       const cacheTime = Date.now() - startTime;
       this.logger.debug(`Cache HIT for key ${cacheKey} (${cacheTime}ms)`);
@@ -217,13 +218,21 @@ export class SearchService {
 
     const paginatedPartners = sortedPartners.slice(startIndex, endIndex);
 
+    // Step 9: Transform to marketplace DTOs and calculate next available slots
+    const marketplaceDtos = await Promise.all(
+      paginatedPartners.map(async (partner) => {
+        const nextAvailableSlot = await this.calculateNextAvailableSlot(partner.id);
+        return this.transformToMarketplaceDto(partner, nextAvailableSlot);
+      }),
+    );
+
     const executionTime = Date.now() - startTime;
     this.logger.debug(
-      `Search completed in ${executionTime}ms. Found ${sortedPartners.length} partners. Returning page ${page} with ${paginatedPartners.length} results.`,
+      `Search completed in ${executionTime}ms. Found ${sortedPartners.length} partners. Returning page ${page} with ${marketplaceDtos.length} results.`,
     );
 
     const result = {
-      data: paginatedPartners as PartnerSearchResult[],
+      data: marketplaceDtos,
       meta: {
         total: sortedPartners.length,
         page,
@@ -328,5 +337,72 @@ export class SearchService {
     const hash = crypto.createHash('md5').update(keyString).digest('hex');
 
     return `partner_search:${hash}`;
+  }
+
+  /**
+   * Calculate next available slot for a partner within the next 7 days
+   * Returns the earliest available slot or null if none found
+   */
+  private async calculateNextAvailableSlot(partnerId: string): Promise<Date | null> {
+    try {
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(nextWeek.getDate() + 7);
+
+      // Check each day in the next 7 days
+      for (let i = 0; i < 7; i++) {
+        const checkDate = new Date(today);
+        checkDate.setDate(checkDate.getDate() + i);
+        const dateString = checkDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        const slots = await this.availabilitiesService.getAvailableSlots(partnerId, {
+          date: dateString,
+          duration: 60, // Default 60 minutes
+        });
+
+        if (slots.availableCount > 0 && slots.slots.length > 0) {
+          // Return the first available slot
+          const firstSlot = slots.slots[0];
+          return new Date(`${dateString}T${firstSlot.time}`);
+        }
+      }
+
+      return null; // No slots available in next 7 days
+    } catch (error) {
+      this.logger.warn(
+        `Failed to calculate next available slot for partner ${partnerId}: ${error.message}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * Transform Partner entity to MarketplacePartnerDto
+   * Includes only essential fields for marketplace display
+   */
+  private transformToMarketplaceDto(
+    partner: PartnerSearchResult,
+    nextAvailableSlot: Date | null,
+  ): MarketplacePartnerDto {
+    const marketplaceServices: MarketplaceServiceDto[] = partner.services.map((service) => ({
+      id: service.id,
+      name: service.name,
+      price: Number(service.price),
+      durationMinutes: service.durationMinutes,
+    }));
+
+    return {
+      id: partner.id,
+      companyName: partner.companyName,
+      type: partner.type,
+      city: partner.city,
+      rating: Number(partner.rating),
+      totalReviews: partner.totalReviews,
+      services: marketplaceServices,
+      distance: partner.distance,
+      nextAvailableSlot,
+      relevanceScore: partner.relevanceScore,
+      hasAvailability: partner.hasAvailability,
+    };
   }
 }

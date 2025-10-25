@@ -230,4 +230,21 @@ export class EmailProcessor {
       throw error;
     }
   }
+
+  @Process('booking-reminder')
+  async handleBookingReminder(job: Job<{ email: string; tenantName: string; bookingData: any }>) {
+    this.logger.debug(`Processing booking reminder email job ${job.id}`);
+
+    try {
+      await this.emailService.sendBookingReminder(
+        job.data.email,
+        job.data.tenantName,
+        job.data.bookingData,
+      );
+      this.logger.log(`Booking reminder email sent to ${job.data.email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send booking reminder email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
 }

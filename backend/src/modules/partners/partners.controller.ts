@@ -30,6 +30,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { SearchPartnersDto } from './dto/search-partners.dto';
 import { GetPartnersQueryDto } from './dto/get-partners-query.dto';
 import { CreatePartnerDto } from './dto/create-partner.dto';
+import { MarketplacePartnerDto } from './dto/marketplace-partner.dto';
 import { Request, BadRequestException } from '@nestjs/common';
 
 interface RequestWithUser extends Request {
@@ -55,23 +56,28 @@ export class PartnersController {
   @Post('search')
   @ApiOperation({
     summary: 'Search partners by geolocation (Tenant)',
-    description: 'Authenticated tenant users can search for approved partners within a specified radius, with optional filters for type, services, price, rating, and availability'
+    description: 'Authenticated tenant users can search for approved partners within a specified radius, with optional filters for type, services, price, rating, and availability. Returns simplified marketplace DTOs with next available slots.'
   })
   @ApiResponse({
     status: 200,
-    description: 'Partners search results with pagination.',
+    description: 'Partners search results with pagination. Returns MarketplacePartnerDto objects with simplified fields and next available booking slot.',
     schema: {
       example: {
         data: [
           {
-            id: 'uuid',
+            id: '550e8400-e29b-41d4-a716-446655440000',
             companyName: 'Garage Martin',
             type: 'garage',
-            distance: 3.2,
+            city: 'Paris',
             rating: 4.5,
-            services: [{ name: 'Vidange', price: 80 }],
-            hasAvailability: true,
-            relevanceScore: 87.5
+            totalReviews: 127,
+            services: [
+              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Vidange complète', price: 89.99, durationMinutes: 60 }
+            ],
+            distance: 3.2,
+            nextAvailableSlot: '2025-10-25T09:00:00.000Z',
+            relevanceScore: 87.5,
+            hasAvailability: true
           }
         ],
         meta: {
@@ -90,7 +96,7 @@ export class PartnersController {
   async searchPartners(
     @CurrentUser() user: User,
     @Body() searchPartnersDto: SearchPartnersDto,
-  ) {
+  ): Promise<{ data: MarketplacePartnerDto[], meta: any }> {
     return this.searchService.searchPartners(searchPartnersDto);
   }
 

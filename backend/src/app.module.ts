@@ -2,6 +2,7 @@ import { Module, NestModule, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -26,6 +27,7 @@ import { PartnersModule } from './modules/partners/partners.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { CommissionsModule } from './modules/commissions/commissions.module';
 import { AvailabilitiesModule } from './modules/availabilities/availabilities.module';
+import { RatingsModule } from './modules/ratings/ratings.module';
 // import { StripeModule } from './stripe/stripe.module';
 // import stripeConfig from './config/stripe.config';
 
@@ -36,6 +38,7 @@ import { AvailabilitiesModule } from './modules/availabilities/availabilities.mo
       envFilePath: '.env',
       // load: [stripeConfig],
     }),
+    ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -69,6 +72,7 @@ import { AvailabilitiesModule } from './modules/availabilities/availabilities.mo
     BookingsModule,
     CommissionsModule,
     AvailabilitiesModule,
+    RatingsModule,
     SubscriptionsModule,
     UsersModule,
     MaintenanceModule,

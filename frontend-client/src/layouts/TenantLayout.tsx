@@ -13,6 +13,8 @@ import {
   UserCog,
   CreditCard,
   Settings,
+  ShoppingBag,
+  Calendar,
 } from 'lucide-react';
 
 interface TenantLayoutProps {
@@ -55,6 +57,16 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
       icon: FileText,
       label: 'Documents',
       path: '/documents',
+    },
+    {
+      icon: ShoppingBag,
+      label: 'Marketplace',
+      path: '/marketplace',
+    },
+    {
+      icon: Calendar,
+      label: 'Mes réservations',
+      path: '/my-bookings',
     },
     {
       icon: UserCog,

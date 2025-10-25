@@ -333,4 +333,31 @@ export class EmailQueueService {
       throw error;
     }
   }
+
+  async queueBookingReminder(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
+    try {
+      await this.emailQueue.add(
+        'booking-reminder',
+        {
+          email,
+          tenantName,
+          bookingData,
+        },
+        {
+          attempts: 3,
+          backoff: { type: 'exponential', delay: 2000 },
+          removeOnComplete: true,
+          removeOnFail: false,
+        },
+      );
+      this.logger.log(`Booking reminder email queued for tenant ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to queue booking reminder email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
 }

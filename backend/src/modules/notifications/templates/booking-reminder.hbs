@@ -1,0 +1,39 @@
+<h2>⏰ Rappel : Rendez-vous demain !</h2>
+
+<p>Bonjour {{tenantName}},</p>
+
+<p>Ce message pour vous rappeler que votre rendez-vous est prévu <strong>demain</strong>.</p>
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #ffc107;">
+  <h3 style="margin-top: 0; color: #856404;">📋 Détails de votre rendez-vous</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Réservation :</strong> #{{bookingId}}</p>
+  <p style="margin: 8px 0;"><strong>Partenaire :</strong> {{partnerName}}</p>
+  <p style="margin: 8px 0;"><strong>Service :</strong> {{serviceName}}</p>
+  <p style="margin: 8px 0;"><strong>Date :</strong> {{scheduledDate}}</p>
+  <p style="margin: 8px 0;"><strong>Heure :</strong> {{scheduledTime}}</p>
+  {{#if vehicleRegistration}}
+  <p style="margin: 8px 0;"><strong>Véhicule :</strong> {{vehicleRegistration}}</p>
+  {{/if}}
+</div>
+
+<div style="background-color: #d1ecf1; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <p style="margin: 0; color: #0c5460;">
+    📍 <strong>Adresse :</strong> {{partnerAddress}}
+  </p>
+  {{#if partnerPhone}}
+  <p style="margin: 8px 0 0 0; color: #0c5460;">
+    📞 <strong>Téléphone :</strong> {{partnerPhone}}
+  </p>
+  {{/if}}
+</div>
+
+<a href="{{appUrl}}/bookings/{{bookingId}}" class="button">Voir ma réservation</a>
+
+<p style="margin-top: 30px; padding: 12px; background-color: #d4edda; border-radius: 6px; color: #155724;">
+  💡 <strong>Conseil :</strong> Pensez à arriver 10 minutes en avance pour faciliter la prise en charge de votre véhicule.
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Pour toute question, contactez-nous à support@flotteq.com
+</p>
