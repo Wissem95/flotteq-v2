@@ -30,8 +30,8 @@ export const bookingsService = {
    * Get booking details by ID
    */
   async getBookingDetails(id: string): Promise<Booking> {
-    const response = await api.get<Booking>(`/bookings/${id}`);
-    return response.data;
+    const response = await api.get<{ message: string; booking: Booking }>(`/bookings/${id}`);
+    return response.data.booking;
   },
 
   /**

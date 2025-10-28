@@ -15,12 +15,12 @@ import * as bcrypt from 'bcrypt';
 import { Tenant } from './tenant.entity';
 
 export enum UserRole {
-  SUPER_ADMIN = 'super_admin',   // Admin FlotteQ (tenantId = 1)
-  SUPPORT = 'support',            // Support FlotteQ (tenantId = 1)
+  SUPER_ADMIN = 'super_admin', // Admin FlotteQ (tenantId = 1)
+  SUPPORT = 'support', // Support FlotteQ (tenantId = 1)
   TENANT_ADMIN = 'tenant_admin', // Admin de l'entreprise cliente
-  MANAGER = 'manager',            // Manager flotte
-  DRIVER = 'driver',              // Conducteur
-  VIEWER = 'viewer',              // Lecture seule
+  MANAGER = 'manager', // Manager flotte
+  DRIVER = 'driver', // Conducteur
+  VIEWER = 'viewer', // Lecture seule
 }
 
 @Entity('users')

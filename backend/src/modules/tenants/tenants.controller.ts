@@ -17,9 +17,13 @@ import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
 import { QueryTenantsDto } from './dto/query-tenants.dto';
 import { UpdateStorageQuotaDto } from './dto/update-storage-quota.dto';
+import { TenantMeResponseDto } from './dto/tenant-me-response.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { Public } from '../../common/decorators/public.decorator';
+import { User } from '../../entities/user.entity';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('tenants')
 @ApiTags('tenants')
@@ -50,6 +54,23 @@ export class TenantsController {
     @Param('planId', ParseIntPipe) planId: number,
   ) {
     return this.tenantsService.changePlan(id, planId);
+  }
+
+  @Get('me')
+  @Public()
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user tenant information' })
+  @ApiResponse({
+    status: 200,
+    description: 'Current user tenant information',
+    type: TenantMeResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Tenant not found for this user' })
+  async findMyTenant(@CurrentUser() user: User): Promise<TenantMeResponseDto> {
+    if (!user || !user.id) {
+      throw new Error('User not authenticated');
+    }
+    return this.tenantsService.findByUserId(user.id);
   }
 
   @Get(':id')

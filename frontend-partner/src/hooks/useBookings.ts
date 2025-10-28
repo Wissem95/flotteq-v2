@@ -11,7 +11,7 @@ export const useBookings = (filters?: BookingFilters) => {
 
   return useQuery({
     queryKey: ['bookings', partnerId, filters],
-    queryFn: async (): Promise<{ data: Booking[]; total: number; page: number; totalPages: number }> => {
+    queryFn: async (): Promise<{ bookings: Booking[]; total: number; page: number; totalPages: number }> => {
       if (!partnerId) throw new Error('Partner ID not found');
 
       // Filter out empty string values to avoid sending empty params

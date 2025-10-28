@@ -8,6 +8,7 @@ import { Partner } from '../../entities/partner.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { Vehicle } from '../../entities/vehicle.entity';
 import { Commission } from '../../entities/commission.entity';
+import { Rating } from '../../entities/rating.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AuditModule } from '../audit/audit.module';
 import { CommissionsModule } from '../commissions/commissions.module';
@@ -15,7 +16,7 @@ import { StripeModule } from '../../stripe/stripe.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Partner, PartnerService, Vehicle, Commission]),
+    TypeOrmModule.forFeature([Booking, Partner, PartnerService, Vehicle, Commission, Rating]),
     NotificationsModule,
     AuditModule,
     StripeModule,

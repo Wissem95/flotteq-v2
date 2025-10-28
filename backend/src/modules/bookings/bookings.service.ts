@@ -12,6 +12,7 @@ import { Booking, BookingStatus } from '../../entities/booking.entity';
 import { Partner, PartnerStatus } from '../../entities/partner.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { Vehicle } from '../../entities/vehicle.entity';
+import { Rating } from '../../entities/rating.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
@@ -35,6 +36,8 @@ export class BookingsService {
     private partnerServiceRepository: Repository<PartnerService>,
     @InjectRepository(Vehicle)
     private vehicleRepository: Repository<Vehicle>,
+    @InjectRepository(Rating)
+    private ratingRepository: Repository<Rating>,
     private emailQueueService: EmailQueueService,
     private auditService: AuditService,
     private commissionsService: CommissionsService,
@@ -168,16 +171,20 @@ export class BookingsService {
       query.andWhere('booking.scheduled_date <= :endDate', { endDate });
     }
 
-    query.orderBy('booking.scheduled_date', 'DESC');
-
     const total = await query.getCount();
     const totalPages = Math.ceil(total / limit);
 
-    query.skip((page - 1) * limit).take(limit);
+    query
+      .orderBy('booking.scheduledDate', 'DESC')
+      .addOrderBy('booking.scheduledTime', 'DESC')
+      .skip((page - 1) * limit)
+      .take(limit);
 
     const bookings = await query.getMany();
 
-    const data: BookingResponseDto[] = bookings.map((booking) => this.toResponseDto(booking));
+    const data: BookingResponseDto[] = await Promise.all(
+      bookings.map((booking) => this.toResponseDto(booking)),
+    );
 
     return {
       bookings: data,
@@ -188,10 +195,13 @@ export class BookingsService {
     };
   }
 
-  async findOne(id: string, tenantId: number): Promise<Booking> {
+  /**
+   * Find booking entity (for internal use)
+   */
+  private async findBookingEntity(id: string, tenantId: number): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id, tenantId },
-      relations: ['partner', 'service', 'vehicle', 'driver'],
+      relations: ['partner', 'service', 'vehicle', 'driver', 'tenant'],
     });
 
     if (!booking) {
@@ -199,6 +209,14 @@ export class BookingsService {
     }
 
     return booking;
+  }
+
+  /**
+   * Find booking and return DTO (for API responses)
+   */
+  async findOne(id: string, tenantId: number): Promise<BookingResponseDto> {
+    const booking = await this.findBookingEntity(id, tenantId);
+    return this.toResponseDto(booking);
   }
 
   async findByPartner(partnerId: string, filters: BookingFilterDto): Promise<BookingListResponseDto> {
@@ -234,7 +252,9 @@ export class BookingsService {
 
     const bookings = await query.getMany();
 
-    const data: BookingResponseDto[] = bookings.map((booking) => this.toResponseDto(booking));
+    const data: BookingResponseDto[] = await Promise.all(
+      bookings.map((booking) => this.toResponseDto(booking)),
+    );
 
     return {
       bookings: data,
@@ -364,7 +384,7 @@ export class BookingsService {
     tenantId: number,
     userId: string,
   ): Promise<Booking> {
-    const booking = await this.findOne(id, tenantId);
+    const booking = await this.findBookingEntity(id, tenantId);
 
     if (!booking.canBeRescheduled()) {
       throw new BadRequestException(`Booking cannot be rescheduled in status: ${booking.status}`);
@@ -510,7 +530,7 @@ export class BookingsService {
   }
 
   async cancel(id: string, reason: string, tenantId: number, userId: string): Promise<Booking> {
-    const booking = await this.findOne(id, tenantId);
+    const booking = await this.findBookingEntity(id, tenantId);
 
     if (!booking.canBeCancelled()) {
       throw new BadRequestException(`Booking cannot be cancelled in status: ${booking.status}`);
@@ -549,7 +569,7 @@ export class BookingsService {
   }
 
   async update(id: string, updateDto: UpdateBookingDto, tenantId: number): Promise<Booking> {
-    const booking = await this.findOne(id, tenantId);
+    const booking = await this.findBookingEntity(id, tenantId);
 
     Object.assign(booking, updateDto);
 
@@ -557,7 +577,7 @@ export class BookingsService {
   }
 
   async remove(id: string, tenantId: number): Promise<void> {
-    const booking = await this.findOne(id, tenantId);
+    const booking = await this.findBookingEntity(id, tenantId);
     await this.bookingRepository.softRemove(booking);
     this.logger.log(`Booking ${id} soft deleted`);
   }
@@ -629,7 +649,12 @@ export class BookingsService {
     }
   }
 
-  private toResponseDto(booking: Booking): BookingResponseDto {
+  private async toResponseDto(booking: Booking): Promise<BookingResponseDto> {
+    // Check if booking has a rating
+    const rating = await this.ratingRepository.findOne({
+      where: { bookingId: booking.id },
+    });
+
     return {
       id: booking.id,
       partnerId: booking.partnerId,
@@ -648,8 +673,8 @@ export class BookingsService {
       scheduledTime: booking.scheduledTime,
       endTime: booking.endTime,
       status: booking.status,
-      price: booking.price,
-      commissionAmount: booking.commissionAmount,
+      price: Number(booking.price),
+      commissionAmount: Number(booking.commissionAmount),
       paymentStatus: booking.paymentStatus,
       customerNotes: booking.customerNotes,
       partnerNotes: booking.partnerNotes,
@@ -658,6 +683,7 @@ export class BookingsService {
       confirmedAt: booking.confirmedAt,
       completedAt: booking.completedAt,
       paidAt: booking.paidAt,
+      hasRating: !!rating,
       createdAt: booking.createdAt,
       updatedAt: booking.updatedAt,
     };

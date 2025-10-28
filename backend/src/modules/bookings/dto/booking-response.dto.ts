@@ -83,6 +83,9 @@ export class BookingResponseDto {
   @ApiPropertyOptional()
   paidAt: Date | null;
 
+  @ApiProperty({ description: 'Whether this booking has been rated by the tenant' })
+  hasRating: boolean;
+
   @ApiProperty()
   createdAt: Date;
 

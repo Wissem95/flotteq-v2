@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, MapPin, Filter } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, MapPin, Filter, Loader2 } from 'lucide-react';
 import type { SearchPartnersParams } from '@/types/marketplace.types';
 
 interface SearchFiltersProps {
@@ -7,13 +7,63 @@ interface SearchFiltersProps {
   isLoading?: boolean;
 }
 
+interface NominatimResult {
+  lat: string;
+  lon: string;
+  display_name: string;
+  place_id: number;
+}
+
 export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProps) {
+  const [address, setAddress] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+  const [suggestions, setSuggestions] = useState<NominatimResult[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [radius, setRadius] = useState('10');
   const [type, setType] = useState('');
   const [minRating, setMinRating] = useState('');
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'price' | 'relevance'>('relevance');
+  const debounceTimer = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    if (address.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(async () => {
+      setIsSearchingAddress(true);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&limit=5&countrycodes=fr`,
+          {
+            headers: {
+              'User-Agent': 'FlotteQ-App',
+            },
+          }
+        );
+        const data: NominatimResult[] = await response.json();
+        setSuggestions(data);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Error fetching address suggestions:', error);
+      } finally {
+        setIsSearchingAddress(false);
+      }
+    }, 500);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [address]);
 
   const handleGetCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -21,6 +71,9 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
         (position) => {
           setLatitude(position.coords.latitude.toString());
           setLongitude(position.coords.longitude.toString());
+          setAddress('Ma position actuelle');
+          setSuggestions([]);
+          setShowSuggestions(false);
         },
         (error) => {
           console.error('Error getting location:', error);
@@ -32,11 +85,19 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
     }
   };
 
+  const handleSelectSuggestion = (result: NominatimResult) => {
+    setAddress(result.display_name);
+    setLatitude(result.lat);
+    setLongitude(result.lon);
+    setShowSuggestions(false);
+    setSuggestions([]);
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!latitude || !longitude) {
-      alert('Veuillez saisir une position ou utiliser votre localisation actuelle');
+      alert('Veuillez saisir une adresse ou utiliser votre localisation actuelle');
       return;
     }
 
@@ -62,50 +123,76 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {/* Localisation */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 relative">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             <MapPin className="inline h-4 w-4 mr-1" />
             Localisation
           </label>
           <div className="flex gap-2">
-            <input
-              type="number"
-              step="any"
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              placeholder="Latitude"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-flotteq-blue text-sm"
-            />
-            <input
-              type="number"
-              step="any"
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              placeholder="Longitude"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-flotteq-blue text-sm"
-            />
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                placeholder="Entrez une adresse (ex: Paris, Marseille...)"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-flotteq-blue text-sm"
+              />
+              {isSearchingAddress && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400" />
+              )}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {suggestions.map((result) => (
+                    <button
+                      key={result.place_id}
+                      type="button"
+                      onClick={() => handleSelectSuggestion(result)}
+                      className="w-full text-left px-4 py-2 hover:bg-blue-50 text-sm border-b border-gray-100 last:border-b-0"
+                    >
+                      <MapPin className="inline h-3 w-3 mr-2 text-gray-400" />
+                      {result.display_name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
             <button
               type="button"
               onClick={handleGetCurrentLocation}
-              className="px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-sm"
-              title="Ma position"
+              className="px-4 py-2 bg-flotteq-blue text-white hover:bg-blue-700 rounded-lg transition-colors text-sm font-medium flex items-center gap-2"
+              title="Utiliser ma position actuelle"
             >
-              📍
+              📍 Ma position
             </button>
           </div>
+          {latitude && longitude && (
+            <p className="text-xs text-gray-500 mt-1">
+              Position: {parseFloat(latitude).toFixed(4)}°, {parseFloat(longitude).toFixed(4)}°
+            </p>
+          )}
         </div>
 
         {/* Rayon */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Rayon (km)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Rayon: <span className="text-flotteq-blue font-semibold">{radius} km</span>
+          </label>
           <input
-            type="number"
+            type="range"
             min="1"
-            max="100"
+            max="200"
             value={radius}
             onChange={(e) => setRadius(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-flotteq-blue text-sm"
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-flotteq-blue"
+            style={{
+              background: `linear-gradient(to right, #0066CC 0%, #0066CC ${(parseInt(radius) / 200) * 100}%, #E5E7EB ${(parseInt(radius) / 200) * 100}%, #E5E7EB 100%)`
+            }}
           />
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
+            <span>1 km</span>
+            <span>200 km</span>
+          </div>
         </div>
 
         {/* Type */}

@@ -42,7 +42,9 @@ export default function PartnerCard({ partner }: PartnerCardProps) {
         <div className="flex flex-col items-end">
           <div className="flex items-center gap-1 mb-1">
             <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-            <span className="font-bold text-gray-900">{partner.rating.toFixed(1)}</span>
+            <span className="font-bold text-gray-900">
+              {typeof partner.rating === 'number' ? partner.rating.toFixed(1) : partner.rating}
+            </span>
           </div>
           <span className="text-xs text-gray-500">{partner.totalReviews} avis</span>
         </div>

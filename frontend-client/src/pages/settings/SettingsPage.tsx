@@ -156,11 +156,11 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l'entreprise</label>
-                <div className="text-gray-900">{tenant?.name}</div>
+                <div className="text-gray-900">{tenant?.name || `${user?.firstName} ${user?.lastName}`}</div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Email entreprise</label>
-                <div className="text-gray-900">{tenant?.email}</div>
+                <div className="text-gray-900">{tenant?.email || user?.email}</div>
               </div>
             </div>
           </div>

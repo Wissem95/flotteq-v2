@@ -8,6 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
+import { User } from '../../entities/user.entity';
 import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
 import { Document } from '../../entities/document.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
@@ -23,6 +24,8 @@ export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
     private tenantsRepository: Repository<Tenant>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
     @InjectRepository(Subscription)
     private subscriptionRepository: Repository<Subscription>,
     @InjectRepository(Document)
@@ -153,6 +156,38 @@ export class TenantsService {
     }
 
     return tenant;
+  }
+
+  /**
+   * Find tenant by user ID
+   * Used for GET /tenants/me endpoint
+   */
+  async findByUserId(userId: string): Promise<any> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user || !user.tenantId) {
+      throw new NotFoundException('User not found or not associated with a tenant');
+    }
+
+    const tenant = await this.tenantsRepository.findOne({
+      where: { id: user.tenantId },
+    });
+
+    if (!tenant) {
+      throw new NotFoundException('Tenant not found');
+    }
+
+    // Retourner uniquement les champs nécessaires pour TenantMeResponseDto
+    return {
+      id: tenant.id,
+      name: tenant.name,
+      email: tenant.email,
+      address: tenant.address,
+      phone: tenant.phone,
+      createdAt: tenant.createdAt,
+    };
   }
 
   async update(id: number, updateTenantDto: UpdateTenantDto): Promise<Tenant> {

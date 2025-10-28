@@ -5,6 +5,7 @@ import type { Booking, BookingStatus } from '@/types/booking.types';
 interface BookingCardProps {
   booking: Booking;
   onCancel?: (id: string) => void;
+  actions?: React.ReactNode;
 }
 
 const statusLabels: Record<BookingStatus, { label: string; color: string }> = {
@@ -16,7 +17,7 @@ const statusLabels: Record<BookingStatus, { label: string; color: string }> = {
   rejected: { label: 'Refusé', color: 'bg-red-100 text-red-800' },
 };
 
-export default function BookingCard({ booking, onCancel }: BookingCardProps) {
+export default function BookingCard({ booking, onCancel, actions }: BookingCardProps) {
   const navigate = useNavigate();
   const status = statusLabels[booking.status];
 
@@ -71,22 +72,25 @@ export default function BookingCard({ booking, onCancel }: BookingCardProps) {
         </div>
       )}
 
-      <div className="flex gap-2">
-        <button
-          onClick={handleViewDetails}
-          className="flex-1 px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-        >
-          Voir détails
-        </button>
-        {canCancel && onCancel && (
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-2">
           <button
-            onClick={handleCancel}
-            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2"
+            onClick={handleViewDetails}
+            className="flex-1 px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm"
           >
-            <X className="h-4 w-4" />
-            Annuler
+            Voir détails
           </button>
-        )}
+          {canCancel && onCancel && (
+            <button
+              onClick={handleCancel}
+              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-2 text-sm"
+            >
+              <X className="h-4 w-4" />
+              Annuler
+            </button>
+          )}
+        </div>
+        {actions && <div className="w-full">{actions}</div>}
       </div>
     </div>
   );

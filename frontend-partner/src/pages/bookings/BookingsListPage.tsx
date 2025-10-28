@@ -53,7 +53,7 @@ export default function BookingsListPage() {
 
   // Fetch bookings
   const { data, isLoading, error } = useBookings(filters);
-  const bookings = data?.data || [];
+  const bookings = data?.bookings || [];
   const total = data?.total || 0;
   const totalPages = data?.totalPages || 1;
 

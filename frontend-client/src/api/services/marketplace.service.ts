@@ -12,7 +12,20 @@ export const marketplaceService = {
    * Search partners by geolocation and filters
    */
   async searchPartners(params: SearchPartnersParams): Promise<SearchPartnersResponse> {
-    const response = await api.post<SearchPartnersResponse>('/partners/search', params);
+    // Map frontend params to backend DTO format
+    const backendParams = {
+      lat: params.latitude,
+      lng: params.longitude,
+      radius: params.radius || 10,
+      ...(params.type && { type: params.type }),
+      ...(params.minRating && { minRating: params.minRating }),
+      ...(params.minPrice && { priceMin: params.minPrice }),
+      ...(params.maxPrice && { priceMax: params.maxPrice }),
+      ...(params.page && { page: params.page }),
+      ...(params.limit && { limit: params.limit }),
+    };
+
+    const response = await api.post<SearchPartnersResponse>('/partners/search', backendParams);
     return response.data;
   },
 

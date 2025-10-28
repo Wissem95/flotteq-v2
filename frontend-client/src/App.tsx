@@ -24,7 +24,10 @@ import BillingPage from './pages/billing/BillingPage';
 import CheckoutSuccessPage from './pages/billing/CheckoutSuccessPage';
 import SettingsPage from './pages/settings/SettingsPage';
 import MarketplacePage from './pages/marketplace/MarketplacePage';
+import PartnerDetailPage from './pages/marketplace/PartnerDetailPage';
 import MyBookingsPage from './pages/bookings/MyBookingsPage';
+import BookingDetailPage from './pages/bookings/BookingDetailPage';
+import BookingFlowPage from './pages/bookings/BookingFlowPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -83,7 +86,10 @@ function App() {
               <Route path="billing/success" element={<CheckoutSuccessPage />} />
               <Route path="settings" element={<SettingsPage />} />
               <Route path="marketplace" element={<MarketplacePage />} />
+              <Route path="marketplace/:partnerId" element={<PartnerDetailPage />} />
               <Route path="my-bookings" element={<MyBookingsPage />} />
+              <Route path="my-bookings/:id" element={<BookingDetailPage />} />
+              <Route path="booking/new/:partnerId/:serviceId?" element={<BookingFlowPage />} />
             </Route>
           </Routes>
         </BrowserRouter>

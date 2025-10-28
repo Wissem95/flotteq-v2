@@ -30,6 +30,7 @@ export interface Booking {
   confirmedAt?: string;
   completedAt?: string;
   paidAt?: string;
+  hasRating: boolean;
   createdAt: string;
   updatedAt: string;
 }
