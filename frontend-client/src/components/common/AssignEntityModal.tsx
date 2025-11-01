@@ -36,7 +36,16 @@ export function AssignEntityModal({
     const entities = type === 'driver' ? drivers : vehicles;
 
     // Étape 1: Exclure les IDs déjà assignés
-    const afterExclude = entities.filter((entity) => !excludeIds.includes(entity.id));
+    let afterExclude = entities.filter((entity) => !excludeIds.includes(entity.id));
+
+    // Étape 1.5: Si type=vehicle, filtrer les véhicules déjà assignés à d'autres conducteurs
+    if (type === 'vehicle') {
+      afterExclude = afterExclude.filter((v) => {
+        const vehicle = v as Vehicle;
+        // Afficher uniquement les véhicules disponibles (sans conducteur assigné)
+        return vehicle.status === 'available' || !vehicle.assignedDriverId;
+      });
+    }
 
     // Étape 2: Filtre de recherche
     if (!searchQuery) {

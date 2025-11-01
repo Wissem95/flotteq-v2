@@ -51,6 +51,7 @@ export class EmailService {
       'booking-rejected',
       'booking-completed',
       'booking-reminder',
+      'report-created',
     ];
 
     try {

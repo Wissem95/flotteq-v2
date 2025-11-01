@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, List, Map } from 'lucide-react';
 import SearchFilters from '@/components/marketplace/SearchFilters';
 import PartnerCard from '@/components/marketplace/PartnerCard';
+import PartnersMap from '@/components/marketplace/PartnersMap';
 import { useSearchPartners } from '@/hooks/useMarketplace';
 import type { SearchPartnersParams } from '@/types/marketplace.types';
 
+type ViewMode = 'list' | 'map';
+
 export default function MarketplacePage() {
   const [searchParams, setSearchParams] = useState<SearchPartnersParams | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const { data, isLoading, error } = useSearchPartners(searchParams!, searchParams !== null);
 
@@ -27,6 +31,34 @@ export default function MarketplacePage() {
             Trouvez et réservez des services près de chez vous
           </p>
         </div>
+
+        {/* Toggle Vue Liste/Carte */}
+        {data && data.data.length > 0 && (
+          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-flotteq-blue text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <List className="h-5 w-5" />
+              <span className="font-medium">Liste</span>
+            </button>
+            <button
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+                viewMode === 'map'
+                  ? 'bg-flotteq-blue text-white'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Map className="h-5 w-5" />
+              <span className="font-medium">Carte</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Search Filters */}
@@ -66,33 +98,47 @@ export default function MarketplacePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.data.map((partner) => (
-              <PartnerCard key={partner.id} partner={partner} />
-            ))}
-          </div>
+          {/* Vue Liste */}
+          {viewMode === 'list' && (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {data.data.map((partner) => (
+                  <PartnerCard key={partner.id} partner={partner} />
+                ))}
+              </div>
 
-          {/* Pagination (simple) */}
-          {data.meta.totalPages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
-              <button
-                onClick={() => setSearchParams({ ...searchParams!, page: (searchParams!.page || 1) - 1 })}
-                disabled={!data.meta.hasPreviousPage}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Précédent
-              </button>
-              <span className="px-4 py-2 bg-white border border-gray-300 rounded-lg">
-                Page {data.meta.page} / {data.meta.totalPages}
-              </span>
-              <button
-                onClick={() => setSearchParams({ ...searchParams!, page: (searchParams!.page || 1) + 1 })}
-                disabled={!data.meta.hasNextPage}
-                className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Suivant
-              </button>
-            </div>
+              {/* Pagination (simple) */}
+              {data.meta.totalPages > 1 && (
+                <div className="mt-6 flex justify-center gap-2">
+                  <button
+                    onClick={() => setSearchParams({ ...searchParams!, page: (searchParams!.page || 1) - 1 })}
+                    disabled={!data.meta.hasPreviousPage}
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Précédent
+                  </button>
+                  <span className="px-4 py-2 bg-white border border-gray-300 rounded-lg">
+                    Page {data.meta.page} / {data.meta.totalPages}
+                  </span>
+                  <button
+                    onClick={() => setSearchParams({ ...searchParams!, page: (searchParams!.page || 1) + 1 })}
+                    disabled={!data.meta.hasNextPage}
+                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Suivant
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Vue Carte */}
+          {viewMode === 'map' && searchParams && (
+            <PartnersMap
+              partners={data.data}
+              center={[searchParams.latitude, searchParams.longitude]}
+              zoom={12}
+            />
           )}
         </div>
       )}

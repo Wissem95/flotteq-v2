@@ -9,6 +9,7 @@ import {
   Index,
 } from 'typeorm';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PartnerService } from './partner-service.entity';
 
 export enum PartnerType {
   GARAGE = 'garage',
@@ -126,6 +127,9 @@ export class Partner {
   @ApiPropertyOptional()
   @DeleteDateColumn({ name: 'deleted_at' })
   deletedAt?: Date;
+
+  @OneToMany(() => PartnerService, (service) => service.partner)
+  services: PartnerService[];
 
   // Check if partner is approved
   isApproved(): boolean {

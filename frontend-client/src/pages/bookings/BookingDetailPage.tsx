@@ -6,8 +6,6 @@ import {
   Car,
   User,
   DollarSign,
-  MapPin,
-  Phone,
   FileText,
   AlertCircle,
   CheckCircle,

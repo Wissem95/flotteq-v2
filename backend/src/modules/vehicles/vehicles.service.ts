@@ -93,7 +93,15 @@ export class VehiclesService {
     const vehicle = this.vehicleRepository.create({
       ...createVehicleDto,
       tenantId,
-    } as any);
+    });
+
+    // SYNCHRONISATION HYBRIDE à la création : currentKm ↔ mileage
+    if (createVehicleDto.currentKm !== undefined && createVehicleDto.currentKm > 0 && !createVehicleDto.mileage) {
+      vehicle.mileage = createVehicleDto.currentKm; // Sync mileage depuis currentKm
+    }
+    if (createVehicleDto.mileage !== undefined && createVehicleDto.mileage > 0 && !createVehicleDto.currentKm) {
+      vehicle.currentKm = createVehicleDto.mileage; // Sync currentKm depuis mileage
+    }
 
     const savedVehicle = await this.vehicleRepository.save(vehicle) as unknown as Vehicle;
     this.logger.log(`Vehicle ${savedVehicle.id} created for tenant ${tenantId}`);
@@ -321,11 +329,19 @@ export class VehiclesService {
     }
 
     // Vérifier si le kilométrage a changé pour enregistrer dans l'historique
-    const kmChanged = updateVehicleDto.currentKm &&
-                      updateVehicleDto.currentKm !== vehicle.currentKm &&
-                      updateVehicleDto.currentKm > 0;
+    const kmChanged = (updateVehicleDto.currentKm && updateVehicleDto.currentKm !== vehicle.currentKm && updateVehicleDto.currentKm > 0) ||
+                      (updateVehicleDto.mileage && updateVehicleDto.mileage !== vehicle.mileage && updateVehicleDto.mileage > 0);
 
     Object.assign(vehicle, updateVehicleDto);
+
+    // SYNCHRONISATION HYBRIDE : currentKm ↔ mileage
+    if (updateVehicleDto.currentKm !== undefined && updateVehicleDto.currentKm > 0) {
+      vehicle.mileage = updateVehicleDto.currentKm; // Sync mileage avec currentKm
+    }
+    if (updateVehicleDto.mileage !== undefined && updateVehicleDto.mileage > 0) {
+      vehicle.currentKm = updateVehicleDto.mileage; // Sync currentKm avec mileage
+    }
+
     const updatedVehicle = await this.vehicleRepository.save(vehicle);
 
     // Enregistrer le changement de kilométrage

@@ -24,6 +24,8 @@ export default function VehicleDetailPage() {
     queryKey: ['vehicle', id],
     queryFn: () => vehiclesService.getVehicleById(id!),
     enabled: !!id,
+    refetchInterval: 30000, // Refresh toutes les 30 secondes pour voir updates kilométrage driver
+    refetchOnWindowFocus: true, // Refresh au retour focus
   });
 
   const assignDriverMutation = useMutation({

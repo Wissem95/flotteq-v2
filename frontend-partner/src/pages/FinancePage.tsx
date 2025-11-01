@@ -4,25 +4,18 @@ import { fr } from 'date-fns/locale';
 import { Download, TrendingUp, Clock, CheckCircle, Calendar } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import StatsCard from '../components/dashboard/StatsCard';
 import { Pagination } from '../components/common/Pagination';
 import {
-  useCommissions,
-  useDailyStats,
-  useWeeklyStats,
-  useMonthlyStats,
-  useMonthlyRevenue
-} from '../hooks/useCommissions';
+  useDailyRevenue,
+  useWeeklyRevenue,
+  useMonthlyRevenue as useMonthlyRevenueStats,
+  useMonthlyRevenueChart,
+  useRevenueByPeriod
+} from '../hooks/useRevenueStats';
 import { useAuthStore } from '../stores/authStore';
 import { toast } from 'sonner';
-
-// Types jsPDF
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: any) => void;
-  }
-}
 
 export default function FinancePage() {
   const user = useAuthStore((state) => state.user);
@@ -35,26 +28,34 @@ export default function FinancePage() {
     limit: 20,
   });
 
-  // Fetch data
-  const dailyStats = useDailyStats();
-  const weeklyStats = useWeeklyStats();
-  const monthlyStats = useMonthlyStats();
-  const monthlyRevenue = useMonthlyRevenue();
+  // Fetch revenue data (revenus partenaire, pas commissions)
+  const dailyStats = useDailyRevenue();
+  const weeklyStats = useWeeklyRevenue();
+  const monthlyStats = useMonthlyRevenueStats();
+  const monthlyRevenue = useMonthlyRevenueChart();
 
-  const { data, isLoading, error } = useCommissions({
-    status: filters.status === 'all' ? undefined : filters.status,
-    startDate: filters.startDate,
-    endDate: filters.endDate,
-  });
+  const { data, isLoading, error } = useRevenueByPeriod(
+    filters.startDate,
+    filters.endDate
+  );
 
-  const commissions = data?.data || [];
+  const bookings = data?.data || [];
   const total = data?.total || 0;
-  const totalPages = data?.totalPages || 1;
+  const totalPages = 1; // Pagination côté frontend si nécessaire
 
-  // Pas besoin de pagination frontend car le backend pagine déjà
-  const paginatedCommissions = commissions;
+  // Filtrer par status si nécessaire
+  const filteredBookings = filters.status === 'all'
+    ? bookings
+    : bookings.filter((b: any) => {
+        if (filters.status === 'paid') return b.paymentStatus === 'paid' || b.status === 'completed';
+        if (filters.status === 'pending') return b.status === 'confirmed' && b.paymentStatus !== 'paid';
+        if (filters.status === 'cancelled') return b.status === 'cancelled';
+        return true;
+      });
 
-  // Calculate KPIs
+  const paginatedBookings = filteredBookings;
+
+  // Calculate KPIs (Revenus partenaire)
   const dailyTotal = dailyStats.data?.find(s => s.status === 'paid')?.total || 0;
   const weeklyTotal = weeklyStats.data?.find(s => s.status === 'paid')?.total || 0;
   const monthlyTotal = monthlyStats.data?.find(s => s.status === 'paid')?.total || 0;
@@ -68,34 +69,35 @@ export default function FinancePage() {
 
       // En-tête
       doc.setFontSize(16);
-      doc.text(`Commissions - ${user?.partner?.companyName || 'Partenaire'}`, 14, 20);
+      doc.text(`Revenus - ${user?.partner?.companyName || 'Partenaire'}`, 14, 20);
       doc.setFontSize(10);
       doc.text(
         `Période: ${format(new Date(filters.startDate), 'dd/MM/yyyy')} - ${format(new Date(filters.endDate), 'dd/MM/yyyy')}`,
         14, 30
       );
 
-      // Table data
-      const tableData = commissions.map(c => [
-        format(new Date(c.createdAt), 'dd/MM/yyyy'),
-        c.bookingId.slice(0, 8),
-        c.booking?.tenant?.name || 'N/A',
-        `${Number(c.amount).toFixed(2)}€`,
-        c.status === 'paid' ? 'Payée' : c.status === 'pending' ? 'En attente' : 'Annulée'
+      // Table data - Revenus partenaire
+      const tableData = paginatedBookings.map((b: any) => [
+        format(new Date(b.scheduledDate), 'dd/MM/yyyy'),
+        b.id.slice(0, 8),
+        b.tenant?.name || 'N/A',
+        `${Number(b.partnerRevenue).toFixed(2)}€`,
+        b.paymentStatus === 'paid' || b.status === 'completed' ? 'Payée' :
+        b.status === 'confirmed' ? 'En attente' : 'Annulée'
       ]);
 
-      const totalAmount = commissions.reduce((s, c) => s + Number(c.amount), 0);
+      const totalAmount = paginatedBookings.reduce((s: number, b: any) => s + Number(b.partnerRevenue), 0);
 
-      doc.autoTable({
+      autoTable(doc, {
         startY: 40,
-        head: [['Date', 'Réservation', 'Client', 'Montant', 'Status']],
+        head: [['Date', 'Réservation', 'Client', 'Revenu Partenaire', 'Status']],
         body: tableData,
         foot: [['', '', 'TOTAL', `${totalAmount.toFixed(2)}€`, '']],
         footStyles: { fontStyle: 'bold', fillColor: [240, 240, 240] }
       });
 
-      doc.save(`commissions_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
-      toast.success(`${commissions.length} commissions exportées`);
+      doc.save(`revenus_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+      toast.success(`${paginatedBookings.length} réservations exportées`);
     } catch (err) {
       toast.error('Erreur lors de l\'export');
     } finally {
@@ -109,7 +111,7 @@ export default function FinancePage() {
         <h1 className="text-2xl font-bold text-gray-900">Finance</h1>
         <button
           onClick={handleExportPDF}
-          disabled={isExporting || commissions.length === 0}
+          disabled={isExporting || paginatedBookings.length === 0}
           className="flex items-center gap-2 px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
         >
           <Download className="h-4 w-4" />
@@ -244,11 +246,11 @@ export default function FinancePage() {
           </div>
         ) : error ? (
           <div className="p-8 text-center text-red-600">
-            Erreur lors du chargement des commissions
+            Erreur lors du chargement des revenus
           </div>
-        ) : paginatedCommissions.length === 0 ? (
+        ) : paginatedBookings.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            Aucune commission trouvée
+            Aucune réservation trouvée
           </div>
         ) : (
           <>
@@ -260,37 +262,38 @@ export default function FinancePage() {
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Réservation</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Client</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Revenu Partenaire</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Paiement</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedCommissions.map(c => (
-                    <tr key={c.id} className="hover:bg-gray-50">
+                  {paginatedBookings.map((b: any) => (
+                    <tr key={b.id} className="hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {format(new Date(c.createdAt), 'dd/MM/yyyy', { locale: fr })}
+                        {format(new Date(b.scheduledDate), 'dd/MM/yyyy', { locale: fr })}
                       </td>
                       <td className="px-4 py-3 text-sm font-mono text-xs text-gray-600">
-                        {c.bookingId.slice(0, 8)}
+                        {b.id.slice(0, 8)}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {c.booking?.tenant?.name || 'N/A'}
+                        {b.tenantName || 'N/A'}
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {Number(c.amount).toFixed(2)}€
+                        {Number(b.partnerRevenue).toFixed(2)}€
                       </td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          c.status === 'paid' ? 'bg-green-100 text-green-800' :
-                          c.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                          b.paymentStatus === 'paid' || b.status === 'completed' ? 'bg-green-100 text-green-800' :
+                          b.status === 'confirmed' ? 'bg-yellow-100 text-yellow-800' :
                           'bg-gray-100 text-gray-800'
                         }`}>
-                          {c.status === 'paid' ? 'Payée' : c.status === 'pending' ? 'En attente' : 'Annulée'}
+                          {b.paymentStatus === 'paid' || b.status === 'completed' ? 'Payée' :
+                           b.status === 'confirmed' ? 'En attente' : 'Annulée'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
-                        {c.paidAt ? format(new Date(c.paidAt), 'dd/MM/yyyy', { locale: fr }) : '-'}
+                        {b.paidAt ? format(new Date(b.paidAt), 'dd/MM/yyyy', { locale: fr }) : '-'}
                       </td>
                     </tr>
                   ))}
@@ -300,32 +303,33 @@ export default function FinancePage() {
 
             {/* Mobile cards */}
             <div className="md:hidden divide-y divide-gray-200">
-              {paginatedCommissions.map(c => (
-                <div key={c.id} className="p-4">
+              {paginatedBookings.map((b: any) => (
+                <div key={b.id} className="p-4">
                   <div className="flex justify-between items-start mb-2">
                     <div className="text-sm font-medium text-gray-900">
-                      {format(new Date(c.createdAt), 'dd/MM/yyyy', { locale: fr })}
+                      {format(new Date(b.scheduledDate), 'dd/MM/yyyy', { locale: fr })}
                     </div>
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      c.status === 'paid' ? 'bg-green-100 text-green-800' :
-                      c.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                      b.paymentStatus === 'paid' || b.status === 'completed' ? 'bg-green-100 text-green-800' :
+                      b.status === 'confirmed' ? 'bg-yellow-100 text-yellow-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
-                      {c.status === 'paid' ? 'Payée' : c.status === 'pending' ? 'En attente' : 'Annulée'}
+                      {b.paymentStatus === 'paid' || b.status === 'completed' ? 'Payée' :
+                       b.status === 'confirmed' ? 'En attente' : 'Annulée'}
                     </span>
                   </div>
                   <div className="text-sm text-gray-600 mb-1">
-                    {c.booking?.tenant?.name || 'N/A'}
+                    {b.tenant?.name || 'N/A'}
                   </div>
                   <div className="text-sm text-gray-500 mb-2">
-                    Réservation: {c.bookingId.slice(0, 8)}
+                    Réservation: {b.id.slice(0, 8)}
                   </div>
                   <div className="text-lg font-bold text-flotteq-blue">
-                    {Number(c.amount).toFixed(2)}€
+                    {Number(b.partnerRevenue).toFixed(2)}€
                   </div>
-                  {c.paidAt && (
+                  {b.paidAt && (
                     <div className="text-xs text-gray-500 mt-1">
-                      Payé le {format(new Date(c.paidAt), 'dd/MM/yyyy', { locale: fr })}
+                      Payé le {format(new Date(b.paidAt), 'dd/MM/yyyy', { locale: fr })}
                     </div>
                   )}
                 </div>

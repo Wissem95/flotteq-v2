@@ -28,6 +28,8 @@ import PartnerDetailPage from './pages/marketplace/PartnerDetailPage';
 import MyBookingsPage from './pages/bookings/MyBookingsPage';
 import BookingDetailPage from './pages/bookings/BookingDetailPage';
 import BookingFlowPage from './pages/bookings/BookingFlowPage';
+import BookingsCalendarPage from './pages/bookings/BookingsCalendarPage';
+import { TripsHistoryPage } from './pages/trips/TripsHistoryPage';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -76,6 +78,7 @@ function App() {
               <Route path="vehicles/:id" element={<VehicleDetailPage />} />
               <Route path="drivers" element={<DriversListPage />} />
               <Route path="drivers/:id" element={<DriverDetailPage />} />
+              <Route path="trips-history" element={<TripsHistoryPage />} />
               <Route path="maintenances" element={<MaintenancesListPage />} />
               <Route path="maintenances/:id" element={<MaintenanceDetailPage />} />
               <Route path="maintenances/calendar" element={<MaintenanceCalendarPage />} />
@@ -89,6 +92,7 @@ function App() {
               <Route path="marketplace/:partnerId" element={<PartnerDetailPage />} />
               <Route path="my-bookings" element={<MyBookingsPage />} />
               <Route path="my-bookings/:id" element={<BookingDetailPage />} />
+              <Route path="bookings/calendar" element={<BookingsCalendarPage />} />
               <Route path="booking/new/:partnerId/:serviceId?" element={<BookingFlowPage />} />
             </Route>
           </Routes>

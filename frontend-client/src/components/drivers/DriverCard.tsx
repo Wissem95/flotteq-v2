@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Driver } from '@/types/driver.types';
 import DriverExpiringBadge from './DriverExpiringBadge';
+import DriverAvatar from './DriverAvatar';
 
 interface DriverCardProps {
   driver: Driver;
@@ -27,9 +28,13 @@ export default function DriverCard({ driver }: DriverCardProps) {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-flotteq-blue text-white flex items-center justify-center text-lg font-semibold">
-              {driver.firstName[0]}{driver.lastName[0]}
-            </div>
+            <DriverAvatar
+              photoUrl={driver.profilePhotoUrl}
+              photoThumbnail={driver.profilePhotoThumbnail}
+              firstName={driver.firstName}
+              lastName={driver.lastName}
+              size="md"
+            />
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
                 {driver.firstName} {driver.lastName}

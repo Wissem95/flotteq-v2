@@ -360,4 +360,45 @@ export class EmailQueueService {
       throw error;
     }
   }
+
+  /**
+   * Generic method to queue any email with custom template
+   * Uses the existing 'send' processor
+   * @param options Email options including recipients, subject, template and context
+   */
+  async queueGenericEmail(options: {
+    to: string | string[];
+    subject: string;
+    template: string;
+    context: Record<string, any>;
+    priority?: number;
+  }) {
+    try {
+      const recipients = Array.isArray(options.to) ? options.to : [options.to];
+
+      for (const email of recipients) {
+        await this.emailQueue.add(
+          'send',  // Uses existing processor
+          {
+            to: email,
+            subject: options.subject,
+            template: options.template,
+            context: options.context,
+          },
+          {
+            attempts: 3,
+            backoff: { type: 'exponential', delay: 2000 },
+            priority: options.priority || 1,
+            removeOnComplete: true,
+            removeOnFail: false,
+          },
+        );
+      }
+
+      this.logger.log(`Generic email queued: ${options.subject} to ${recipients.length} recipient(s)`);
+    } catch (error) {
+      this.logger.error(`Failed to queue generic email: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
 }

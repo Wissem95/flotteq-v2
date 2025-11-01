@@ -21,7 +21,7 @@ export default function BookingFlowPage() {
     vehicleId: string | null;
     serviceId: string | null;
     date: string | null;
-    slot: { start: string; end: string } | null;
+    slot: { time: string; endTime: string } | null;
   }>({
     vehicleId: null,
     serviceId: serviceId || null,
@@ -61,8 +61,8 @@ export default function BookingFlowPage() {
     setIsSubmitting(true);
 
     try {
-      const startDate = new Date(bookingData.slot.start);
-      const endDate = new Date(bookingData.slot.end);
+      const startDate = new Date(`${bookingData.date}T${bookingData.slot.time}`);
+      const endDate = new Date(`${bookingData.date}T${bookingData.slot.endTime}`);
 
       await bookingsService.createBooking({
         partnerId,
@@ -171,6 +171,7 @@ export default function BookingFlowPage() {
             <SlotSelectionStep
               partnerId={partnerId}
               serviceId={bookingData.serviceId}
+              serviceDuration={partner?.services?.find(s => s.id === bookingData.serviceId)?.durationMinutes || 60}
               value={{ date: bookingData.date, slot: bookingData.slot }}
               onChange={(data) =>
                 setBookingData((prev) => ({ ...prev, date: data.date, slot: data.slot }))

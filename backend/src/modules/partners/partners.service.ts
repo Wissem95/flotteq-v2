@@ -168,6 +168,7 @@ export class PartnersService {
   async findOne(id: string): Promise<Partner> {
     const partner = await this.partnerRepository.findOne({
       where: { id },
+      relations: ['services'],
     });
 
     if (!partner) {

@@ -1,24 +1,32 @@
 import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, MoreThan, LessThan, IsNull } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource, MoreThan, LessThan, IsNull } from 'typeorm';
 import { Driver, DriverStatus } from '../entities/driver.entity';
+import { User, UserRole } from '../entities/user.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 import { CreateDriverDto } from './dto/create-driver.dto';
 import { UpdateDriverDto } from './dto/update-driver.dto';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
+import { randomBytes } from 'crypto';
 
 @Injectable()
 export class DriversService {
   private readonly logger = new Logger(DriversService.name);
+  private readonly userRepository: Repository<User>;
 
   constructor(
     @InjectRepository(Driver)
     private readonly driverRepository: Repository<Driver>,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
     @InjectRepository(Vehicle)
     private readonly vehicleRepository: Repository<Vehicle>,
     @Inject(REQUEST) private readonly request: Request,
-  ) {}
+  ) {
+    // Obtenir le repository User via DataSource pour éviter les dépendances circulaires
+    this.userRepository = this.dataSource.getRepository(User);
+  }
 
   private getTenantId(): number | null {
     // Si super_admin, pas de filtre tenant
@@ -69,7 +77,61 @@ export class DriversService {
 
     const saved = await this.driverRepository.save(driver);
     this.logger.log(`Driver created: ${saved.id} for tenant ${tenantId}`);
+
+    // Créer automatiquement un user avec role=driver associé
+    try {
+      await this.createUserForDriver(saved);
+    } catch (error) {
+      this.logger.error(`Failed to create user for driver ${saved.id}:`, error);
+      // Ne pas bloquer la création du driver si la création du user échoue
+    }
+
     return saved;
+  }
+
+  /**
+   * Créer un user automatiquement pour un driver
+   */
+  private async createUserForDriver(driver: Driver): Promise<User> {
+    this.logger.log(`Creating user for driver ${driver.email}`);
+
+    // Vérifier si un user existe déjà avec cet email pour ce tenant
+    const existingUser = await this.userRepository.findOne({
+      where: { email: driver.email, tenantId: driver.tenantId },
+    });
+
+    if (existingUser) {
+      // Si le user existe, on lie simplement le driver
+      if (!driver.userId) {
+        driver.userId = existingUser.id;
+        await this.driverRepository.save(driver);
+        this.logger.log(`Linked driver ${driver.id} to existing user ${existingUser.id}`);
+      }
+      return existingUser;
+    }
+
+    // Créer un nouveau user avec un mot de passe temporaire
+    const tempPassword = randomBytes(16).toString('hex');
+
+    const user = this.userRepository.create({
+      email: driver.email,
+      password: tempPassword,
+      firstName: driver.firstName,
+      lastName: driver.lastName,
+      phone: driver.phone || '',
+      role: UserRole.DRIVER,
+      tenantId: driver.tenantId,
+      isActive: true,
+    });
+
+    const savedUser = await this.userRepository.save(user);
+
+    // Lier le driver au nouveau user
+    driver.userId = savedUser.id;
+    await this.driverRepository.save(driver);
+
+    this.logger.log(`User created: ${savedUser.id} for driver ${driver.id} with temp password`);
+    return savedUser;
   }
 
   async findAll(page = 1, limit = 10, status?: DriverStatus): Promise<{ data: Driver[]; total: number; page: number; limit: number }> {

@@ -664,6 +664,8 @@ export class BookingsService {
       tenantEmail: booking.tenant?.email || null,
       vehicleId: booking.vehicleId,
       vehicleRegistration: booking.vehicle?.registration || 'Unknown',
+      vehicleBrand: booking.vehicle?.brand || 'Unknown',
+      vehicleModel: booking.vehicle?.model || 'Unknown',
       driverId: booking.driverId,
       driverName: booking.driver ? `${booking.driver.firstName} ${booking.driver.lastName}` : null,
       serviceId: booking.serviceId,

@@ -188,9 +188,12 @@ export const useCompleteBooking = () => {
       queryClient.invalidateQueries({ queryKey: ['dashboard-stats'] });
       queryClient.invalidateQueries({ queryKey: ['commissions'] });
 
-      const commission = data.booking?.commissionAmount;
-      if (commission) {
-        toast.success(`Réservation terminée ! Commission: ${Number(commission).toFixed(2)}€`);
+      const price = parseFloat(data.booking?.price || '0');
+      const commission = parseFloat(data.booking?.commissionAmount || '0');
+      const partnerRevenue = price - commission;
+
+      if (partnerRevenue > 0) {
+        toast.success(`Réservation terminée ! Vous recevrez ${partnerRevenue.toFixed(2)}€`);
       } else {
         toast.success('Réservation terminée avec succès');
       }

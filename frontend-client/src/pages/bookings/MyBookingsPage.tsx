@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Calendar, Star } from 'lucide-react';
 import BookingCard from '@/components/bookings/BookingCard';
 import RatingModal from '@/components/bookings/RatingModal';
@@ -8,6 +9,7 @@ import type { Booking } from '@/types/booking.types';
 type TabType = 'upcoming' | 'past';
 
 export default function MyBookingsPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
   const [ratingModal, setRatingModal] = useState<{ isOpen: boolean; booking: Booking | null }>({
     isOpen: false,
@@ -62,6 +64,15 @@ export default function MyBookingsPage() {
           </h1>
           <p className="text-gray-600 mt-1">Gérez vos réservations avec les partenaires</p>
         </div>
+
+        {/* Bouton Calendrier */}
+        <button
+          onClick={() => navigate('/bookings/calendar')}
+          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-flotteq-blue text-flotteq-blue rounded-lg hover:bg-blue-50 transition-colors font-medium"
+        >
+          <Calendar className="h-5 w-5" />
+          Vue Calendrier
+        </button>
       </div>
 
       {/* Tabs */}

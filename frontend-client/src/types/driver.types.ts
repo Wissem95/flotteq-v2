@@ -24,6 +24,8 @@ export interface Driver {
   emergencyContact?: string;
   emergencyPhone?: string;
   notes?: string;
+  profilePhotoUrl?: string | null;
+  profilePhotoThumbnail?: string | null;
   tenantId: number;
   vehicles?: {
     id: string;

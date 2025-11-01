@@ -6,6 +6,7 @@ import { DriverStatus } from '@/types/driver.types';
 import DriverInfoTab from '@/components/drivers/DriverInfoTab';
 import DriverVehiclesTab from '@/components/drivers/DriverVehiclesTab';
 import DriverExpiringBadge from '@/components/drivers/DriverExpiringBadge';
+import DriverAvatar from '@/components/drivers/DriverAvatar';
 import { EntityDocumentsTab } from '@/components/documents/EntityDocumentsTab';
 import { DocumentEntityType } from '@/types/document.types';
 
@@ -28,6 +29,8 @@ export default function DriverDetailPage() {
     queryKey: ['driver', id],
     queryFn: () => driversService.getDriver(id!),
     enabled: !!id,
+    refetchInterval: 60000, // Refresh toutes les 60 secondes pour voir updates profil driver
+    refetchOnWindowFocus: true, // Refresh au retour focus
   });
 
   const deleteMutation = useMutation({
@@ -96,9 +99,13 @@ export default function DriverDetailPage() {
       <div className="bg-white rounded-lg shadow p-6 mb-6">
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-4">
-            <div className="w-16 h-16 rounded-full bg-flotteq-blue text-white flex items-center justify-center text-2xl font-semibold">
-              {driver.firstName[0]}{driver.lastName[0]}
-            </div>
+            <DriverAvatar
+              photoUrl={driver.profilePhotoUrl}
+              photoThumbnail={driver.profilePhotoThumbnail}
+              firstName={driver.firstName}
+              lastName={driver.lastName}
+              size="lg"
+            />
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {driver.firstName} {driver.lastName}

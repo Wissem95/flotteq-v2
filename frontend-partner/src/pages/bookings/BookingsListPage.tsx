@@ -193,9 +193,9 @@ export default function BookingsListPage() {
                       <td className="px-4 py-3 text-sm text-gray-900">{booking.scheduledTime}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">{booking.tenant?.name || booking.tenantName || 'N/A'}</td>
                       <td className="px-4 py-3 text-sm text-gray-900">
-                        {booking.vehicle ? `${booking.vehicle.brand} ${booking.vehicle.model}` : booking.vehicleRegistration || 'N/A'}
+                        {booking.vehicleBrand && booking.vehicleModel ? `${booking.vehicleBrand} ${booking.vehicleModel}` : 'N/A'}
                         <br />
-                        <span className="text-xs text-gray-500">{booking.vehicle?.registration || booking.vehicleRegistration || 'N/A'}</span>
+                        <span className="text-xs text-gray-500">{booking.vehicleRegistration || 'N/A'}</span>
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">{booking.service?.name || booking.serviceName || 'N/A'}</td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
@@ -230,7 +230,7 @@ export default function BookingsListPage() {
                   <div className="text-sm text-gray-600 space-y-1 mb-3">
                     <div>{booking.tenant?.name || booking.tenantName || 'N/A'}</div>
                     <div>
-                      {booking.vehicle ? `${booking.vehicle.brand} ${booking.vehicle.model} (${booking.vehicle.registration})` : booking.vehicleRegistration || 'N/A'}
+                      {booking.vehicleBrand && booking.vehicleModel ? `${booking.vehicleBrand} ${booking.vehicleModel} (${booking.vehicleRegistration})` : booking.vehicleRegistration || 'N/A'}
                     </div>
                     <div className="font-medium">
                       {booking.service?.name || booking.serviceName || 'N/A'} - {Number(booking.price || booking.service?.price || 0).toFixed(2)}€
@@ -427,10 +427,10 @@ function BookingDetailModal({
             </h3>
             <div className="space-y-2 text-sm">
               <div className="font-medium">
-                {booking.vehicle ? `${booking.vehicle.brand} ${booking.vehicle.model}` : 'N/A'}
+                {booking.vehicleBrand && booking.vehicleModel ? `${booking.vehicleBrand} ${booking.vehicleModel}` : 'N/A'}
               </div>
               <div className="text-gray-600">
-                Immatriculation: {booking.vehicle?.registration || booking.vehicleRegistration || 'N/A'}
+                Immatriculation: {booking.vehicleRegistration || 'N/A'}
               </div>
             </div>
           </div>
@@ -446,11 +446,6 @@ function BookingDetailModal({
               <div className="text-lg font-bold text-flotteq-blue">
                 {Number(booking.price || booking.service?.price || 0).toFixed(2)}€
               </div>
-              {booking.commissionAmount && (
-                <div className="text-sm text-green-600">
-                  Commission: {Number(booking.commissionAmount).toFixed(2)}€
-                </div>
-              )}
             </div>
           </div>
 
@@ -683,15 +678,6 @@ function BookingDetailModal({
                 acceptedTypes={['image/jpeg', 'image/png', 'image/webp']}
               />
             </div>
-
-            {booking.commissionAmount && (
-              <div className="bg-white rounded-lg p-3 text-center">
-                <div className="text-sm text-gray-600">Commission estimée</div>
-                <div className="text-2xl font-bold text-green-600">
-                  {Number(booking.commissionAmount).toFixed(2)}€
-                </div>
-              </div>
-            )}
 
             <button
               onClick={handleComplete}

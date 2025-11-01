@@ -1,0 +1,41 @@
+<h2>🚨 Nouveau signalement véhicule</h2>
+
+<p>Bonjour,</p>
+
+<p>Un conducteur a signalé un problème sur un véhicule de votre flotte.</p>
+
+<div style="background-color: #fff3cd; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #ffc107;">
+  <h3 style="margin-top: 0; color: #856404;">⚠️ Détails du signalement</h3>
+
+  <p style="margin: 8px 0;"><strong>ID Signalement :</strong> #{{reportId}}</p>
+  <p style="margin: 8px 0;"><strong>Type :</strong> {{reportType}}</p>
+  <p style="margin: 8px 0;"><strong>Conducteur :</strong> {{driverName}}</p>
+  <p style="margin: 8px 0;"><strong>Date :</strong> {{createdAt}}</p>
+</div>
+
+<div style="background-color: #d1ecf1; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h3 style="margin-top: 0; color: #0c5460;">🚗 Véhicule concerné</h3>
+
+  <p style="margin: 8px 0;"><strong>Immatriculation :</strong> {{vehicleRegistration}}</p>
+  <p style="margin: 8px 0;"><strong>Marque/Modèle :</strong> {{vehicleBrand}} {{vehicleModel}}</p>
+</div>
+
+<div style="background-color: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0;">
+  <h4 style="margin-top: 0; color: #495057;">📝 Description</h4>
+  <p style="margin: 8px 0; white-space: pre-wrap;">{{description}}</p>
+
+  {{#if notes}}
+  <h4 style="color: #495057; margin-top: 15px;">💬 Notes complémentaires</h4>
+  <p style="margin: 8px 0; white-space: pre-wrap;">{{notes}}</p>
+  {{/if}}
+</div>
+
+<a href="{{appUrl}}/reports/{{reportId}}" class="button">Voir le signalement</a>
+
+<p style="margin-top: 30px; padding: 12px; background-color: #d4edda; border-radius: 6px; color: #155724;">
+  💡 <strong>Action requise :</strong> Veuillez prendre en compte ce signalement et planifier une intervention si nécessaire.
+</p>
+
+<p style="color: #666; font-size: 14px;">
+  Pour toute question, contactez-nous à support@flotteq.com
+</p>

@@ -15,6 +15,7 @@ import {
   Settings,
   ShoppingBag,
   Calendar,
+  Route,
 } from 'lucide-react';
 
 interface TenantLayoutProps {
@@ -47,6 +48,11 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
       icon: Users,
       label: 'Conducteurs',
       path: '/drivers',
+    },
+    {
+      icon: Route,
+      label: 'Historique trajets',
+      path: '/trips-history',
     },
     {
       icon: Wrench,

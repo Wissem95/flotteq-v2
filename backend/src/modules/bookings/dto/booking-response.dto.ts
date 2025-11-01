@@ -26,6 +26,12 @@ export class BookingResponseDto {
   @ApiProperty()
   vehicleRegistration: string;
 
+  @ApiProperty()
+  vehicleBrand: string;
+
+  @ApiProperty()
+  vehicleModel: string;
+
   @ApiPropertyOptional({ format: 'uuid' })
   driverId: string | null;
 

@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, OneToOne, ManyToOne, JoinColumn } from 'typeorm';
 import { Vehicle } from './vehicle.entity';
 import { Tenant } from './tenant.entity';
+import { User } from './user.entity';
 
 export enum DriverStatus {
   ACTIVE = 'active',
@@ -63,12 +64,26 @@ export class Driver {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'profile_photo_url' })
+  profilePhotoUrl: string | null;
+
+  @Column({ type: 'varchar', length: 500, nullable: true, name: 'profile_photo_thumbnail' })
+  profilePhotoThumbnail: string | null;
+
   @Column({ name: 'tenant_id' })
   tenantId: number;
 
   @ManyToOne(() => Tenant, (tenant) => tenant.drivers)
   @JoinColumn({ name: 'tenant_id' })
   tenant: Tenant;
+
+  // Relation OneToOne avec User (nullable pour transition progressive)
+  @Column({ name: 'user_id', type: 'uuid', nullable: true })
+  userId: string | null;
+
+  @OneToOne(() => User, (user) => user.driver, { nullable: true })
+  @JoinColumn({ name: 'user_id' })
+  user: User | null;
 
   // Un driver peut avoir plusieurs véhicules assignés
   @OneToMany(() => Vehicle, vehicle => vehicle.assignedDriver)

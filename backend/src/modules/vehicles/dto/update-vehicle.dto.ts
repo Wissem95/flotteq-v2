@@ -46,6 +46,12 @@ export class UpdateVehicleDto {
   @Min(0)
   currentKm?: number;
 
+  @ApiProperty({ description: 'Current mileage (km)', required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  mileage?: number;
+
   @ApiProperty({ description: 'Vehicle status', enum: VehicleStatus, required: false })
   @IsOptional()
   @IsEnum(VehicleStatus)

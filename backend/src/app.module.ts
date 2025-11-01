@@ -28,6 +28,9 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { CommissionsModule } from './modules/commissions/commissions.module';
 import { AvailabilitiesModule } from './modules/availabilities/availabilities.module';
 import { RatingsModule } from './modules/ratings/ratings.module';
+import { DriverModule } from './modules/driver/driver.module';
+import { ReportsModule } from './modules/reports/reports.module';
+import { TripsModule } from './modules/trips/trips.module';
 // import { StripeModule } from './stripe/stripe.module';
 // import stripeConfig from './config/stripe.config';
 
@@ -73,6 +76,9 @@ import { RatingsModule } from './modules/ratings/ratings.module';
     CommissionsModule,
     AvailabilitiesModule,
     RatingsModule,
+    DriverModule,
+    ReportsModule,
+    TripsModule,
     SubscriptionsModule,
     UsersModule,
     MaintenanceModule,
@@ -115,8 +121,8 @@ export class AppModule implements NestModule {
         '/api/tenants(.*)',
         '/api/onboarding/(.*)',
         '/api/stripe/webhook',
-        '/api/availabilities/:partnerId',          // Public: voir schedule partner
-        '/api/availabilities/:partnerId/slots',    // Public: rechercher créneaux
+        '/api/availabilities/:partnerId', // Public: voir schedule partner
+        '/api/availabilities/:partnerId/slots', // Public: rechercher créneaux
       )
       .forRoutes('*');
   }

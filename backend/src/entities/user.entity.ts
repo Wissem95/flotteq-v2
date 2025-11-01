@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
+  OneToOne,
   JoinColumn,
   BeforeInsert,
   BeforeUpdate,
@@ -13,6 +14,7 @@ import {
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Tenant } from './tenant.entity';
+import { Driver } from './driver.entity';
 
 export enum UserRole {
   SUPER_ADMIN = 'super_admin', // Admin FlotteQ (tenantId = 1)
@@ -79,6 +81,10 @@ export class User {
 
   @Column({ type: 'timestamp', nullable: true, name: 'invitation_expires_at' })
   invitationExpiresAt: Date | null;
+
+  // Relation OneToOne avec Driver (pour les users avec role=driver)
+  @OneToOne(() => Driver, (driver) => driver.user, { nullable: true })
+  driver: Driver | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

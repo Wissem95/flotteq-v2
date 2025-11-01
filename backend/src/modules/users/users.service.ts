@@ -4,10 +4,12 @@ import {
   ForbiddenException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from '../../entities/user.entity';
+import { Driver, DriverStatus } from '../../entities/driver.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InviteUserDto } from './dto/invite-user.dto';
@@ -19,9 +21,13 @@ import { IsNull } from 'typeorm';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     @InjectRepository(User)
     private usersRepository: Repository<User>,
+    @InjectRepository(Driver)
+    private driversRepository: Repository<Driver>,
     private subscriptionsService: SubscriptionsService,
     private emailQueueService: EmailQueueService,
   ) {}
@@ -72,6 +78,16 @@ export class UsersService {
       await this.subscriptionsService.updateUsage(tenantId, 'users', 1);
     }
 
+    // Si le rôle est DRIVER, créer automatiquement un driver associé
+    if (createUserDto.role === UserRole.DRIVER) {
+      try {
+        await this.createDriverForUser(savedUser, currentUser);
+      } catch (error) {
+        this.logger.error(`Failed to create driver for user ${savedUser.id}:`, error);
+        // Ne pas bloquer la création de l'utilisateur si la création du driver échoue
+      }
+    }
+
     // Envoyer email de bienvenue (asynchrone)
     try {
       // Récupérer le tenant pour avoir son nom
@@ -93,6 +109,67 @@ export class UsersService {
     }
 
     return savedUser;
+  }
+
+  /**
+   * Créer un driver automatiquement pour un user avec role=driver
+   */
+  private async createDriverForUser(user: User, currentUser: User): Promise<Driver> {
+    this.logger.log(`Creating driver for user ${user.email}`);
+
+    // Vérifier si un driver existe déjà avec cet email
+    const existingDriver = await this.driversRepository.findOne({
+      where: { email: user.email, tenantId: user.tenantId },
+    });
+
+    if (existingDriver) {
+      // Si le driver existe mais n'a pas de userId, on le lie
+      if (!existingDriver.userId) {
+        existingDriver.userId = user.id;
+        existingDriver.firstName = user.firstName;
+        existingDriver.lastName = user.lastName;
+        existingDriver.phone = user.phone || existingDriver.phone;
+        await this.driversRepository.save(existingDriver);
+        this.logger.log(`Linked existing driver ${existingDriver.id} to user ${user.id}`);
+        return existingDriver;
+      }
+      this.logger.warn(`Driver already exists for user ${user.email}`);
+      return existingDriver;
+    }
+
+    // Générer un numéro de permis temporaire unique
+    const tempLicenseNumber = `TEMP-${user.id.substring(0, 8).toUpperCase()}`;
+
+    // Date d'expiration du permis par défaut : 10 ans dans le futur
+    const defaultLicenseExpiry = new Date();
+    defaultLicenseExpiry.setFullYear(defaultLicenseExpiry.getFullYear() + 10);
+
+    // Créer le driver
+    const driver = this.driversRepository.create({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      phone: user.phone || '',
+      licenseNumber: tempLicenseNumber,
+      licenseExpiryDate: defaultLicenseExpiry,
+      status: DriverStatus.ACTIVE,
+      tenantId: user.tenantId,
+      userId: user.id,
+    });
+
+    const savedDriver = await this.driversRepository.save(driver);
+
+    // Incrémenter l'usage des drivers (sauf pour super_admin)
+    if (currentUser.role !== UserRole.SUPER_ADMIN) {
+      try {
+        await this.subscriptionsService.updateUsage(user.tenantId, 'drivers', 1);
+      } catch (error) {
+        this.logger.error(`Failed to update drivers usage:`, error);
+      }
+    }
+
+    this.logger.log(`Driver created: ${savedDriver.id} for user ${user.id} with temp license ${tempLicenseNumber}`);
+    return savedDriver;
   }
 
   async findAll(tenantId: number, currentUser: User): Promise<User[]> {

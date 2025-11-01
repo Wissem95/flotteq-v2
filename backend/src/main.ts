@@ -7,7 +7,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import helmet from 'helmet';
 import * as compression from 'compression';
-import { json } from 'express';
+import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { AuditService } from './modules/audit/audit.service';
@@ -44,6 +44,7 @@ async function bootstrap() {
   // JSON body parser - skip for Stripe webhook route
   app.use(
     json({
+      limit: '50mb', // Augmenter la limite pour les uploads de photos
       verify: (req: any, res, buf) => {
         if (req.originalUrl === '/api/stripe/webhook') {
           req.rawBody = buf;
@@ -51,6 +52,9 @@ async function bootstrap() {
       },
     }),
   );
+
+  // URL encoded body parser avec limite augmentée
+  app.use(urlencoded({ limit: '50mb', extended: true }));
 
   // Global validation pipe
   app.useGlobalPipes(

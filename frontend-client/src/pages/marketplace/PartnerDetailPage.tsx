@@ -37,10 +37,14 @@ export default function PartnerDetailPage() {
   const [isBookingModalV2Open, setIsBookingModalV2Open] = useState(false);
 
   const { data: partner, isLoading, error } = usePartnerDetails(partnerId);
+
+  const selectedService = partner?.services?.find(s => s.id === selectedServiceId);
+
   const { data: slotsData } = useAvailableSlots(
     partnerId,
     selectedServiceId || undefined,
     selectedDate,
+    selectedService?.durationMinutes,
     !!selectedServiceId
   );
 
@@ -205,7 +209,9 @@ export default function PartnerDetailPage() {
                       <span>{service.durationMinutes} min</span>
                     </div>
                     <div className="text-xl font-bold text-flotteq-blue">
-                      {service.price.toFixed(2)} €
+                      {typeof service.price === 'number'
+                        ? service.price.toFixed(2)
+                        : parseFloat(service.price).toFixed(2)} €
                     </div>
                   </div>
                   {service.isActive && (
@@ -285,10 +291,10 @@ export default function PartnerDetailPage() {
                       className="px-4 py-3 border border-green-200 bg-green-50 rounded-lg text-center"
                     >
                       <div className="font-medium text-gray-900">
-                        {format(new Date(slot.start), 'HH:mm', { locale: fr })}
+                        {slot.time}
                       </div>
                       <div className="text-xs text-gray-600">
-                        {format(new Date(slot.end), 'HH:mm', { locale: fr })}
+                        {slot.endTime}
                       </div>
                     </div>
                   ))
@@ -303,6 +309,7 @@ export default function PartnerDetailPage() {
         <CreateBookingModal
           partnerId={partnerId!}
           serviceId={selectedServiceId}
+          serviceDuration={(partner.services || []).find(s => s.id === selectedServiceId)?.durationMinutes || 60}
           partnerName={partner.companyName}
           serviceName={(partner.services || []).find(s => s.id === selectedServiceId)?.name || ''}
           onClose={() => setIsBookingModalV1Open(false)}
@@ -314,6 +321,7 @@ export default function PartnerDetailPage() {
         <CreateBookingModalV2
           partnerId={partnerId!}
           serviceId={selectedServiceId}
+          serviceDuration={(partner.services || []).find(s => s.id === selectedServiceId)?.durationMinutes || 60}
           partnerName={partner.companyName}
           serviceName={(partner.services || []).find(s => s.id === selectedServiceId)?.name || ''}
           onClose={() => setIsBookingModalV2Open(false)}

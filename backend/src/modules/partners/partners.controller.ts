@@ -214,7 +214,7 @@ export class PartnersController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(HybridAuthGuard, TenantGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get partner by ID' })
   @ApiResponse({ status: 200, description: 'Partner retrieved.' })
@@ -348,7 +348,7 @@ export class PartnersController {
   }
 
   @Get(':id/services')
-  @UseGuards(JwtAuthGuard, TenantGuard)
+  @UseGuards(HybridAuthGuard, TenantGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get partner services by partner ID' })
   @ApiResponse({ status: 200, description: 'Services retrieved.' })
