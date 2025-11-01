@@ -1,9 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Eye, Download, Calendar, MapPin, AlertTriangle } from 'lucide-react';
+import { Search, Filter, Eye, Download, Calendar, MapPin, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { subDays, format } from 'date-fns';
-import { useTripsHistory } from '../../hooks/useTrips';
+import { useTripsHistory, useMonthlyStats } from '../../hooks/useTrips';
 import { TripDetailModal } from '../../components/trips/TripDetailModal';
 import { DateRangePicker } from '../../components/common/DateRangePicker';
+import { TripsStatsChart } from '../../components/trips/TripsStatsChart';
+import { TripsMap } from '../../components/trips/TripsMap';
 import { exportTripsToPDF } from '../../utils/pdf/tripsPdfExport';
 import type { Trip, TripStatus } from '../../types/trip.types';
 
@@ -24,6 +27,11 @@ export const TripsHistoryPage: React.FC = () => {
     startDate: startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
     endDate: endDate ? format(endDate, 'yyyy-MM-dd') : undefined,
   });
+
+  const { data: monthlyStats } = useMonthlyStats(
+    startDate ? format(startDate, 'yyyy-MM-dd') : undefined,
+    endDate ? format(endDate, 'yyyy-MM-dd') : undefined
+  );
 
   const trips = data?.data || [];
 
@@ -112,14 +120,23 @@ export const TripsHistoryPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Historique des Trajets</h1>
           <p className="text-gray-600">Vue globale des trajets de tous les conducteurs</p>
         </div>
-        <button
-          onClick={handleExportPDF}
-          disabled={filteredTrips.length === 0}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          <Download className="w-5 h-5" />
-          <span>Exporter PDF</span>
-        </button>
+        <div className="flex gap-3">
+          <Link
+            to="/trips-reports"
+            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <BarChart3 className="w-5 h-5" />
+            <span>Rapports</span>
+          </Link>
+          <button
+            onClick={handleExportPDF}
+            disabled={filteredTrips.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            <Download className="w-5 h-5" />
+            <span>Exporter PDF</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -145,6 +162,21 @@ export const TripsHistoryPage: React.FC = () => {
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <p className="text-sm text-gray-600 mb-1">Défauts</p>
           <p className="text-2xl font-bold text-orange-600">{globalStats.totalDefects}</p>
+        </div>
+      </div>
+
+      {/* Charts & Map */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Stats Chart */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Évolution sur la période</h3>
+          <TripsStatsChart data={monthlyStats || []} type="line" />
+        </div>
+
+        {/* Map */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Carte des trajets</h3>
+          <TripsMap trips={filteredTrips.filter(t => t.status === 'completed')} height={320} />
         </div>
       </div>
 

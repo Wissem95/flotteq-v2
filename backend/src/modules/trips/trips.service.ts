@@ -15,6 +15,8 @@ import { ReportType } from '../../entities/report.entity';
 import { StartTripDto } from './dto/start-trip.dto';
 import { EndTripDto } from './dto/end-trip.dto';
 import { TripFilterDto } from './dto/trip-filter.dto';
+import { MonthlyStatsResponseDto } from './dto/monthly-stats-response.dto';
+import { DriversPerformanceResponseDto } from './dto/drivers-performance-response.dto';
 
 @Injectable()
 export class TripsService {
@@ -285,5 +287,100 @@ export class TripsService {
       page,
       limit,
     };
+  }
+
+  /**
+   * Obtenir les statistiques mensuelles
+   */
+  async getMonthlyStats(
+    tenantId: number,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<MonthlyStatsResponseDto> {
+    const params: any[] = [tenantId];
+    let dateFilter = '';
+
+    if (startDate) {
+      params.push(startDate);
+      dateFilter += ` AND "startedAt" >= $${params.length}`;
+    }
+
+    if (endDate) {
+      params.push(endDate);
+      dateFilter += ` AND "startedAt" <= $${params.length}`;
+    }
+
+    const query = `
+      SELECT
+        TO_CHAR(DATE_TRUNC('month', "startedAt"), 'YYYY-MM') as month,
+        TO_CHAR(DATE_TRUNC('month', "startedAt"), 'Mon YYYY') as "monthLabel",
+        COUNT(*)::int as "tripCount",
+        COALESCE(SUM("distanceKm"), 0)::int as "totalKm",
+        COALESCE(AVG("startFuelLevel" - COALESCE("endFuelLevel", "startFuelLevel")), 0)::int as "avgFuelConsumption"
+      FROM trips
+      WHERE "tenantId" = $1
+        AND status = 'completed'
+        ${dateFilter}
+      GROUP BY DATE_TRUNC('month', "startedAt")
+      ORDER BY month DESC
+      LIMIT 12
+    `;
+
+    const rawData = await this.tripRepository.query(query, params);
+
+    return {
+      data: rawData.map((row: any) => ({
+        month: row.month,
+        monthLabel: row.monthLabel,
+        tripCount: row.tripCount,
+        totalKm: row.totalKm,
+        avgFuelConsumption: row.avgFuelConsumption,
+      })),
+    };
+  }
+
+  /**
+   * Rapport de performance des conducteurs
+   */
+  async getDriversPerformance(
+    tenantId: number,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<DriversPerformanceResponseDto> {
+    const params: any[] = [tenantId];
+    let dateFilter = '';
+
+    if (startDate) {
+      params.push(startDate);
+      dateFilter += ` AND t."startedAt" >= $${params.length}`;
+    }
+
+    if (endDate) {
+      params.push(endDate);
+      dateFilter += ` AND t."startedAt" <= $${params.length}`;
+    }
+
+    const query = `
+      SELECT
+        d.id as "driverId",
+        d."firstName" || ' ' || d."lastName" as "driverName",
+        COUNT(t.id)::int as "tripCount",
+        COALESCE(SUM(t."distanceKm"), 0)::int as "totalKm",
+        COALESCE(AVG(t."distanceKm"), 0)::int as "avgKmPerTrip",
+        COALESCE(SUM(
+          jsonb_array_length(COALESCE(t."startDefects", '[]'::jsonb)) +
+          jsonb_array_length(COALESCE(t."endDefects", '[]'::jsonb))
+        ), 0)::int as "totalDefects"
+      FROM drivers d
+      LEFT JOIN trips t ON t."driverId" = d.id AND t.status = 'completed'
+      WHERE d."tenantId" = $1${dateFilter}
+      GROUP BY d.id, d."firstName", d."lastName"
+      HAVING COUNT(t.id) > 0
+      ORDER BY "totalKm" DESC
+    `;
+
+    const rawData = await this.tripRepository.query(query, params);
+
+    return { data: rawData };
   }
 }

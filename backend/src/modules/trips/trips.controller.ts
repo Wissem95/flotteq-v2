@@ -12,6 +12,8 @@ import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { TripsService } from './trips.service';
 import { TripFilterDto } from './dto/trip-filter.dto';
 import { TripResponseDto, TripListResponseDto } from './dto/trip-response.dto';
+import { MonthlyStatsResponseDto } from './dto/monthly-stats-response.dto';
+import { DriversPerformanceResponseDto } from './dto/drivers-performance-response.dto';
 
 @ApiTags('trips')
 @ApiBearerAuth()
@@ -28,6 +30,28 @@ export class TripsController {
   ): Promise<TripListResponseDto> {
     const user = (req as any).user;
     return await this.tripsService.getAllTrips(user.tenantId, filterDto);
+  }
+
+  @Get('stats/monthly')
+  @ApiOperation({ summary: 'Get monthly trips statistics' })
+  async getMonthlyStats(
+    @Request() req: ExpressRequest,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<MonthlyStatsResponseDto> {
+    const user = (req as any).user;
+    return await this.tripsService.getMonthlyStats(user.tenantId, startDate, endDate);
+  }
+
+  @Get('reports/drivers-performance')
+  @ApiOperation({ summary: 'Get drivers performance report' })
+  async getDriversPerformance(
+    @Request() req: ExpressRequest,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ): Promise<DriversPerformanceResponseDto> {
+    const user = (req as any).user;
+    return await this.tripsService.getDriversPerformance(user.tenantId, startDate, endDate);
   }
 
   @Get(':id')

@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryResult } from '@tantml/react-query';
 import { tripsService, type TripsFilters, type TripsListResponse } from '../api/services/trips.service';
 import type { Trip } from '../types/trip.types';
+import type { MonthlyStats, DriverPerformance } from '../types/trip-stats.types';
 
 /**
  * Hook to fetch all trips with filters (tenant view)
@@ -39,5 +40,33 @@ export function useTripsStats(): UseQueryResult<{
     queryKey: ['trips', 'stats'],
     queryFn: () => tripsService.getTripsStats(),
     staleTime: 60000, // 1 minute
+  });
+}
+
+/**
+ * Hook to fetch monthly statistics
+ */
+export function useMonthlyStats(
+  startDate?: string,
+  endDate?: string
+): UseQueryResult<MonthlyStats[], Error> {
+  return useQuery({
+    queryKey: ['trips', 'monthly-stats', startDate, endDate],
+    queryFn: () => tripsService.getMonthlyStats(startDate, endDate),
+    staleTime: 60000,
+  });
+}
+
+/**
+ * Hook to fetch drivers performance
+ */
+export function useDriversPerformance(
+  startDate?: string,
+  endDate?: string
+): UseQueryResult<DriverPerformance[], Error> {
+  return useQuery({
+    queryKey: ['trips', 'drivers-performance', startDate, endDate],
+    queryFn: () => tripsService.getDriversPerformance(startDate, endDate),
+    staleTime: 60000,
   });
 }

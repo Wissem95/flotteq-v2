@@ -1,5 +1,6 @@
 import { api } from '../../config/api';
 import type { Trip } from '../../types/trip.types';
+import type { MonthlyStats, MonthlyStatsResponse, DriverPerformance, DriversPerformanceResponse } from '../../types/trip-stats.types';
 
 export interface TripsFilters {
   driverId?: string;
@@ -60,5 +61,29 @@ export const tripsService = {
   }> {
     const response = await api.get('/trips/stats');
     return response.data;
+  },
+
+  /**
+   * Get monthly statistics
+   */
+  async getMonthlyStats(startDate?: string, endDate?: string): Promise<MonthlyStats[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    const response = await api.get<MonthlyStatsResponse>(`/trips/stats/monthly?${params}`);
+    return response.data.data;
+  },
+
+  /**
+   * Get drivers performance report
+   */
+  async getDriversPerformance(startDate?: string, endDate?: string): Promise<DriverPerformance[]> {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+
+    const response = await api.get<DriversPerformanceResponse>(`/trips/reports/drivers-performance?${params}`);
+    return response.data.data;
   },
 };
