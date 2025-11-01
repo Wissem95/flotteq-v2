@@ -1,4 +1,5 @@
 import { IsOptional, IsUUID, IsEnum, IsDateString, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TripStatus } from '../../../entities/trip.entity';
 
@@ -41,12 +42,14 @@ export class TripFilterDto {
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   page?: number = 1;
 
   @ApiPropertyOptional({ default: 10 })
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(1)
   limit?: number = 10;
