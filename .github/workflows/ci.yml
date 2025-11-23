@@ -1,0 +1,227 @@
+name: CI - Tests & Build
+
+on:
+  push:
+    branches: ['**']  # Tous les branches
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # Backend Tests
+  backend-tests:
+    name: Backend - Tests & Build
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: flotteq_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Lint code
+        working-directory: ./backend
+        run: npm run lint
+
+      - name: Run unit tests
+        working-directory: ./backend
+        run: npm test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: test_password
+          DB_NAME: flotteq_test
+          JWT_ACCESS_SECRET: test_access_secret_min_32_chars_for_testing_only
+          JWT_REFRESH_SECRET: test_refresh_secret_min_32_chars_for_testing_only
+          JWT_PARTNER_SECRET: test_partner_secret_min_32_chars_for_testing_only
+          NODE_ENV: test
+
+      - name: Run E2E tests
+        working-directory: ./backend
+        run: npm run test:e2e
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: test_password
+          DB_NAME: flotteq_test
+          JWT_ACCESS_SECRET: test_access_secret_min_32_chars
+          JWT_REFRESH_SECRET: test_refresh_secret_min_32_chars
+          JWT_PARTNER_SECRET: test_partner_secret_min_32_chars
+
+      - name: Build backend
+        working-directory: ./backend
+        run: npm run build
+
+      - name: Upload backend artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-dist
+          path: backend/dist
+          retention-days: 7
+
+  # Frontend Client Tests & Build
+  frontend-client-build:
+    name: Frontend Client - Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-client/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend-client
+        run: npm ci
+
+      - name: Lint
+        working-directory: ./frontend-client
+        run: npm run lint
+
+      - name: Run tests
+        working-directory: ./frontend-client
+        run: npm test
+        env:
+          VITE_API_URL: http://localhost:3000/api
+
+      - name: Build
+        working-directory: ./frontend-client
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.flotteq.com/api
+          VITE_STRIPE_PUBLISHABLE_KEY: pk_test_dummy_for_build
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-client-dist
+          path: frontend-client/dist
+          retention-days: 7
+
+  # Frontend Partner Build
+  frontend-partner-build:
+    name: Frontend Partner - Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-partner/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend-partner
+        run: npm ci
+
+      - name: Build
+        working-directory: ./frontend-partner
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.flotteq.com
+
+  # Frontend Driver Build
+  frontend-driver-build:
+    name: Frontend Driver - Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-driver/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend-driver
+        run: npm ci
+
+      - name: Build
+        working-directory: ./frontend-driver
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.flotteq.com/api
+          VITE_STRIPE_PUBLISHABLE_KEY: pk_test_dummy_for_build
+
+  # Frontend Internal Build
+  frontend-internal-build:
+    name: Frontend Internal - Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-internal/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend-internal
+        run: npm ci
+
+      - name: Build
+        working-directory: ./frontend-internal
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.flotteq.com
+
+  # Docker Build Test
+  docker-build-test:
+    name: Docker - Build Test
+    runs-on: ubuntu-latest
+    needs: [backend-tests]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: flotteq-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend-client image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend-client
+          file: ./frontend-client/Dockerfile
+          push: false
+          tags: flotteq-frontend-client:test

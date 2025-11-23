@@ -1,4 +1,4 @@
-import { useQuery, type UseQueryResult } from '@tantml/react-query';
+import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { tripsService, type TripsFilters, type TripsListResponse } from '../api/services/trips.service';
 import type { Trip } from '../types/trip.types';
 import type { MonthlyStats, DriverPerformance } from '../types/trip-stats.types';

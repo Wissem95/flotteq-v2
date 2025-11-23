@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Filter, Eye, Download, Calendar, MapPin, AlertTriangle, BarChart3 } from 'lucide-react';
+import { Search, Filter, Eye, Download, Calendar, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { subDays, format } from 'date-fns';
 import { useTripsHistory, useMonthlyStats } from '../../hooks/useTrips';

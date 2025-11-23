@@ -30,8 +30,7 @@ export const TripsStatsChart: React.FC<TripsStatsChartProps> = ({ data, type = '
   const chartData = data.map((stat) => ({
     month: stat.month,
     'Distance (km)': stat.totalKm,
-    'Trajets': stat.totalTrips,
-    'Heures': stat.totalHours,
+    'Trajets': stat.tripCount,
   }));
 
   const CustomTooltip = ({ active, payload, label }: any) => {

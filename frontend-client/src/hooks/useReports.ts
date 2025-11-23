@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { reportsService } from '../api/services/reports.service';
-import { Report } from '../types/report.types';
+import type { Report } from '../types/report.types';
 
 export const useDriverReports = () => {
   const [reports, setReports] = useState<Report[]>([]);

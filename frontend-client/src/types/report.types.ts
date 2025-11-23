@@ -1,16 +1,21 @@
-export enum ReportType {
-  MECHANICAL = 'mechanical',
-  ACCIDENT = 'accident',
-  DAMAGE = 'damage',
-  CLEANING = 'cleaning',
-  OTHER = 'other',
-}
+// Using const assertions instead of enums for erasableSyntaxOnly compatibility
+export const ReportType = {
+  MECHANICAL: 'mechanical',
+  ACCIDENT: 'accident',
+  DAMAGE: 'damage',
+  CLEANING: 'cleaning',
+  OTHER: 'other',
+} as const;
 
-export enum ReportStatus {
-  OPEN = 'open',
-  ACKNOWLEDGED = 'acknowledged',
-  RESOLVED = 'resolved',
-}
+export type ReportType = typeof ReportType[keyof typeof ReportType];
+
+export const ReportStatus = {
+  OPEN: 'open',
+  ACKNOWLEDGED: 'acknowledged',
+  RESOLVED: 'resolved',
+} as const;
+
+export type ReportStatus = typeof ReportStatus[keyof typeof ReportStatus];
 
 export interface Report {
   id: string;

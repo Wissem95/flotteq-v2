@@ -1,0 +1,13 @@
+#!/bin/bash
+set -e
+
+# ==========================================
+# Détection automatique du projet FlotteQ
+# ==========================================
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+echo "🔄 Renouvellement certificats SSL Let's Encrypt"
+
+
+=== PREUVE CORRECTION LIGNE 6 ===

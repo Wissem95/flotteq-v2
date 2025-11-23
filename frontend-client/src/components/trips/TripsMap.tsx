@@ -47,8 +47,8 @@ export const TripsMap: React.FC<TripsMapProps> = ({ trips, height = 400 }) => {
 
     trips.forEach((trip) => {
       // Start location
-      if (trip.startLocation?.latitude && trip.startLocation?.longitude) {
-        const startMarker = L.marker([trip.startLocation.latitude, trip.startLocation.longitude], {
+      if (trip.startLocation?.lat && trip.startLocation?.lng) {
+        const startMarker = L.marker([trip.startLocation.lat, trip.startLocation.lng], {
           icon: L.icon({
             iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
             iconSize: [25, 41],
@@ -70,12 +70,12 @@ export const TripsMap: React.FC<TripsMapProps> = ({ trips, height = 400 }) => {
         `);
 
         startMarker.addTo(map);
-        bounds.push(L.latLngBounds([trip.startLocation.latitude, trip.startLocation.longitude], [trip.startLocation.latitude, trip.startLocation.longitude]));
+        bounds.push(L.latLngBounds([trip.startLocation.lat, trip.startLocation.lng], [trip.startLocation.lat, trip.startLocation.lng]));
       }
 
       // End location
-      if (trip.endLocation?.latitude && trip.endLocation?.longitude) {
-        const endMarker = L.marker([trip.endLocation.latitude, trip.endLocation.longitude], {
+      if (trip.endLocation?.lat && trip.endLocation?.lng) {
+        const endMarker = L.marker([trip.endLocation.lat, trip.endLocation.lng], {
           icon: L.icon({
             iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
             iconSize: [25, 41],
@@ -97,13 +97,13 @@ export const TripsMap: React.FC<TripsMapProps> = ({ trips, height = 400 }) => {
         `);
 
         endMarker.addTo(map);
-        bounds.push(L.latLngBounds([trip.endLocation.latitude, trip.endLocation.longitude], [trip.endLocation.latitude, trip.endLocation.longitude]));
+        bounds.push(L.latLngBounds([trip.endLocation.lat, trip.endLocation.lng], [trip.endLocation.lat, trip.endLocation.lng]));
 
         // Draw line between start and end if both exist
-        if (trip.startLocation?.latitude && trip.startLocation?.longitude) {
+        if (trip.startLocation?.lat && trip.startLocation?.lng) {
           const polyline = L.polyline([
-            [trip.startLocation.latitude, trip.startLocation.longitude],
-            [trip.endLocation.latitude, trip.endLocation.longitude],
+            [trip.startLocation.lat, trip.startLocation.lng],
+            [trip.endLocation.lat, trip.endLocation.lng],
           ], {
             color: '#3b82f6',
             weight: 3,

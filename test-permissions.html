@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head><title>Test Permissions</title></head>
+<body>
+<h1>Test Debug Permissions</h1>
+<p>Ouvrir la console (F12) et se connecter avec un compte VIEWER</p>
+<script>
+// Ajouter ce code dans la console DevTools après login :
+console.log("=== DEBUG PERMISSIONS ===");
+const user = JSON.parse(localStorage.getItem('user') || 'null');
+console.log("User from localStorage:", user);
+console.log("User role:", user?.role);
+
+// Vérifier si le rôle est bien récupéré
+if (!user) {
+  console.error("❌ Pas d'utilisateur dans localStorage");
+} else if (!user.role) {
+  console.error("❌ Pas de rôle sur l'utilisateur");
+} else {
+  console.log("✅ Rôle trouvé:", user.role);
+}
+</script>
+</body>
+</html>

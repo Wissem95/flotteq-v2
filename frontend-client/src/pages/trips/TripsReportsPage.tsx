@@ -30,12 +30,11 @@ export const TripsReportsPage: React.FC = () => {
   // Calculate summary stats
   const summaryStats = monthlyStats?.reduce(
     (acc, month) => ({
-      totalTrips: acc.totalTrips + month.totalTrips,
+      totalTrips: acc.totalTrips + month.tripCount,
       totalKm: acc.totalKm + month.totalKm,
-      totalHours: acc.totalHours + month.totalHours,
     }),
-    { totalTrips: 0, totalKm: 0, totalHours: 0 }
-  ) || { totalTrips: 0, totalKm: 0, totalHours: 0 };
+    { totalTrips: 0, totalKm: 0 }
+  ) || { totalTrips: 0, totalKm: 0 };
 
   const avgKmPerTrip = summaryStats.totalTrips > 0
     ? Math.round(summaryStats.totalKm / summaryStats.totalTrips)
@@ -110,7 +109,7 @@ export const TripsReportsPage: React.FC = () => {
             <p className="text-sm text-gray-600">Heures Totales</p>
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            {summaryStats.totalHours} <span className="text-lg text-gray-600">h</span>
+            - <span className="text-lg text-gray-600">h</span>
           </p>
         </div>
 
@@ -210,17 +209,17 @@ export const TripsReportsPage: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div>
                           <p className="font-medium text-gray-900">{driver.driverName}</p>
-                          <p className="text-sm text-gray-500">{driver.driverEmail}</p>
+                          <p className="text-sm text-gray-500">ID: {driver.driverId}</p>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {driver.totalTrips}
+                        {driver.tripCount}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-purple-600">
                         {driver.totalKm.toLocaleString()} km
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {driver.totalHours}h
+                        -
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         {driver.avgKmPerTrip} km

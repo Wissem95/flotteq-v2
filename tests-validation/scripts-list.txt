@@ -1,0 +1,7 @@
+-rwxr-xr-x@ 1 wissem  staff   1.4K Nov 23 14:15 scripts/backup-db.sh
+-rwxr-xr-x@ 1 wissem  staff   1.2K Nov 23 14:15 scripts/backup-uploads.sh
+-rwxr-xr-x@ 1 wissem  staff   2.1K Nov 23 14:16 scripts/generate-secrets.sh
+-rwxr-xr-x@ 1 wissem  staff   2.1K Nov 23 14:15 scripts/init-ssl.sh
+-rwxr-xr-x@ 1 wissem  staff   1.1K Nov 23 14:15 scripts/renew-ssl.sh
+-rwxr-xr-x@ 1 wissem  staff   1.5K Nov 23 14:15 scripts/restore-db.sh
+-rwxr-xr-x@ 1 wissem  staff   1.6K Nov 23 14:16 scripts/start-pm2.sh

@@ -1,0 +1,51 @@
+# SPRINT D2.5 - TESTS VALIDATION
+
+## Date: 2025-11-23 14:30:15
+
+## ✅ TICKET D2.5-001 : Nginx Volumes
+Status: VALIDÉ ✅
+- Volumes Nginx déjà corrects dans docker-compose.production.yml
+- Montage spécifique nginx.conf et conf.d (pas tout /etc/nginx)
+
+## ✅ TICKET D2.5-002 : Chemins Relatifs
+Status: COMPLÉTÉ ✅
+Scripts corrigés (7) :
+- backup-db.sh
+- backup-uploads.sh  
+- restore-db.sh
+- renew-ssl.sh (LIGNE 6 : /path/to/flotteq-v2 → détection auto)
+- init-ssl.sh
+- start-pm2.sh (+ warning Docker recommandé)
+- generate-secrets.sh
+
+Test chemins relatifs depuis /tmp :
+🔐 Génération des secrets production FlotteQ
+📁 Projet: /Users/wissem/Flotteq-v2
+
+## ✅ TICKET D2.5-003 : Architecture Docker vs PM2
+Status: COMPLÉTÉ ✅
+- docs/ARCHITECTURE.md créé (Docker = principal)
+- backend/ecosystem.config.js → docs/alternatives/
+- docs/PM2_GUIDE.md → docs/alternatives/
+- start-pm2.sh : warning ajouté
+
+Fichiers déplacés :
+-rw-r--r--@ 1 wissem  staff  3565 Nov 23 13:58 PM2_GUIDE.md
+-rw-r--r--@ 1 wissem  staff  1113 Nov 23 13:58 ecosystem.config.js
+
+## 📊 RÉSUMÉ CORRECTIONS
+
+Fichiers modifiés : 7 scripts
+Fichiers créés : 1 (docs/ARCHITECTURE.md)
+Fichiers déplacés : 2 (PM2 → alternatives/)
+Dossiers créés : tests-validation/, certbot/conf, certbot/www
+
+## 🎯 VALIDATION
+
+✅ Nginx volumes corrects
+✅ Scripts chemins relatifs fonctionnels
+✅ Architecture Docker clairement documentée
+✅ PM2 déplacé en alternative
+
+Sprint D2.5 : SUCCÈS ✅
+

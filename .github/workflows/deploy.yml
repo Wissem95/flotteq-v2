@@ -1,0 +1,75 @@
+name: CD - Deploy to Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add VPS to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          ssh $VPS_USER@$VPS_HOST << 'EOF'
+            set -e
+
+            echo "🚀 Starting deployment..."
+
+            # Navigate to project
+            cd /opt/flotteq
+
+            # Pull latest code
+            git pull origin main
+
+            # Run deployment script
+            ./scripts/deploy-production.sh
+
+            echo "✅ Deployment completed!"
+          EOF
+
+      - name: Health check
+        run: |
+          sleep 30  # Wait for services to start
+          curl -f https://api.flotteq.com/api/health || exit 1
+
+      - name: Notify Slack (success)
+        if: success()
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "✅ FlotteQ deployed successfully to production!",
+              "username": "GitHub Actions",
+              "icon_emoji": ":rocket:"
+            }'
+
+      - name: Notify Slack (failure)
+        if: failure()
+        run: |
+          curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
+            -H 'Content-Type: application/json' \
+            -d '{
+              "text": "❌ FlotteQ deployment FAILED!",
+              "username": "GitHub Actions",
+              "icon_emoji": ":warning:"
+            }'

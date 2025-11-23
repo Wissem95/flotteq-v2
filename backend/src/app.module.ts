@@ -28,6 +28,7 @@ import { BookingsModule } from './modules/bookings/bookings.module';
 import { CommissionsModule } from './modules/commissions/commissions.module';
 import { AvailabilitiesModule } from './modules/availabilities/availabilities.module';
 import { RatingsModule } from './modules/ratings/ratings.module';
+import { HealthModule } from './health/health.module';
 import { DriverModule } from './modules/driver/driver.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { TripsModule } from './modules/trips/trips.module';
@@ -42,6 +43,7 @@ import { TripsModule } from './modules/trips/trips.module';
       // load: [stripeConfig],
     }),
     ScheduleModule.forRoot(),
+    HealthModule,
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({

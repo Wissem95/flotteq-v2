@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, AlertCircle, CheckCircle, Loader } from 'lucide-react';
-import { ReportType, REPORT_TYPE_LABELS, CreateReportDto } from '../../types/report.types';
+import { ReportType, REPORT_TYPE_LABELS, type CreateReportDto } from '../../types/report.types';
 import { reportsService } from '../../api/services/reports.service';
 
 interface ReportVehicleModalProps {

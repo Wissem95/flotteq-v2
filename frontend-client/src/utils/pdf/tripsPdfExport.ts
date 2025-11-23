@@ -165,7 +165,7 @@ export const exportTripsToPDF = ({
       6: { cellWidth: 25 }, // Défauts
     },
     margin: { left: 14, right: 14 },
-    didDrawPage: function (data) {
+    didDrawPage: function () {
       // Footer sur chaque page
       const pageCount = (doc as any).internal.getNumberOfPages();
       const currentPage = (doc as any).internal.getCurrentPageInfo().pageNumber;
