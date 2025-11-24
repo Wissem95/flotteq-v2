@@ -73,6 +73,8 @@ jobs:
           JWT_ACCESS_SECRET: test_access_secret_min_32_chars
           JWT_REFRESH_SECRET: test_refresh_secret_min_32_chars
           JWT_PARTNER_SECRET: test_partner_secret_min_32_chars
+          STRIPE_SECRET_KEY: sk_test_dummy_key_for_ci_tests_only
+          STRIPE_WEBHOOK_SECRET: whsec_test_dummy_webhook_secret
 
       - name: Build backend
         working-directory: ./backend
