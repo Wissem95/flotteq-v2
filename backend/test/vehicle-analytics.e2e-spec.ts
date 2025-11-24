@@ -199,9 +199,10 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     const vehicle = await vehiclesRepository.findOne({
       where: { id: vehicleId },
     });
-    expect(vehicle.status).toBe('sold');
-    expect(vehicle.currentValue).toBe(18000);
-    expect(vehicle.soldDate).toBeDefined();
+    expect(vehicle).not.toBeNull();
+    expect(vehicle!.status).toBe('sold');
+    expect(vehicle!.currentValue).toBe(18000);
+    expect(vehicle!.soldDate).toBeDefined();
   });
 
   // 6. Vérifier qu'un audit log a été créé pour le changement de statut
@@ -218,7 +219,7 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
 
     // Trouver le log de l'UPDATE qui a changé le statut
     const statusUpdateLog = response.body.find(
-      (log) =>
+      (log: any) =>
         log.action === 'UPDATE' &&
         log.newValue &&
         log.newValue.status === 'sold',

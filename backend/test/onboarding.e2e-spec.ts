@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { Repository } from 'typeorm';
+import { Repository, DataSource } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User, UserRole } from '../src/entities/user.entity';
 import { Tenant } from '../src/entities/tenant.entity';
@@ -48,7 +48,12 @@ describe('Onboarding (e2e)', () => {
     vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
     jwtService = moduleFixture.get(JwtService);
 
-    // Clean up ALL test data from previous runs (proper order: vehicles -> users -> tenants)
+    // Clean up ALL test data from previous runs
+    // First delete bookings (FK constraint to vehicles)
+    const dataSource = moduleFixture.get(DataSource);
+    await dataSource.query('DELETE FROM bookings WHERE 1=1');
+
+    // Then delete vehicles
     const allVehicles = await vehiclesRepository.find();
     for (const vehicle of allVehicles) {
       await vehiclesRepository.delete(vehicle.id);
@@ -305,6 +310,7 @@ describe('Onboarding (e2e)', () => {
       // Verify driver was created in DB
       const createdDriver = await usersRepository.findOne({
         where: { email: driverEmail, tenantId: user.tenantId },
+        select: ['id', 'firstName', 'lastName', 'email', 'phone', 'role', 'password'],
       });
 
       expect(createdDriver).toBeDefined();

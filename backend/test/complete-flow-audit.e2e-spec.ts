@@ -93,7 +93,8 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     // Vérifier que le tenant existe bien dans la base
     const tenant = await tenantsRepository.findOne({ where: { id: tenantId } });
     expect(tenant).toBeDefined();
-    expect(tenant.name).toBe(uniqueCompany);
+    expect(tenant).not.toBeNull();
+    expect(tenant!.name).toBe(uniqueCompany);
   });
 
   // 2. Créer un véhicule
@@ -167,7 +168,8 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const vehicle = await vehiclesRepository.findOne({
       where: { id: vehicleId },
     });
-    expect(vehicle.currentKm).toBe(10000);
+    expect(vehicle).not.toBeNull();
+    expect(vehicle!.currentKm).toBe(10000);
   });
 
   // 5. Vérifier le deuxième audit log (UPDATE)
@@ -182,7 +184,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
 
     expect(response.body.length).toBeGreaterThanOrEqual(2);
 
-    const updateLog = response.body.find((log) => log.action === 'UPDATE');
+    const updateLog = response.body.find((log: any) => log.action === 'UPDATE');
     expect(updateLog).toBeDefined();
     expect(updateLog.entityType).toBe('Vehicle');
     expect(updateLog.entityId).toBe(vehicleId);
@@ -201,7 +203,8 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
       withDeleted: true,
     });
     expect(vehicle).toBeDefined();
-    expect(vehicle.deletedAt).toBeDefined();
+    expect(vehicle).not.toBeNull();
+    expect(vehicle!.deletedAt).toBeDefined();
   });
 
   // 7. Vérifier le troisième audit log (DELETE)
@@ -218,7 +221,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     expect(Array.isArray(response.body.data)).toBe(true);
 
     const deleteLogs = response.body.data.filter(
-      (log) => log.action === 'DELETE' && log.entityId === vehicleId,
+      (log: any) => log.action === 'DELETE' && log.entityId === vehicleId,
     );
     expect(deleteLogs.length).toBeGreaterThanOrEqual(1);
   });

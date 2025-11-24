@@ -5,14 +5,22 @@ import { AppModule } from '../src/app.module';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { User } from '../src/entities/user.entity';
+import { Tenant } from '../src/entities/tenant.entity';
+import { Subscription } from '../src/entities/subscription.entity';
+import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { createTestTenant, cleanupTestTenant, TestTenant } from './test-helpers';
 
 describe('Auth Password Reset (e2e)', () => {
   let app: INestApplication;
   let usersRepository: Repository<User>;
+  let tenantsRepository: Repository<Tenant>;
+  let subscriptionsRepository: Repository<Subscription>;
+  let plansRepository: Repository<SubscriptionPlan>;
   let jwtService: JwtService;
   let testUser: User;
+  let testTenantData: TestTenant;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -26,24 +34,39 @@ describe('Auth Password Reset (e2e)', () => {
     await app.init();
 
     usersRepository = moduleFixture.get(getRepositoryToken(User));
+    tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
+    subscriptionsRepository = moduleFixture.get(getRepositoryToken(Subscription));
+    plansRepository = moduleFixture.get(getRepositoryToken(SubscriptionPlan));
     jwtService = moduleFixture.get(JwtService);
 
-    // Create test user
-    const hashedPassword = await bcrypt.hash('OldPassword123', 12);
-    testUser = await usersRepository.save({
-      email: `reset-test-${Date.now()}@test.com`,
-      password: hashedPassword,
-      firstName: 'Reset',
-      lastName: 'Test',
-      role: 'tenant_admin',
-      tenantId: 1,
-    } as any);
+    // Create test tenant with user using helper
+    testTenantData = await createTestTenant(
+      tenantsRepository,
+      usersRepository,
+      subscriptionsRepository,
+      plansRepository,
+      {
+        userData: {
+          email: `reset-test-${Date.now()}@test.com`,
+          password: await bcrypt.hash('OldPassword123', 12),
+          firstName: 'Reset',
+          lastName: 'Test',
+          role: 'tenant_admin',
+        },
+      },
+    );
+    testUser = testTenantData.user;
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (testUser) {
-      await usersRepository.delete(testUser.id);
+    // Cleanup using helper
+    if (testTenantData) {
+      await cleanupTestTenant(
+        testTenantData.tenant,
+        tenantsRepository,
+        usersRepository,
+        subscriptionsRepository,
+      );
     }
     await app.close();
   });

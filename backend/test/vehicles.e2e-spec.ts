@@ -2,13 +2,28 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../src/entities/user.entity';
+import { Tenant } from '../src/entities/tenant.entity';
+import { Subscription } from '../src/entities/subscription.entity';
+import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
+import { Vehicle } from '../src/entities/vehicle.entity';
+import { JwtService } from '@nestjs/jwt';
+import { createTestTenant, cleanupTestTenant, TestTenant } from './test-helpers';
 
 describe('VehiclesController (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let usersRepository: Repository<User>;
+  let tenantsRepository: Repository<Tenant>;
+  let subscriptionsRepository: Repository<Subscription>;
+  let plansRepository: Repository<SubscriptionPlan>;
+  let vehiclesRepository: Repository<Vehicle>;
+  let jwtService: JwtService;
   let authToken: string;
   let vehicleId: string;
+  let testTenantData: TestTenant;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -22,22 +37,49 @@ describe('VehiclesController (e2e)', () => {
     await app.init();
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
+    usersRepository = moduleFixture.get(getRepositoryToken(User));
+    tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
+    subscriptionsRepository = moduleFixture.get(getRepositoryToken(Subscription));
+    plansRepository = moduleFixture.get(getRepositoryToken(SubscriptionPlan));
+    vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
+    jwtService = moduleFixture.get(JwtService);
 
-    // Login pour obtenir un token
-    const loginResponse = await request(app.getHttpServer())
-      .post('/auth/login')
-      .send({
-        email: 'test@example.com',
-        password: 'Test123!',
-      });
+    // Create test tenant with user using helper
+    testTenantData = await createTestTenant(
+      tenantsRepository,
+      usersRepository,
+      subscriptionsRepository,
+      plansRepository,
+      {
+        userData: {
+          email: `vehicles-test-${Date.now()}@test.com`,
+          role: 'tenant_admin',
+        },
+      },
+    );
 
-    authToken = loginResponse.body.access_token;
+    // Generate JWT token for authentication
+    authToken = jwtService.sign(
+      {
+        sub: testTenantData.user.id,
+        email: testTenantData.user.email,
+        role: testTenantData.user.role,
+        tenantId: testTenantData.tenant.id,
+      },
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '1h' },
+    );
   });
 
   afterAll(async () => {
-    // Nettoyer les véhicules de test
-    if (dataSource) {
-      await dataSource.query('DELETE FROM vehicles WHERE tenant_id = 1');
+    // Cleanup using helper
+    if (testTenantData) {
+      await cleanupTestTenant(
+        testTenantData.tenant,
+        tenantsRepository,
+        usersRepository,
+        subscriptionsRepository,
+        vehiclesRepository,
+      );
     }
     await app.close();
   });
@@ -47,7 +89,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/vehicles')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .send({
           registration: 'AB-123-CD',
           brand: 'Renault',
@@ -71,7 +113,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/vehicles')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .send({
           registration: 'AB-123-CD',
           brand: 'Peugeot',
@@ -87,7 +129,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .post('/vehicles')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .send({
           registration: 'XY-999-ZZ',
           brand: 'Citroën',
@@ -101,7 +143,7 @@ describe('VehiclesController (e2e)', () => {
     it('should return 401 without authentication', () => {
       return request(app.getHttpServer())
         .post('/vehicles')
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .send({
           registration: 'NO-AUTH-01',
           brand: 'Renault',
@@ -118,7 +160,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/vehicles')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(200)
         .then((response) => {
           expect(response.body).toHaveProperty('data');
@@ -133,7 +175,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/vehicles?status=available')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(200)
         .then((response) => {
           expect(
@@ -146,7 +188,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/vehicles?brand=Renault')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(200)
         .then((response) => {
           expect(response.body.data.length).toBeGreaterThan(0);
@@ -159,7 +201,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/vehicles/stats')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(200)
         .then((response) => {
           expect(response.body).toHaveProperty('total');
@@ -176,7 +218,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get(`/vehicles/${vehicleId}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(200)
         .then((response) => {
           expect(response.body.id).toBe(vehicleId);
@@ -188,7 +230,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/vehicles/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(404);
     });
 
@@ -196,7 +238,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get('/vehicles/invalid-uuid')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(400);
     });
   });
@@ -206,7 +248,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .patch(`/vehicles/${vehicleId}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .send({
           mileage: 6000,
           status: 'in_use',
@@ -222,7 +264,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .patch('/vehicles/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .send({
           mileage: 7000,
         })
@@ -235,7 +277,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .delete(`/vehicles/${vehicleId}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(200);
     });
 
@@ -243,7 +285,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .delete('/vehicles/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(404);
     });
 
@@ -251,7 +293,7 @@ describe('VehiclesController (e2e)', () => {
       return request(app.getHttpServer())
         .get(`/vehicles/${vehicleId}`)
         .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '1')
+        .set('X-Tenant-ID', String(testTenantData.tenant.id))
         .expect(404);
     });
   });

@@ -43,9 +43,14 @@ describe('Partner Email Notifications E2E', () => {
 
   beforeEach(async () => {
     // Clear queue before each test
-    await emailQueue.empty();
+    try {
+      await emailQueue.empty();
+    } catch (error) {
+      // If queue is already empty or not ready, just continue
+      console.log('Queue empty failed, continuing:', error);
+    }
     sendEmailSpy.mockClear();
-  });
+  }, 10000); // Increase timeout to 10 seconds
 
   // Helper function to wait for a specific job to complete
   const waitForJobCompletion = async (

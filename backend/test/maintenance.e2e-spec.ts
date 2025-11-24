@@ -2,7 +2,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { User } from '../src/entities/user.entity';
+import { Tenant } from '../src/entities/tenant.entity';
+import { Subscription } from '../src/entities/subscription.entity';
+import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
+import { Vehicle } from '../src/entities/vehicle.entity';
+import { JwtService } from '@nestjs/jwt';
+import { createTestTenant, cleanupTestTenant, TestTenant } from './test-helpers';
 import {
   MaintenanceType,
   MaintenanceStatus,
@@ -11,11 +19,18 @@ import {
 describe('Maintenance (e2e)', () => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let usersRepository: Repository<User>;
+  let tenantsRepository: Repository<Tenant>;
+  let subscriptionsRepository: Repository<Subscription>;
+  let plansRepository: Repository<SubscriptionPlan>;
+  let vehiclesRepository: Repository<Vehicle>;
+  let jwtService: JwtService;
   let authToken: string;
   let tenantId: number;
   let vehicleId: string;
   let maintenanceId: string;
   let templateId: string;
+  let testTenantData: TestTenant;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -27,20 +42,39 @@ describe('Maintenance (e2e)', () => {
     await app.init();
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
+    usersRepository = moduleFixture.get(getRepositoryToken(User));
+    tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
+    subscriptionsRepository = moduleFixture.get(getRepositoryToken(Subscription));
+    plansRepository = moduleFixture.get(getRepositoryToken(SubscriptionPlan));
+    vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
+    jwtService = moduleFixture.get(JwtService);
 
-    // Create test user and login
-    const signupResponse = await request(app.getHttpServer())
-      .post('/auth/register')
-      .send({
-        email: `maintenance-test-${Date.now()}@example.com`,
-        password: 'Test123!@#',
-        firstName: 'Test',
-        lastName: 'Maintenance',
-        companyName: 'Test Maintenance Co',
-      });
+    // Create test tenant with user using helper
+    testTenantData = await createTestTenant(
+      tenantsRepository,
+      usersRepository,
+      subscriptionsRepository,
+      plansRepository,
+      {
+        userData: {
+          email: `maintenance-test-${Date.now()}@test.com`,
+          role: 'tenant_admin',
+        },
+      },
+    );
 
-    authToken = signupResponse.body.accessToken;
-    tenantId = signupResponse.body.user.tenantId;
+    tenantId = testTenantData.tenant.id;
+
+    // Generate JWT token for authentication
+    authToken = jwtService.sign(
+      {
+        sub: testTenantData.user.id,
+        email: testTenantData.user.email,
+        role: testTenantData.user.role,
+        tenantId: testTenantData.tenant.id,
+      },
+      { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '1h' },
+    );
 
     // Create a test vehicle
     const vehicleResponse = await request(app.getHttpServer())
@@ -60,8 +94,8 @@ describe('Maintenance (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (dataSource) {
+    // Cleanup using helper and direct queries for maintenance data
+    if (dataSource && tenantId) {
       await dataSource.query('DELETE FROM maintenances WHERE tenant_id = $1', [
         tenantId,
       ]);
@@ -69,13 +103,15 @@ describe('Maintenance (e2e)', () => {
         'DELETE FROM maintenance_templates WHERE tenant_id = $1',
         [tenantId],
       );
-      await dataSource.query('DELETE FROM vehicles WHERE tenant_id = $1', [
-        tenantId,
-      ]);
-      await dataSource.query('DELETE FROM users WHERE tenant_id = $1', [
-        tenantId,
-      ]);
-      await dataSource.query('DELETE FROM tenants WHERE id = $1', [tenantId]);
+    }
+    if (testTenantData) {
+      await cleanupTestTenant(
+        testTenantData.tenant,
+        tenantsRepository,
+        usersRepository,
+        subscriptionsRepository,
+        vehiclesRepository,
+      );
     }
     await app.close();
   });

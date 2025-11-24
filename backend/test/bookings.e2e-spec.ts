@@ -121,7 +121,7 @@ describe('Bookings (e2e)', () => {
         .query({ status: BookingStatus.PENDING })
         .expect(200)
         .expect((res) => {
-          res.body.data.forEach((booking) => {
+          res.body.data.forEach((booking: any) => {
             expect(booking.status).toBe(BookingStatus.PENDING);
           });
         });
@@ -154,7 +154,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('GET /api/bookings/:id', () => {
-    it('should return a booking by id', () => {
+    it('should return a booking by id', async () => {
       if (!createdBookingId) {
         return; // Skip if no booking created
       }
@@ -177,7 +177,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('PATCH /api/bookings/:id/confirm', () => {
-    it('should confirm a booking (partner only)', () => {
+    it('should confirm a booking (partner only)', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -194,7 +194,7 @@ describe('Bookings (e2e)', () => {
         });
     });
 
-    it('should fail with 400 if booking cannot be confirmed', () => {
+    it('should fail with 400 if booking cannot be confirmed', async () => {
       // Assuming booking is already confirmed or in wrong status
       if (!createdBookingId) {
         return;
@@ -208,7 +208,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('PATCH /api/bookings/:id/reject', () => {
-    it('should reject a booking with reason', () => {
+    it('should reject a booking with reason', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -228,7 +228,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('PATCH /api/bookings/:id/reschedule', () => {
-    it('should reschedule a booking', () => {
+    it('should reschedule a booking', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -249,7 +249,7 @@ describe('Bookings (e2e)', () => {
         });
     });
 
-    it('should fail with 400 if new date is in the past', () => {
+    it('should fail with 400 if new date is in the past', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -267,7 +267,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('PATCH /api/bookings/:id/start', () => {
-    it('should start work on a confirmed booking', () => {
+    it('should start work on a confirmed booking', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -283,7 +283,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('PATCH /api/bookings/:id/complete', () => {
-    it('should complete a booking and calculate commission', () => {
+    it('should complete a booking and calculate commission', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -303,7 +303,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('PATCH /api/bookings/:id/cancel', () => {
-    it('should cancel a booking', () => {
+    it('should cancel a booking', async () => {
       if (!createdBookingId) {
         return;
       }
@@ -323,7 +323,7 @@ describe('Bookings (e2e)', () => {
   });
 
   describe('DELETE /api/bookings/:id', () => {
-    it('should soft delete a booking', () => {
+    it('should soft delete a booking', async () => {
       if (!createdBookingId) {
         return;
       }

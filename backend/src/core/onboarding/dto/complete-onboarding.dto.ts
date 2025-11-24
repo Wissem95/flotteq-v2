@@ -5,6 +5,7 @@ import {
   IsString,
   IsNumber,
   IsEmail,
+  IsNotEmpty,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
@@ -12,22 +13,27 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 class OnboardingProfileDto {
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   companyName: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   companyAddress: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   companyCity: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   companyPostalCode: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   companyCountry: string;
 
   @ApiProperty()
@@ -39,14 +45,17 @@ class OnboardingProfileDto {
 class OnboardingVehicleDto {
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   licensePlate: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   brand: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   model: string;
 
   @ApiProperty()
@@ -63,10 +72,12 @@ class OnboardingVehicleDto {
 class OnboardingDriverDto {
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   firstName: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   lastName: string;
 
   @ApiProperty()
@@ -75,10 +86,12 @@ class OnboardingDriverDto {
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   phone: string;
 
   @ApiProperty()
   @IsString()
+  @IsNotEmpty()
   licenseNumber: string;
 }
 
