@@ -19,7 +19,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Loader2 } from 'lucide-react';
-import type { Partner, PartnerType } from '@/api/types/partner.types';
+import type { Partner } from '@/api/types/partner.types';
+import { PartnerType } from '@/api/types/partner.types';
 
 interface PartnerFormModalProps {
   partner?: Partner | null;
@@ -72,7 +73,7 @@ export const PartnerFormModal = ({ partner, open, onClose }: PartnerFormModalPro
     } else {
       setFormData({
         companyName: '',
-        type: 'garage',
+        type: PartnerType.GARAGE,
         email: '',
         phone: '',
         address: '',

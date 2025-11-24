@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Mail, Phone, MapPin, Users, Camera, Trash2, Save, Calendar } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Users, Camera, Trash2, Save, Calendar, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/config/api';
 import { toast } from 'sonner';
@@ -174,9 +174,21 @@ export default function ProfilePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
-        <p className="text-gray-600 mt-1">Gérez vos informations personnelles</p>
+      <div className="flex items-center gap-4">
+        <button
+          onClick={() => navigate(-1)}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          aria-label="Retour"
+        >
+          <ArrowLeft className="w-6 h-6 text-gray-600" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-3xl font-bold text-gray-900">Mon Profil</h1>
+          <p className="text-gray-600 mt-1">
+            Gérez vos informations personnelles
+            {user && <span className="ml-2 text-flotteq-blue">• {user.email}</span>}
+          </p>
+        </div>
       </div>
 
       {/* Photo de profil */}

@@ -88,7 +88,7 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
   };
 
   const handleUpload = async () => {
-    if (previews.length === 0) return;
+    if (previews.length === 0 || !onUpload) return;
 
     setUploading(true);
     try {

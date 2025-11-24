@@ -44,7 +44,7 @@ export const PartnersListPage = () => {
   });
 
   const getStatusBadge = (status: PartnerStatus) => {
-    const variants = {
+    const variants: Record<PartnerStatus, "default" | "secondary" | "destructive" | "outline"> = {
       pending: 'secondary',
       approved: 'default',
       rejected: 'destructive',

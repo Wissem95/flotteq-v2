@@ -70,6 +70,34 @@ export const TripStats: React.FC<TripStatsProps> = ({
   // Vue détaillée pour card expanded
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {/* Kilométrage départ */}
+      <div className="bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="p-2 bg-gray-600 rounded-lg">
+            <Gauge className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <p className="text-xs text-gray-600">Départ</p>
+            <p className="text-xl font-bold text-gray-900">{startKm.toLocaleString()} km</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Kilométrage arrivée */}
+      {endKm !== null && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="p-2 bg-gray-600 rounded-lg">
+              <Gauge className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <p className="text-xs text-gray-600">Arrivée</p>
+              <p className="text-xl font-bold text-gray-900">{endKm.toLocaleString()} km</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Distance parcourue */}
       {distanceKm !== null && (
         <div className="bg-blue-50 rounded-lg p-4">
