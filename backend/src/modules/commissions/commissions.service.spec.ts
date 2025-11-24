@@ -94,6 +94,7 @@ describe('CommissionsService', () => {
       save: jest.fn(),
       find: jest.fn(),
       findOne: jest.fn(),
+      count: jest.fn(),
       createQueryBuilder: jest.fn(),
     },
     bookingRepository: {
@@ -215,6 +216,8 @@ describe('CommissionsService', () => {
       mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
         mockQueryBuilder,
       );
+      mockRepositories.commissionRepository.count.mockResolvedValue(1);
+      mockRepositories.commissionRepository.find.mockResolvedValue([mockCommission]);
 
       const result = await service.findAll({ page: 1, limit: 20 });
 
@@ -239,13 +242,18 @@ describe('CommissionsService', () => {
       mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
         mockQueryBuilder,
       );
+      mockRepositories.commissionRepository.count.mockResolvedValue(1);
+      mockRepositories.commissionRepository.find.mockResolvedValue([mockCommission]);
 
-      await service.findAll({ partnerId: 'partner-1', page: 1, limit: 20 });
+      const result = await service.findAll({ partnerId: 'partner-1', page: 1, limit: 20 });
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'commission.partner_id = :partnerId',
-        { partnerId: 'partner-1' },
+      // Verify where clause includes partnerId
+      expect(mockRepositories.commissionRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ partnerId: 'partner-1' }),
+        }),
       );
+      expect(result.data).toHaveLength(1);
     });
 
     it('should filter by status', async () => {
@@ -262,19 +270,22 @@ describe('CommissionsService', () => {
       mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
         mockQueryBuilder,
       );
+      mockRepositories.commissionRepository.count.mockResolvedValue(1);
+      mockRepositories.commissionRepository.find.mockResolvedValue([mockCommission]);
 
-      await service.findAll({
+      const result = await service.findAll({
         status: CommissionStatus.PENDING,
         page: 1,
         limit: 20,
       });
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'commission.status = :status',
-        {
-          status: CommissionStatus.PENDING,
-        },
+      // Verify where clause includes status
+      expect(mockRepositories.commissionRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: CommissionStatus.PENDING }),
+        }),
       );
+      expect(result.data).toHaveLength(1);
     });
   });
 
@@ -289,7 +300,13 @@ describe('CommissionsService', () => {
       expect(result).toEqual(mockCommission);
       expect(commissionRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'commission-1' },
-        relations: ['partner', 'booking'],
+        relations: [
+          'partner',
+          'booking',
+          'booking.tenant',
+          'booking.vehicle',
+          'booking.service',
+        ],
       });
     });
 
@@ -313,7 +330,13 @@ describe('CommissionsService', () => {
 
       expect(commissionRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'commission-1', partnerId: 'partner-1' },
-        relations: ['partner', 'booking'],
+        relations: [
+          'partner',
+          'booking',
+          'booking.tenant',
+          'booking.vehicle',
+          'booking.service',
+        ],
       });
     });
   });

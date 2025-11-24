@@ -254,16 +254,20 @@ describe('AvailabilitiesService', () => {
       expect(mockAuditService.create).toHaveBeenCalled();
     });
 
-    it('should throw ConflictException if some days already have availabilities', async () => {
-      const existingAvail = { ...mockAvailability, dayOfWeek: 1 };
+    it('should update existing availabilities (UPSERT behavior)', async () => {
+      const existingAvail = { ...mockAvailability, dayOfWeek: 1, id: 'existing-1' };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
       mockRepositories.availabilityRepository.find.mockResolvedValue([
         existingAvail,
       ]);
+      mockRepositories.availabilityRepository.create.mockImplementation((dto) => dto);
+      mockRepositories.availabilityRepository.save.mockResolvedValue(bulkDtos);
 
-      await expect(
-        service.setMultipleAvailabilities('partner-123', bulkDtos, 'user-1'),
-      ).rejects.toThrow(ConflictException);
+      const result = await service.setMultipleAvailabilities('partner-123', bulkDtos, 'user-1');
+
+      // Should merge existing with new values instead of throwing error
+      expect(result).toHaveLength(3);
+      expect(mockRepositories.availabilityRepository.save).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if duplicate days in request', async () => {

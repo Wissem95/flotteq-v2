@@ -1,0 +1,117 @@
+
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║       ✅ SCÉNARIO B - DÉPLOIEMENT IP COMPLÉTÉ 100%          ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+📦 FICHIERS CRÉÉS (6 fichiers):
+
+1. .env.production.ip (74 lignes)
+   → Configuration pour déploiement sur IP 37.59.96.178
+   → Vraies clés Stripe TEST incluses
+   → CORS configuré pour IP + ports
+
+2. docker-compose.ip.yml (213 lignes)
+   → Docker Compose SANS Nginx/SSL
+   → 7 services : Postgres + Redis + Backend + 4 Frontends
+   → Ports exposés directement (3000, 5174, 5175, 5176, 3001)
+
+3. scripts/deploy-ip.sh (320 lignes - EXÉCUTABLE)
+   → Script de déploiement automatisé
+   → Build + migrations + healthchecks
+   → Logs colorés et détaillés
+
+4. GUIDE_DEPLOY_IP.md (450+ lignes)
+   → Guide COMPLET pas-à-pas
+   → SSH, Docker, Firewall, Déploiement
+   → Troubleshooting + Commandes utiles
+
+5. QUICK_START_IP.md (120 lignes)
+   → Guide RAPIDE (30 min)
+   → Format étapes numérotées
+   → Perfect pour démarrer vite
+
+6. AIDE_MEMOIRE_SSH.md (150 lignes)
+   → Infos VPS (IP, specs)
+   → Commandes SSH essentielles
+   → Récupération mot de passe root
+
+📊 TOTAL: ~1500 lignes de code + documentation
+
+══════════════════════════════════════════════════════════════
+
+🎯 PROCHAINES ÉTAPES - À FAIRE MAINTENANT:
+
+1️⃣  OUVRE LE GUIDE
+    → Ouvre: QUICK_START_IP.md
+
+2️⃣  CONNEXION SSH
+    → Terminal Mac: ssh root@37.59.96.178
+    → Mot de passe: cherche email OVH
+
+3️⃣  INSTALLE DOCKER (10 min)
+    → curl -fsSL https://get.docker.com | sh
+    → apt install docker-compose-plugin -y
+
+4️⃣  CLONE LE PROJET (3 min)
+    → cd /opt
+    → git clone https://github.com/Wissem95/flotteq-v2.git
+
+5️⃣  DÉPLOIE (25 min)
+    → cd flotteq-v2
+    → ./scripts/deploy-ip.sh
+
+6️⃣  TESTE (2 min)
+    → Ouvre: http://37.59.96.178:5174
+
+══════════════════════════════════════════════════════════════
+
+📚 GUIDES DISPONIBLES:
+
+🚀 DÉMARRAGE RAPIDE (30 min):
+   → QUICK_START_IP.md
+
+📖 GUIDE COMPLET (avec troubleshooting):
+   → GUIDE_DEPLOY_IP.md
+
+🔑 AIDE SSH:
+   → AIDE_MEMOIRE_SSH.md
+
+📋 RÉCAPITULATIF COMPLET:
+   → SCENARIO_B_COMPLETION.md
+
+══════════════════════════════════════════════════════════════
+
+🌐 URLS APRÈS DÉPLOIEMENT:
+
+✅ API:            http://37.59.96.178:3000/api/health
+✅ Frontend Client: http://37.59.96.178:5174
+✅ Partner:        http://37.59.96.178:5175
+✅ Driver:         http://37.59.96.178:5176
+✅ Admin:          http://37.59.96.178:3001
+
+══════════════════════════════════════════════════════════════
+
+⚡ COMPTE ADMIN PAR DÉFAUT:
+
+Email:    admin@flotteq.com
+Password: password123
+
+(à créer manuellement, voir GUIDE_DEPLOY_IP.md étape 7)
+
+══════════════════════════════════════════════════════════════
+
+💡 TU AS DES QUESTIONS ?
+
+→ Lis: GUIDE_DEPLOY_IP.md section "Troubleshooting"
+→ Commandes utiles dans AIDE_MEMOIRE_SSH.md
+
+══════════════════════════════════════════════════════════════
+
+🎉 BON DÉPLOIEMENT ! 🚀
+
+Lance maintenant: ssh root@37.59.96.178
+
+═══════════════════════════════════════════════════════════════
+
