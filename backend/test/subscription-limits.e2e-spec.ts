@@ -62,7 +62,7 @@ describe('Subscription Limits Enforcement (e2e)', () => {
         firstName: 'Test',
         lastName: 'Limits',
         companyName: uniqueCompany,
-        planId: 1, // Freemium - max 3 véhicules
+        planId: 16, // Freemium - max 3 véhicules
       });
 
     accessToken = registerResponse.body.accessToken;
@@ -143,11 +143,11 @@ describe('Subscription Limits Enforcement (e2e)', () => {
     });
 
     expect(subscription).toBeDefined();
-    expect(subscription.planId).toBe(1); // Freemium
+    expect(subscription.planId).toBe(16); // Freemium
 
     // Simuler un upgrade vers le plan Business (plan ID 2, max 50 véhicules)
     // Note : Dans un vrai scénario, cela passerait par Stripe
-    subscription.planId = 2; // Business
+    subscription.planId = 11; // Business
     await subscriptionsRepository.save(subscription);
 
     // Maintenant, créer un 4ème véhicule → doit réussir

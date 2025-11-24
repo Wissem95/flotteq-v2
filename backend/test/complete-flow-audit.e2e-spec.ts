@@ -78,7 +78,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
         firstName: 'Test',
         lastName: 'Flow',
         companyName: uniqueCompany,
-        planId: 1, // Freemium
+        planId: 16, // Freemium
       })
       .expect(201);
 
