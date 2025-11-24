@@ -27,11 +27,10 @@ describe('StripeService', () => {
     city: 'test-city',
     postalCode: 'test-postal',
     country: 'test-country',
-    status: TenantStatus.TRIAL,
+    status: TenantStatus.ACTIVE,
     stripeCustomerId: 'cus_test_123',
     stripeSubscriptionId: 'sub_test_123',
-    subscriptionStatus: 'trial',
-    trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    subscriptionStatus: 'active',
     subscriptionStartedAt: new Date(),
     subscriptionEndedAt: new Date(),
     createdAt: new Date(),
@@ -193,35 +192,7 @@ describe('StripeService', () => {
     });
   });
 
-  describe('isTrial', () => {
-    it('should return true if tenant is in trial and trial not ended', () => {
-      const tenant = { ...mockTenant, subscriptionStatus: 'trial' };
-      expect(service.isTrial(tenant)).toBe(true);
-    });
-
-    it('should return false if tenant is not in trial status', () => {
-      const tenant = { ...mockTenant, subscriptionStatus: 'active' };
-      expect(service.isTrial(tenant)).toBe(false);
-    });
-
-    it('should return false if trial has ended', () => {
-      const tenant = {
-        ...mockTenant,
-        subscriptionStatus: 'trial',
-        trialEndsAt: new Date(Date.now() - 24 * 60 * 60 * 1000),
-      };
-      expect(service.isTrial(tenant)).toBe(false);
-    });
-
-    it('should return false if trialEndsAt is null', () => {
-      const tenant = {
-        ...mockTenant,
-        subscriptionStatus: 'trial',
-        trialEndsAt: null as any,
-      };
-      expect(service.isTrial(tenant)).toBe(false);
-    });
-  });
+  // isTrial() has been removed - no more trial period, all tenants use Stripe subscriptions
 
   describe('isActive', () => {
     it('should return true if subscription status is active', () => {

@@ -19,11 +19,10 @@ describe('TenantsService', () => {
     id: 1,
     name: 'Test Company',
     email: 'test@company.com',
-    status: TenantStatus.TRIAL,
+    status: TenantStatus.ACTIVE,
     stripeCustomerId: 'cus_test_123',
     stripeSubscriptionId: 'sub_test_123',
-    subscriptionStatus: 'trial',
-    trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+    subscriptionStatus: 'active',
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -124,8 +123,8 @@ describe('TenantsService', () => {
       expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
           ...createDto,
-          status: TenantStatus.TRIAL,
-          subscriptionStatus: 'trial',
+          status: TenantStatus.ACTIVE,
+          subscriptionStatus: 'active',
         }),
       );
       expect(mockStripeService.createCustomer).toHaveBeenCalled();
@@ -170,8 +169,7 @@ describe('TenantsService', () => {
 
       expect(mockRepository.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          status: TenantStatus.TRIAL,
-          trialEndsAt: expect.any(Date),
+          status: TenantStatus.ACTIVE,
         }),
       );
     });
@@ -335,7 +333,7 @@ describe('TenantsService', () => {
         users: [{}, {}],
         vehicles: [{}, {}, {}],
         drivers: [{}],
-        status: TenantStatus.TRIAL,
+        status: TenantStatus.ACTIVE,
       };
 
       mockRepository.findOne.mockResolvedValue(tenantWithRelations);
@@ -346,8 +344,7 @@ describe('TenantsService', () => {
         usersCount: 2,
         vehiclesCount: 3,
         driversCount: 1,
-        status: TenantStatus.TRIAL,
-        trialEndsAt: mockTenant.trialEndsAt,
+        status: TenantStatus.ACTIVE,
         createdAt: mockTenant.createdAt,
       });
     });

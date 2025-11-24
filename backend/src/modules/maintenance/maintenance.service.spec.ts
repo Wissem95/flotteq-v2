@@ -8,12 +8,14 @@ import {
   MaintenanceStatus,
   MaintenanceType,
 } from './entities/maintenance.entity';
+import { MaintenanceTemplate } from './entities/maintenance-template.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 
 describe('MaintenanceService', () => {
   let service: MaintenanceService;
   let repository: Repository<Maintenance>;
+  let templateRepository: Repository<MaintenanceTemplate>;
 
   const mockMaintenance: Maintenance = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -55,12 +57,25 @@ describe('MaintenanceService', () => {
           provide: getRepositoryToken(Maintenance),
           useValue: mockRepository,
         },
+        {
+          provide: getRepositoryToken(MaintenanceTemplate),
+          useValue: {
+            find: jest.fn(),
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<MaintenanceService>(MaintenanceService);
     repository = module.get<Repository<Maintenance>>(
       getRepositoryToken(Maintenance),
+    );
+    templateRepository = module.get<Repository<MaintenanceTemplate>>(
+      getRepositoryToken(MaintenanceTemplate),
     );
 
     jest.clearAllMocks();
