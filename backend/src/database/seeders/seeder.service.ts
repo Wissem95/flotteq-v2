@@ -80,9 +80,7 @@ export class SeederService {
       await queryRunner.query('DELETE FROM tenants');
 
       // Reset sequence for tenants to ensure FlotteQ gets ID 1
-      await queryRunner.query(
-        "SELECT setval('tenants_id_seq', 1, false)",
-      );
+      await queryRunner.query("SELECT setval('tenants_id_seq', 1, false)");
 
       console.log('✓ Database cleaned\n');
     } finally {

@@ -93,8 +93,12 @@ describe('DriversService', () => {
     }).compile();
 
     service = module.get<DriversService>(DriversService);
-    driverRepository = module.get<Repository<Driver>>(getRepositoryToken(Driver));
-    vehicleRepository = module.get<Repository<Vehicle>>(getRepositoryToken(Vehicle));
+    driverRepository = module.get<Repository<Driver>>(
+      getRepositoryToken(Driver),
+    );
+    vehicleRepository = module.get<Repository<Vehicle>>(
+      getRepositoryToken(Vehicle),
+    );
   });
 
   it('should be defined', () => {
@@ -119,20 +123,27 @@ describe('DriversService', () => {
       const result = await service.create(createDriverDto);
 
       expect(result).toEqual(mockDriver);
-      expect(driverRepository.create).toHaveBeenCalledWith({ ...createDriverDto, tenantId: 1 });
+      expect(driverRepository.create).toHaveBeenCalledWith({
+        ...createDriverDto,
+        tenantId: 1,
+      });
     });
 
     it('should throw error if email already exists', async () => {
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
 
-      await expect(service.create(createDriverDto)).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDriverDto)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
   describe('findAll', () => {
     it('should return paginated drivers', async () => {
       const drivers = [mockDriver];
-      jest.spyOn(driverRepository, 'findAndCount').mockResolvedValue([drivers, 1]);
+      jest
+        .spyOn(driverRepository, 'findAndCount')
+        .mockResolvedValue([drivers, 1]);
 
       const result = await service.findAll(1, 10);
 
@@ -146,7 +157,9 @@ describe('DriversService', () => {
 
     it('should filter by status', async () => {
       const drivers = [mockDriver];
-      jest.spyOn(driverRepository, 'findAndCount').mockResolvedValue([drivers, 1]);
+      jest
+        .spyOn(driverRepository, 'findAndCount')
+        .mockResolvedValue([drivers, 1]);
 
       await service.findAll(1, 10, DriverStatus.ACTIVE);
 
@@ -170,7 +183,9 @@ describe('DriversService', () => {
     it('should throw NotFoundException if driver not found', async () => {
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(null);
 
-      await expect(service.findOne('invalid-id')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('invalid-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -178,7 +193,9 @@ describe('DriversService', () => {
     it('should assign vehicle to driver successfully', async () => {
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
       jest.spyOn(vehicleRepository, 'findOne').mockResolvedValue(mockVehicle);
-      jest.spyOn(vehicleRepository, 'save').mockResolvedValue({ ...mockVehicle, assignedDriverId: mockDriver.id });
+      jest
+        .spyOn(vehicleRepository, 'save')
+        .mockResolvedValue({ ...mockVehicle, assignedDriverId: mockDriver.id });
 
       const result = await service.assignVehicle(mockDriver.id, mockVehicle.id);
 
@@ -191,29 +208,51 @@ describe('DriversService', () => {
     });
 
     it('should throw error if driver license is expired', async () => {
-      const expiredDriver = { ...mockDriver, licenseExpiryDate: new Date('2020-01-01') };
+      const expiredDriver = {
+        ...mockDriver,
+        licenseExpiryDate: new Date('2020-01-01'),
+      };
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(expiredDriver);
 
-      await expect(service.assignVehicle(mockDriver.id, mockVehicle.id)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.assignVehicle(mockDriver.id, mockVehicle.id),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw error if vehicle already assigned', async () => {
-      const assignedVehicle = { ...mockVehicle, assignedDriverId: 'another-driver-id' };
+      const assignedVehicle = {
+        ...mockVehicle,
+        assignedDriverId: 'another-driver-id',
+      };
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
-      jest.spyOn(vehicleRepository, 'findOne').mockResolvedValue(assignedVehicle);
+      jest
+        .spyOn(vehicleRepository, 'findOne')
+        .mockResolvedValue(assignedVehicle);
 
-      await expect(service.assignVehicle(mockDriver.id, mockVehicle.id)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.assignVehicle(mockDriver.id, mockVehicle.id),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('unassignVehicle', () => {
     it('should unassign vehicle from driver', async () => {
-      const assignedVehicle = { ...mockVehicle, assignedDriverId: mockDriver.id };
+      const assignedVehicle = {
+        ...mockVehicle,
+        assignedDriverId: mockDriver.id,
+      };
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
-      jest.spyOn(vehicleRepository, 'findOne').mockResolvedValue(assignedVehicle);
-      jest.spyOn(vehicleRepository, 'save').mockResolvedValue({ ...assignedVehicle, assignedDriverId: null });
+      jest
+        .spyOn(vehicleRepository, 'findOne')
+        .mockResolvedValue(assignedVehicle);
+      jest
+        .spyOn(vehicleRepository, 'save')
+        .mockResolvedValue({ ...assignedVehicle, assignedDriverId: null });
 
-      const result = await service.unassignVehicle(mockDriver.id, mockVehicle.id);
+      const result = await service.unassignVehicle(
+        mockDriver.id,
+        mockVehicle.id,
+      );
 
       expect(vehicleRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -226,9 +265,13 @@ describe('DriversService', () => {
     it('should throw error if vehicle not assigned to driver', async () => {
       const unassignedVehicle = { ...mockVehicle, assignedDriverId: null };
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
-      jest.spyOn(vehicleRepository, 'findOne').mockResolvedValue(unassignedVehicle as any);
+      jest
+        .spyOn(vehicleRepository, 'findOne')
+        .mockResolvedValue(unassignedVehicle as any);
 
-      await expect(service.unassignVehicle(mockDriver.id, mockVehicle.id)).rejects.toThrow(BadRequestException);
+      await expect(
+        service.unassignVehicle(mockDriver.id, mockVehicle.id),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -247,7 +290,9 @@ describe('DriversService', () => {
       jest.spyOn(driverRepository, 'findOne').mockResolvedValue(mockDriver);
       jest.spyOn(vehicleRepository, 'count').mockResolvedValue(1);
 
-      await expect(service.remove(mockDriver.id)).rejects.toThrow(BadRequestException);
+      await expect(service.remove(mockDriver.id)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -260,7 +305,9 @@ describe('DriversService', () => {
         getMany: jest.fn().mockResolvedValue([mockDriver]),
       };
 
-      jest.spyOn(driverRepository, 'createQueryBuilder').mockReturnValue(queryBuilder);
+      jest
+        .spyOn(driverRepository, 'createQueryBuilder')
+        .mockReturnValue(queryBuilder);
 
       const result = await service.getExpiringLicenses(30);
 

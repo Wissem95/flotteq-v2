@@ -1,6 +1,19 @@
-import { IsOptional, IsString, IsInt, IsEnum, IsDateString, IsNumber, Min, ValidateIf } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  IsEnum,
+  IsDateString,
+  IsNumber,
+  Min,
+  ValidateIf,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { VehicleStatus, TransmissionType, FuelType } from '../../../entities/vehicle.entity';
+import {
+  VehicleStatus,
+  TransmissionType,
+  FuelType,
+} from '../../../entities/vehicle.entity';
 
 export class UpdateVehicleDto {
   @ApiProperty({ description: 'Vehicle registration number', required: false })
@@ -34,7 +47,10 @@ export class UpdateVehicleDto {
   @IsString()
   color?: string;
 
-  @ApiProperty({ description: 'Initial mileage at purchase (km)', required: false })
+  @ApiProperty({
+    description: 'Initial mileage at purchase (km)',
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -52,7 +68,11 @@ export class UpdateVehicleDto {
   @Min(0)
   mileage?: number;
 
-  @ApiProperty({ description: 'Vehicle status', enum: VehicleStatus, required: false })
+  @ApiProperty({
+    description: 'Vehicle status',
+    enum: VehicleStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(VehicleStatus)
   status?: VehicleStatus;
@@ -68,13 +88,21 @@ export class UpdateVehicleDto {
   @Min(0)
   purchasePrice?: number;
 
-  @ApiProperty({ description: 'Assigned driver ID', required: false, nullable: true })
+  @ApiProperty({
+    description: 'Assigned driver ID',
+    required: false,
+    nullable: true,
+  })
   @IsOptional()
   @ValidateIf((o) => o.assignedDriverId !== null)
   @IsString()
   assignedDriverId?: string | null;
 
-  @ApiProperty({ description: 'Transmission type', enum: TransmissionType, required: false })
+  @ApiProperty({
+    description: 'Transmission type',
+    enum: TransmissionType,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(TransmissionType)
   transmission?: TransmissionType;
@@ -84,12 +112,18 @@ export class UpdateVehicleDto {
   @IsEnum(FuelType)
   fuelType?: FuelType;
 
-  @ApiProperty({ description: 'Last technical inspection date', required: false })
+  @ApiProperty({
+    description: 'Last technical inspection date',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   lastTechnicalInspection?: string;
 
-  @ApiProperty({ description: 'Next technical inspection date', required: false })
+  @ApiProperty({
+    description: 'Next technical inspection date',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   nextTechnicalInspection?: string;
@@ -100,7 +134,10 @@ export class UpdateVehicleDto {
   @Min(0)
   currentValue?: number;
 
-  @ApiProperty({ description: 'Date when the vehicle was sold', required: false })
+  @ApiProperty({
+    description: 'Date when the vehicle was sold',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   soldDate?: string;

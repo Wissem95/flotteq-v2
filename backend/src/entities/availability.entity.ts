@@ -30,7 +30,10 @@ export class Availability {
   @JoinColumn({ name: 'partner_id' })
   partner: Partner;
 
-  @ApiProperty({ example: 1, description: 'Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday' })
+  @ApiProperty({
+    example: 1,
+    description: 'Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday',
+  })
   @Column({ type: 'int', name: 'day_of_week' })
   dayOfWeek: number;
 
@@ -60,7 +63,15 @@ export class Availability {
 
   // Helper method to get day name
   getDayName(): string {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const days = [
+      'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+    ];
     return days[this.dayOfWeek];
   }
 

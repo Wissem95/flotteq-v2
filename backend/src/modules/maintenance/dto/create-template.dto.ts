@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsEnum, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { MaintenanceType } from '../entities/maintenance.entity';
 
@@ -10,7 +17,7 @@ export class CreateMaintenanceTemplateDto {
 
   @ApiProperty({
     description: 'Type of maintenance',
-    enum: MaintenanceType
+    enum: MaintenanceType,
   })
   @IsNotEmpty()
   @IsEnum(MaintenanceType)
@@ -21,7 +28,7 @@ export class CreateMaintenanceTemplateDto {
   @IsString()
   description: string;
 
-  @ApiProperty({ description: 'Estimated cost', example: 150.00 })
+  @ApiProperty({ description: 'Estimated cost', example: 150.0 })
   @IsNotEmpty()
   @IsNumber()
   @Min(0)

@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddStripeFieldsToPartners1760917000000 implements MigrationInterface {
+export class AddStripeFieldsToPartners1760917000000
+  implements MigrationInterface
+{
   name = 'AddStripeFieldsToPartners1760917000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -40,7 +42,7 @@ export class AddStripeFieldsToPartners1760917000000 implements MigrationInterfac
           type: 'decimal',
           precision: 5,
           scale: 2,
-          default: 10.00,
+          default: 10.0,
         }),
       );
     }

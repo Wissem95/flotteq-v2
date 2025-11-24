@@ -112,7 +112,9 @@ describe('TenantsService', () => {
       mockRepository.create.mockReturnValue(mockTenant);
       mockRepository.save.mockResolvedValue(mockTenant);
       mockStripeService.createCustomer.mockResolvedValue('cus_new_123');
-      mockStripeService.createSubscription.mockResolvedValue({ id: 'sub_new_123' });
+      mockStripeService.createSubscription.mockResolvedValue({
+        id: 'sub_new_123',
+      });
 
       const result = await service.create(createDto);
 
@@ -160,7 +162,9 @@ describe('TenantsService', () => {
       mockRepository.create.mockImplementation((data) => data);
       mockRepository.save.mockImplementation((data) => Promise.resolve(data));
       mockStripeService.createCustomer.mockResolvedValue('cus_new_123');
-      mockStripeService.createSubscription.mockResolvedValue({ id: 'sub_new_123' });
+      mockStripeService.createSubscription.mockResolvedValue({
+        id: 'sub_new_123',
+      });
 
       await service.create(createDto);
 
@@ -181,7 +185,9 @@ describe('TenantsService', () => {
       mockRepository.findOne.mockResolvedValue(null);
       mockRepository.create.mockReturnValue(mockTenant);
       mockRepository.save.mockResolvedValue(mockTenant);
-      mockStripeService.createCustomer.mockRejectedValue(new Error('Stripe error'));
+      mockStripeService.createCustomer.mockRejectedValue(
+        new Error('Stripe error'),
+      );
 
       const result = await service.create(createDto);
 

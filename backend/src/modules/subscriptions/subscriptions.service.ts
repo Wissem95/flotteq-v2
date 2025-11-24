@@ -1,7 +1,15 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
+import {
+  Subscription,
+  SubscriptionStatus,
+} from '../../entities/subscription.entity';
 import { SubscriptionPlan } from '../../entities/subscription-plan.entity';
 import { Tenant } from '../../entities/tenant.entity';
 import { CreatePlanDto } from './dto/create-plan.dto';
@@ -51,12 +59,12 @@ export class SubscriptionsService {
 
     // Vérifier qu'aucun abonnement n'utilise ce plan
     const subscriptionsCount = await this.subscriptionRepo.count({
-      where: { planId: id }
+      where: { planId: id },
     });
 
     if (subscriptionsCount > 0) {
       throw new BadRequestException(
-        `Impossible de supprimer ce plan : ${subscriptionsCount} abonnements l'utilisent`
+        `Impossible de supprimer ce plan : ${subscriptionsCount} abonnements l'utilisent`,
       );
     }
 
@@ -64,7 +72,10 @@ export class SubscriptionsService {
   }
 
   // ========== GESTION DES ABONNEMENTS ==========
-  async createSubscription(tenantId: number, planId: number): Promise<Subscription> {
+  async createSubscription(
+    tenantId: number,
+    planId: number,
+  ): Promise<Subscription> {
     const plan = await this.getPlan(planId);
     const tenant = await this.tenantRepo.findOne({ where: { id: tenantId } });
 
@@ -127,7 +138,7 @@ export class SubscriptionsService {
 
       // Si pas d'abonnement, créer automatiquement un Freemium
       const freemiumPlan = await this.planRepo.findOne({
-        where: { name: 'Freemium', price: 0 }
+        where: { name: 'Freemium', price: 0 },
       });
 
       if (freemiumPlan) {
@@ -140,25 +151,36 @@ export class SubscriptionsService {
     return subscription;
   }
 
-  async updateUsage(tenantId: number, resource: 'vehicles' | 'users' | 'drivers', delta: number): Promise<void> {
+  async updateUsage(
+    tenantId: number,
+    resource: 'vehicles' | 'users' | 'drivers',
+    delta: number,
+  ): Promise<void> {
     const subscription = await this.getCurrentSubscription(tenantId);
 
     if (!subscription.usage) {
       subscription.usage = { vehicles: 0, users: 0, drivers: 0 };
     }
 
-    subscription.usage[resource] = Math.max(0, (subscription.usage[resource] || 0) + delta);
+    subscription.usage[resource] = Math.max(
+      0,
+      (subscription.usage[resource] || 0) + delta,
+    );
 
     await this.subscriptionRepo.save(subscription);
   }
 
-  async checkLimit(tenantId: number, resource: 'vehicles' | 'users' | 'drivers'): Promise<boolean> {
+  async checkLimit(
+    tenantId: number,
+    resource: 'vehicles' | 'users' | 'drivers',
+  ): Promise<boolean> {
     try {
       const subscription = await this.getCurrentSubscription(tenantId);
       const plan = subscription.plan;
 
       const usage = subscription.usage?.[resource] || 0;
-      const limitKey = `max${resource.charAt(0).toUpperCase() + resource.slice(1)}` as keyof SubscriptionPlan;
+      const limitKey =
+        `max${resource.charAt(0).toUpperCase() + resource.slice(1)}` as keyof SubscriptionPlan;
       const limit = plan[limitKey] as number;
 
       // -1 signifie illimité
@@ -171,17 +193,22 @@ export class SubscriptionsService {
     }
   }
 
-  async enforceLimit(tenantId: number, resource: 'vehicles' | 'users' | 'drivers'): Promise<void> {
+  async enforceLimit(
+    tenantId: number,
+    resource: 'vehicles' | 'users' | 'drivers',
+  ): Promise<void> {
     const canAdd = await this.checkLimit(tenantId, resource);
 
     if (!canAdd) {
       const subscription = await this.getCurrentSubscription(tenantId);
       const plan = subscription.plan;
-      const limitKey = `max${resource.charAt(0).toUpperCase() + resource.slice(1)}` as keyof SubscriptionPlan;
+      const limitKey =
+        `max${resource.charAt(0).toUpperCase() + resource.slice(1)}` as keyof SubscriptionPlan;
       const limit = plan[limitKey] as number;
 
       throw new ForbiddenException({
-        message: `Limite atteinte : vous avez atteint la limite de ${limit} ${resource} pour votre plan ${plan.name}. ` +
+        message:
+          `Limite atteinte : vous avez atteint la limite de ${limit} ${resource} pour votre plan ${plan.name}. ` +
           `Veuillez upgrader votre abonnement pour continuer.`,
         error: 'Forbidden',
         statusCode: 403,
@@ -199,13 +226,13 @@ export class SubscriptionsService {
 
     if (newPlan.maxVehicles !== -1 && usage.vehicles > newPlan.maxVehicles) {
       throw new BadRequestException(
-        `Impossible de passer au plan ${newPlan.name} : vous avez ${usage.vehicles} véhicules mais la limite est ${newPlan.maxVehicles}`
+        `Impossible de passer au plan ${newPlan.name} : vous avez ${usage.vehicles} véhicules mais la limite est ${newPlan.maxVehicles}`,
       );
     }
 
     if (newPlan.maxUsers !== -1 && usage.users > newPlan.maxUsers) {
       throw new BadRequestException(
-        `Impossible de passer au plan ${newPlan.name} : vous avez ${usage.users} utilisateurs mais la limite est ${newPlan.maxUsers}`
+        `Impossible de passer au plan ${newPlan.name} : vous avez ${usage.users} utilisateurs mais la limite est ${newPlan.maxUsers}`,
       );
     }
 
@@ -241,17 +268,26 @@ export class SubscriptionsService {
         vehicles: {
           current: subscription.usage?.vehicles || 0,
           limit: plan.maxVehicles === -1 ? 'Illimité' : plan.maxVehicles,
-          percentage: plan.maxVehicles === -1 ? 0 : ((subscription.usage?.vehicles || 0) / plan.maxVehicles) * 100,
+          percentage:
+            plan.maxVehicles === -1
+              ? 0
+              : ((subscription.usage?.vehicles || 0) / plan.maxVehicles) * 100,
         },
         users: {
           current: subscription.usage?.users || 0,
           limit: plan.maxUsers === -1 ? 'Illimité' : plan.maxUsers,
-          percentage: plan.maxUsers === -1 ? 0 : ((subscription.usage?.users || 0) / plan.maxUsers) * 100,
+          percentage:
+            plan.maxUsers === -1
+              ? 0
+              : ((subscription.usage?.users || 0) / plan.maxUsers) * 100,
         },
         drivers: {
           current: subscription.usage?.drivers || 0,
           limit: plan.maxDrivers === -1 ? 'Illimité' : plan.maxDrivers,
-          percentage: plan.maxDrivers === -1 ? 0 : ((subscription.usage?.drivers || 0) / plan.maxDrivers) * 100,
+          percentage:
+            plan.maxDrivers === -1
+              ? 0
+              : ((subscription.usage?.drivers || 0) / plan.maxDrivers) * 100,
         },
       },
       status: subscription.status,
@@ -270,6 +306,6 @@ export class SubscriptionsService {
     });
 
     // Filtrer pour exclure les tenants supprimés (soft deleted)
-    return subscriptions.filter(sub => sub.tenant && !sub.tenant.deletedAt);
+    return subscriptions.filter((sub) => sub.tenant && !sub.tenant.deletedAt);
   }
 }

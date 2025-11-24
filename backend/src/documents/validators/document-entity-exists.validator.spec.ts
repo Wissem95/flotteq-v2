@@ -11,7 +11,9 @@ describe('DocumentEntityExistsConstraint', () => {
 
   beforeEach(async () => {
     mockRepository = { findOne: jest.fn() } as any;
-    dataSource = { getRepository: jest.fn().mockReturnValue(mockRepository) } as any;
+    dataSource = {
+      getRepository: jest.fn().mockReturnValue(mockRepository),
+    } as any;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -23,7 +25,10 @@ describe('DocumentEntityExistsConstraint', () => {
     constraint = module.get(DocumentEntityExistsConstraint);
   });
 
-  const createValidationArgs = (entityType: DocumentEntityType, entityId: string): ValidationArguments => ({
+  const createValidationArgs = (
+    entityType: DocumentEntityType,
+    entityId: string,
+  ): ValidationArguments => ({
     value: entityId,
     object: { entityType },
     constraints: [],
@@ -39,12 +44,17 @@ describe('DocumentEntityExistsConstraint', () => {
 
     expect(result).toBe(true);
     expect(dataSource.getRepository).toHaveBeenCalledWith('Vehicle');
-    expect(mockRepository.findOne).toHaveBeenCalledWith({ where: { id: 'valid-uuid' } });
+    expect(mockRepository.findOne).toHaveBeenCalledWith({
+      where: { id: 'valid-uuid' },
+    });
   });
 
   it('should return false when vehicle does not exist', async () => {
     mockRepository.findOne.mockResolvedValue(null);
-    const args = createValidationArgs(DocumentEntityType.VEHICLE, 'invalid-uuid');
+    const args = createValidationArgs(
+      DocumentEntityType.VEHICLE,
+      'invalid-uuid',
+    );
 
     const result = await constraint.validate('invalid-uuid', args);
 
@@ -63,7 +73,10 @@ describe('DocumentEntityExistsConstraint', () => {
 
   it('should return true when maintenance exists', async () => {
     mockRepository.findOne.mockResolvedValue({ id: 'maintenance-uuid' });
-    const args = createValidationArgs(DocumentEntityType.MAINTENANCE, 'maintenance-uuid');
+    const args = createValidationArgs(
+      DocumentEntityType.MAINTENANCE,
+      'maintenance-uuid',
+    );
 
     const result = await constraint.validate('maintenance-uuid', args);
 

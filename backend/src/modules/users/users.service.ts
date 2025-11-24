@@ -17,7 +17,6 @@ import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { randomBytes } from 'crypto';
 import { PaginatedResponse } from '../../common/dto/paginated-response.dto';
-import { IsNull } from 'typeorm';
 
 @Injectable()
 export class UsersService {
@@ -34,15 +33,20 @@ export class UsersService {
 
   async create(createUserDto: CreateUserDto, currentUser: User): Promise<User> {
     // Vérifier les permissions (utiliser vérification directe du rôle)
-    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(
+      currentUser.role,
+    );
     if (!canManage) {
-      throw new ForbiddenException('Vous n\'avez pas le droit de créer des utilisateurs');
+      throw new ForbiddenException(
+        "Vous n'avez pas le droit de créer des utilisateurs",
+      );
     }
 
     // Si c'est un tenant_admin, il ne peut créer que pour son tenant
-    const tenantId = currentUser.role === UserRole.SUPER_ADMIN && createUserDto.tenantId
-      ? createUserDto.tenantId
-      : currentUser.tenantId;
+    const tenantId =
+      currentUser.role === UserRole.SUPER_ADMIN && createUserDto.tenantId
+        ? createUserDto.tenantId
+        : currentUser.tenantId;
 
     // Vérifier la limite du plan pour les users (sauf super_admin)
     if (currentUser.role !== UserRole.SUPER_ADMIN) {
@@ -83,7 +87,10 @@ export class UsersService {
       try {
         await this.createDriverForUser(savedUser, currentUser);
       } catch (error) {
-        this.logger.error(`Failed to create driver for user ${savedUser.id}:`, error);
+        this.logger.error(
+          `Failed to create driver for user ${savedUser.id}:`,
+          error,
+        );
         // Ne pas bloquer la création de l'utilisateur si la création du driver échoue
       }
     }
@@ -114,7 +121,10 @@ export class UsersService {
   /**
    * Créer un driver automatiquement pour un user avec role=driver
    */
-  private async createDriverForUser(user: User, currentUser: User): Promise<Driver> {
+  private async createDriverForUser(
+    user: User,
+    currentUser: User,
+  ): Promise<Driver> {
     this.logger.log(`Creating driver for user ${user.email}`);
 
     // Vérifier si un driver existe déjà avec cet email
@@ -130,7 +140,9 @@ export class UsersService {
         existingDriver.lastName = user.lastName;
         existingDriver.phone = user.phone || existingDriver.phone;
         await this.driversRepository.save(existingDriver);
-        this.logger.log(`Linked existing driver ${existingDriver.id} to user ${user.id}`);
+        this.logger.log(
+          `Linked existing driver ${existingDriver.id} to user ${user.id}`,
+        );
         return existingDriver;
       }
       this.logger.warn(`Driver already exists for user ${user.email}`);
@@ -162,19 +174,27 @@ export class UsersService {
     // Incrémenter l'usage des drivers (sauf pour super_admin)
     if (currentUser.role !== UserRole.SUPER_ADMIN) {
       try {
-        await this.subscriptionsService.updateUsage(user.tenantId, 'drivers', 1);
+        await this.subscriptionsService.updateUsage(
+          user.tenantId,
+          'drivers',
+          1,
+        );
       } catch (error) {
         this.logger.error(`Failed to update drivers usage:`, error);
       }
     }
 
-    this.logger.log(`Driver created: ${savedDriver.id} for user ${user.id} with temp license ${tempLicenseNumber}`);
+    this.logger.log(
+      `Driver created: ${savedDriver.id} for user ${user.id} with temp license ${tempLicenseNumber}`,
+    );
     return savedDriver;
   }
 
   async findAll(tenantId: number, currentUser: User): Promise<User[]> {
     // Super admin voit tous les users
-    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(
+      currentUser.role,
+    );
 
     if (canViewAll) {
       return this.usersRepository.find({
@@ -199,7 +219,9 @@ export class UsersService {
     const skip = (page - 1) * limit;
 
     // Super admin voit tous les users
-    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(
+      currentUser.role,
+    );
 
     let whereConditions: any = {};
 
@@ -242,7 +264,9 @@ export class UsersService {
     }
 
     // Vérifier les permissions (utiliser vérification directe du rôle)
-    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(
+      currentUser.role,
+    );
     if (!canViewAll && user.tenantId !== currentUser.tenantId) {
       throw new ForbiddenException('Accès non autorisé');
     }
@@ -253,22 +277,44 @@ export class UsersService {
   async findByEmail(email: string, tenantId: number): Promise<User | null> {
     return this.usersRepository.findOne({
       where: { email, tenantId },
-      select: ['id', 'email', 'password', 'firstName', 'lastName', 'role', 'tenantId', 'isActive'],
+      select: [
+        'id',
+        'email',
+        'password',
+        'firstName',
+        'lastName',
+        'role',
+        'tenantId',
+        'isActive',
+      ],
     });
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto, currentUser: User): Promise<User> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+    currentUser: User,
+  ): Promise<User> {
     const user = await this.findOne(id, currentUser);
 
     // Vérifier les permissions de modification (utiliser vérification directe du rôle)
-    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(
+      currentUser.role,
+    );
     if (!canManage && user.id !== currentUser.id) {
-      throw new ForbiddenException('Vous ne pouvez modifier que votre propre profil');
+      throw new ForbiddenException(
+        'Vous ne pouvez modifier que votre propre profil',
+      );
     }
 
     // Un tenant_admin ne peut pas modifier un super_admin
-    if (currentUser.role === UserRole.TENANT_ADMIN && user.role === UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Vous ne pouvez pas modifier un super administrateur');
+    if (
+      currentUser.role === UserRole.TENANT_ADMIN &&
+      user.role === UserRole.SUPER_ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Vous ne pouvez pas modifier un super administrateur',
+      );
     }
 
     // Empêcher la modification du tenantId et du rôle pour certains users
@@ -287,19 +333,30 @@ export class UsersService {
     const user = await this.findOne(id, currentUser);
 
     // Vérifier les permissions (utiliser vérification directe du rôle)
-    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(
+      currentUser.role,
+    );
     if (!canManage) {
-      throw new ForbiddenException('Vous n\'avez pas le droit de supprimer des utilisateurs');
+      throw new ForbiddenException(
+        "Vous n'avez pas le droit de supprimer des utilisateurs",
+      );
     }
 
     // On ne peut pas supprimer son propre compte
     if (user.id === currentUser.id) {
-      throw new BadRequestException('Vous ne pouvez pas supprimer votre propre compte');
+      throw new BadRequestException(
+        'Vous ne pouvez pas supprimer votre propre compte',
+      );
     }
 
     // Un tenant_admin ne peut pas supprimer un super_admin
-    if (currentUser.role === UserRole.TENANT_ADMIN && user.role === UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Vous ne pouvez pas supprimer un super administrateur');
+    if (
+      currentUser.role === UserRole.TENANT_ADMIN &&
+      user.role === UserRole.SUPER_ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Vous ne pouvez pas supprimer un super administrateur',
+      );
     }
 
     await this.usersRepository.delete(id);
@@ -324,13 +381,13 @@ export class UsersService {
     const stats = {
       total: users.length,
       byRole: {} as Record<string, number>,
-      active: users.filter(u => u.isActive).length,
-      inactive: users.filter(u => !u.isActive).length,
+      active: users.filter((u) => u.isActive).length,
+      inactive: users.filter((u) => !u.isActive).length,
     };
 
     // Compter par rôle
     for (const role of Object.values(UserRole)) {
-      stats.byRole[role] = users.filter(u => u.role === role).length;
+      stats.byRole[role] = users.filter((u) => u.role === role).length;
     }
 
     return stats;
@@ -339,7 +396,9 @@ export class UsersService {
   async deactivate(id: string, currentUser: User): Promise<User> {
     // Prevent self-deactivation
     if (id === currentUser.id) {
-      throw new BadRequestException('Vous ne pouvez pas désactiver votre propre compte');
+      throw new BadRequestException(
+        'Vous ne pouvez pas désactiver votre propre compte',
+      );
     }
 
     const user = await this.usersRepository.findOne({
@@ -351,8 +410,13 @@ export class UsersService {
     }
 
     // A tenant_admin cannot deactivate a super_admin
-    if (currentUser.role === UserRole.TENANT_ADMIN && user.role === UserRole.SUPER_ADMIN) {
-      throw new ForbiddenException('Vous ne pouvez pas désactiver un super administrateur');
+    if (
+      currentUser.role === UserRole.TENANT_ADMIN &&
+      user.role === UserRole.SUPER_ADMIN
+    ) {
+      throw new ForbiddenException(
+        'Vous ne pouvez pas désactiver un super administrateur',
+      );
     }
 
     user.isActive = false;
@@ -369,7 +433,9 @@ export class UsersService {
     }
 
     // Verify tenant access
-    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(currentUser.role);
+    const canViewAll = [UserRole.SUPER_ADMIN, UserRole.SUPPORT].includes(
+      currentUser.role,
+    );
     if (!canViewAll && user.tenantId !== currentUser.tenantId) {
       throw new ForbiddenException('Accès non autorisé');
     }
@@ -385,9 +451,13 @@ export class UsersService {
     const { email, role } = inviteUserDto;
 
     // Verify permissions (utiliser vérification directe du rôle)
-    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(currentUser.role);
+    const canManage = [UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN].includes(
+      currentUser.role,
+    );
     if (!canManage) {
-      throw new ForbiddenException('Vous n\'avez pas le droit d\'inviter des utilisateurs');
+      throw new ForbiddenException(
+        "Vous n'avez pas le droit d'inviter des utilisateurs",
+      );
     }
 
     // Limit roles that tenant_admin can assign
@@ -406,7 +476,7 @@ export class UsersService {
     // Option A: Refuser si user déjà actif avec password
     if (existingUser && existingUser.isActive && existingUser.password) {
       throw new ConflictException(
-        'Cet utilisateur est déjà actif. Utilisez la fonction "Réinitialiser le mot de passe" si nécessaire.'
+        'Cet utilisateur est déjà actif. Utilisez la fonction "Réinitialiser le mot de passe" si nécessaire.',
       );
     }
 
@@ -442,8 +512,8 @@ export class UsersService {
     // Build invitation link - différent selon le rôle (client vs internal)
     const isInternalRole = ['super_admin', 'support'].includes(role);
     const frontendUrl = isInternalRole
-      ? (process.env.FRONTEND_INTERNAL_URL || 'http://localhost:5175')
-      : (process.env.FRONTEND_CLIENT_URL || 'http://localhost:5174');
+      ? process.env.FRONTEND_INTERNAL_URL || 'http://localhost:5175'
+      : process.env.FRONTEND_CLIENT_URL || 'http://localhost:5174';
 
     const invitationLink = `${frontendUrl}/accept-invitation?token=${token}`;
 

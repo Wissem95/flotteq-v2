@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddPaymentStatusToBookings1760920000000 implements MigrationInterface {
+export class AddPaymentStatusToBookings1760920000000
+  implements MigrationInterface
+{
   name = 'AddPaymentStatusToBookings1760920000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -26,7 +28,9 @@ export class AddPaymentStatusToBookings1760920000000 implements MigrationInterfa
     await queryRunner.query(`DROP INDEX "idx_bookings_payment_status"`);
 
     // Drop column
-    await queryRunner.query(`ALTER TABLE "bookings" DROP COLUMN "payment_status"`);
+    await queryRunner.query(
+      `ALTER TABLE "bookings" DROP COLUMN "payment_status"`,
+    );
 
     // Drop enum
     await queryRunner.query(`DROP TYPE "payment_status_enum"`);

@@ -9,7 +9,10 @@ import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { AuditService } from '../../modules/audit/audit.service';
-import { AUDITABLE_KEY, AuditableOptions } from '../decorators/auditable.decorator';
+import {
+  AUDITABLE_KEY,
+  AuditableOptions,
+} from '../decorators/auditable.decorator';
 import { AuditAction } from '../../entities/audit-log.entity';
 
 @Injectable()
@@ -60,8 +63,14 @@ export class AuditInterceptor implements NestInterceptor {
             action,
             entityType,
             entityId,
-            oldValue: action === AuditAction.UPDATE || action === AuditAction.DELETE ? body : undefined,
-            newValue: action === AuditAction.CREATE || action === AuditAction.UPDATE ? data : undefined,
+            oldValue:
+              action === AuditAction.UPDATE || action === AuditAction.DELETE
+                ? body
+                : undefined,
+            newValue:
+              action === AuditAction.CREATE || action === AuditAction.UPDATE
+                ? data
+                : undefined,
             metadata: {
               ip,
               userAgent: headers['user-agent'],

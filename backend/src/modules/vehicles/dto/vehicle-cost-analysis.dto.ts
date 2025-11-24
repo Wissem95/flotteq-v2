@@ -15,7 +15,7 @@ export class VehicleCostAnalysisDto {
   @ApiProperty({ format: 'uuid', description: 'ID du véhicule' })
   vehicleId: string;
 
-  @ApiProperty({ description: 'Prix d\'achat du véhicule' })
+  @ApiProperty({ description: "Prix d'achat du véhicule" })
   purchasePrice: number;
 
   @ApiProperty({ description: 'Coût total des maintenances' })
@@ -27,7 +27,9 @@ export class VehicleCostAnalysisDto {
   @ApiProperty({ description: 'Coût moyen par maintenance' })
   averageMaintenanceCost: number;
 
-  @ApiProperty({ description: 'Coût total de possession (achat + maintenances)' })
+  @ApiProperty({
+    description: 'Coût total de possession (achat + maintenances)',
+  })
   totalOwnershipCost: number;
 
   @ApiProperty({

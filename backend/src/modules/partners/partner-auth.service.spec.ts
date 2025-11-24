@@ -5,7 +5,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { UnauthorizedException } from '@nestjs/common';
 import { PartnerAuthService } from './partner-auth.service';
-import { PartnerUser, PartnerUserRole } from '../../entities/partner-user.entity';
+import {
+  PartnerUser,
+  PartnerUserRole,
+} from '../../entities/partner-user.entity';
 import { Partner, PartnerStatus } from '../../entities/partner.entity';
 import { PartnerLoginDto } from './dto/partner-login.dto';
 
@@ -88,7 +91,9 @@ describe('PartnerAuthService', () => {
     };
 
     it('should login successfully with valid credentials', async () => {
-      partnerUserRepository.findOne.mockResolvedValue(mockPartnerUser as PartnerUser);
+      partnerUserRepository.findOne.mockResolvedValue(
+        mockPartnerUser as PartnerUser,
+      );
       (mockPartnerUser.validatePassword as jest.Mock).mockResolvedValue(true);
       partnerRepository.findOne.mockResolvedValue(mockPartner as Partner);
       jwtService.sign.mockReturnValue('jwt-token');
@@ -107,14 +112,20 @@ describe('PartnerAuthService', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       partnerUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
-      partnerUserRepository.findOne.mockResolvedValue(mockPartnerUser as PartnerUser);
+      partnerUserRepository.findOne.mockResolvedValue(
+        mockPartnerUser as PartnerUser,
+      );
       (mockPartnerUser.validatePassword as jest.Mock).mockResolvedValue(false);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if user is inactive', async () => {
@@ -124,19 +135,27 @@ describe('PartnerAuthService', () => {
       } as PartnerUser);
       (mockPartnerUser.validatePassword as jest.Mock).mockResolvedValue(true);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if partner not found', async () => {
-      partnerUserRepository.findOne.mockResolvedValue(mockPartnerUser as PartnerUser);
+      partnerUserRepository.findOne.mockResolvedValue(
+        mockPartnerUser as PartnerUser,
+      );
       (mockPartnerUser.validatePassword as jest.Mock).mockResolvedValue(true);
       partnerRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if partner not approved', async () => {
-      partnerUserRepository.findOne.mockResolvedValue(mockPartnerUser as PartnerUser);
+      partnerUserRepository.findOne.mockResolvedValue(
+        mockPartnerUser as PartnerUser,
+      );
       (mockPartnerUser.validatePassword as jest.Mock).mockResolvedValue(true);
       partnerRepository.findOne.mockResolvedValue({
         ...mockPartner,
@@ -213,7 +232,9 @@ describe('PartnerAuthService', () => {
     it('should throw UnauthorizedException if user not found', async () => {
       partnerUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.getProfile('user-123')).rejects.toThrow(UnauthorizedException);
+      await expect(service.getProfile('user-123')).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 });

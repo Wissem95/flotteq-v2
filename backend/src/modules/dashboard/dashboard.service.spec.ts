@@ -4,7 +4,11 @@ import { Repository } from 'typeorm';
 import { DashboardService } from './dashboard.service';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../../entities/driver.entity';
-import { Maintenance, MaintenanceStatus, MaintenanceType } from '../maintenance/entities/maintenance.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+  MaintenanceType,
+} from '../maintenance/entities/maintenance.entity';
 import { Tenant } from '../../entities/tenant.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
@@ -79,9 +83,15 @@ describe('DashboardService', () => {
     }).compile();
 
     service = module.get<DashboardService>(DashboardService);
-    vehicleRepository = module.get<Repository<Vehicle>>(getRepositoryToken(Vehicle));
-    driverRepository = module.get<Repository<Driver>>(getRepositoryToken(Driver));
-    maintenanceRepository = module.get<Repository<Maintenance>>(getRepositoryToken(Maintenance));
+    vehicleRepository = module.get<Repository<Vehicle>>(
+      getRepositoryToken(Vehicle),
+    );
+    driverRepository = module.get<Repository<Driver>>(
+      getRepositoryToken(Driver),
+    );
+    maintenanceRepository = module.get<Repository<Maintenance>>(
+      getRepositoryToken(Maintenance),
+    );
   });
 
   afterEach(() => {
@@ -209,7 +219,9 @@ describe('DashboardService', () => {
         getMany: jest.fn().mockResolvedValue([]),
       };
 
-      mockMaintenanceRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockMaintenanceRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       const result = await service.getUpcomingAlerts(tenantId);
 
@@ -240,7 +252,9 @@ describe('DashboardService', () => {
         ]),
       };
 
-      mockMaintenanceRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockMaintenanceRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       const result = await service.getUpcomingAlerts(tenantId);
 

@@ -17,7 +17,10 @@ import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { BookingFilterDto } from './dto/booking-filter.dto';
-import { BookingResponseDto, BookingListResponseDto } from './dto/booking-response.dto';
+import {
+  BookingResponseDto,
+  BookingListResponseDto,
+} from './dto/booking-response.dto';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../../entities/audit-log.entity';
@@ -43,7 +46,11 @@ export class BookingsService {
     private commissionsService: CommissionsService,
   ) {}
 
-  async create(createBookingDto: CreateBookingDto, tenantId: number, userId: string): Promise<Booking> {
+  async create(
+    createBookingDto: CreateBookingDto,
+    tenantId: number,
+    userId: string,
+  ): Promise<Booking> {
     // Validate partner is approved
     const partner = await this.partnerRepository.findOne({
       where: { id: createBookingDto.partnerId },
@@ -54,12 +61,17 @@ export class BookingsService {
     }
 
     if (!partner.canOfferServices()) {
-      throw new BadRequestException('Partner is not approved or has been suspended');
+      throw new BadRequestException(
+        'Partner is not approved or has been suspended',
+      );
     }
 
     // Validate service exists and is active
     const service = await this.partnerServiceRepository.findOne({
-      where: { id: createBookingDto.serviceId, partnerId: createBookingDto.partnerId },
+      where: {
+        id: createBookingDto.serviceId,
+        partnerId: createBookingDto.partnerId,
+      },
     });
 
     if (!service) {
@@ -76,7 +88,9 @@ export class BookingsService {
     });
 
     if (!vehicle) {
-      throw new NotFoundException('Vehicle not found or does not belong to your organization');
+      throw new NotFoundException(
+        'Vehicle not found or does not belong to your organization',
+      );
     }
 
     // Validate scheduled date is in the future
@@ -128,13 +142,27 @@ export class BookingsService {
       },
     );
 
-    this.logger.log(`Booking ${savedBooking.id} created for partner ${partner.companyName}`);
+    this.logger.log(
+      `Booking ${savedBooking.id} created for partner ${partner.companyName}`,
+    );
 
     return savedBooking;
   }
 
-  async findAll(tenantId: number, filters: BookingFilterDto): Promise<BookingListResponseDto> {
-    const { partnerId, vehicleId, driverId, status, startDate, endDate, page = 1, limit = 20 } = filters;
+  async findAll(
+    tenantId: number,
+    filters: BookingFilterDto,
+  ): Promise<BookingListResponseDto> {
+    const {
+      partnerId,
+      vehicleId,
+      driverId,
+      status,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 20,
+    } = filters;
 
     const query = this.bookingRepository
       .createQueryBuilder('booking')
@@ -198,7 +226,10 @@ export class BookingsService {
   /**
    * Find booking entity (for internal use)
    */
-  private async findBookingEntity(id: string, tenantId: number): Promise<Booking> {
+  private async findBookingEntity(
+    id: string,
+    tenantId: number,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id, tenantId },
       relations: ['partner', 'service', 'vehicle', 'driver', 'tenant'],
@@ -219,7 +250,10 @@ export class BookingsService {
     return this.toResponseDto(booking);
   }
 
-  async findByPartner(partnerId: string, filters: BookingFilterDto): Promise<BookingListResponseDto> {
+  async findByPartner(
+    partnerId: string,
+    filters: BookingFilterDto,
+  ): Promise<BookingListResponseDto> {
     const { status, startDate, endDate, page = 1, limit = 20 } = filters;
 
     const query = this.bookingRepository
@@ -245,7 +279,7 @@ export class BookingsService {
     const totalPages = Math.ceil(total / limit);
 
     query
-      .orderBy('booking.scheduledDate', 'DESC')  // Property name (camelCase)
+      .orderBy('booking.scheduledDate', 'DESC') // Property name (camelCase)
       .addOrderBy('booking.scheduledTime', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
@@ -283,7 +317,11 @@ export class BookingsService {
     });
   }
 
-  async confirm(id: string, partnerId: string, userId: string): Promise<Booking> {
+  async confirm(
+    id: string,
+    partnerId: string,
+    userId: string,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id, partnerId },
       relations: ['partner', 'service', 'vehicle', 'tenant'],
@@ -294,7 +332,9 @@ export class BookingsService {
     }
 
     if (!booking.canBeConfirmed()) {
-      throw new BadRequestException(`Booking cannot be confirmed in status: ${booking.status}`);
+      throw new BadRequestException(
+        `Booking cannot be confirmed in status: ${booking.status}`,
+      );
     }
 
     booking.status = BookingStatus.CONFIRMED;
@@ -331,7 +371,12 @@ export class BookingsService {
     return updatedBooking;
   }
 
-  async reject(id: string, partnerId: string, reason: string, userId: string): Promise<Booking> {
+  async reject(
+    id: string,
+    partnerId: string,
+    reason: string,
+    userId: string,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id, partnerId },
       relations: ['partner', 'service', 'vehicle', 'tenant'],
@@ -342,7 +387,9 @@ export class BookingsService {
     }
 
     if (!booking.canBeRejected()) {
-      throw new BadRequestException(`Booking cannot be rejected in status: ${booking.status}`);
+      throw new BadRequestException(
+        `Booking cannot be rejected in status: ${booking.status}`,
+      );
     }
 
     booking.status = BookingStatus.REJECTED;
@@ -387,7 +434,9 @@ export class BookingsService {
     const booking = await this.findBookingEntity(id, tenantId);
 
     if (!booking.canBeRescheduled()) {
-      throw new BadRequestException(`Booking cannot be rescheduled in status: ${booking.status}`);
+      throw new BadRequestException(
+        `Booking cannot be rescheduled in status: ${booking.status}`,
+      );
     }
 
     // Validate new scheduled date is in the future
@@ -425,12 +474,18 @@ export class BookingsService {
       },
     });
 
-    this.logger.log(`Booking ${id} rescheduled to ${rescheduleDto.scheduledDate} ${rescheduleDto.scheduledTime}`);
+    this.logger.log(
+      `Booking ${id} rescheduled to ${rescheduleDto.scheduledDate} ${rescheduleDto.scheduledTime}`,
+    );
 
     return updatedBooking;
   }
 
-  async startWork(id: string, partnerId: string, userId: string): Promise<Booking> {
+  async startWork(
+    id: string,
+    partnerId: string,
+    userId: string,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id, partnerId },
     });
@@ -440,7 +495,9 @@ export class BookingsService {
     }
 
     if (!booking.canBeStarted()) {
-      throw new BadRequestException(`Booking cannot be started in status: ${booking.status}`);
+      throw new BadRequestException(
+        `Booking cannot be started in status: ${booking.status}`,
+      );
     }
 
     booking.status = BookingStatus.IN_PROGRESS;
@@ -463,7 +520,12 @@ export class BookingsService {
     return updatedBooking;
   }
 
-  async complete(id: string, partnerId: string, partnerNotes: string, userId: string): Promise<Booking> {
+  async complete(
+    id: string,
+    partnerId: string,
+    partnerNotes: string,
+    userId: string,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id, partnerId },
       relations: ['partner', 'service', 'tenant'],
@@ -474,11 +536,14 @@ export class BookingsService {
     }
 
     if (!booking.canBeCompleted()) {
-      throw new BadRequestException(`Booking cannot be completed in status: ${booking.status}`);
+      throw new BadRequestException(
+        `Booking cannot be completed in status: ${booking.status}`,
+      );
     }
 
     // Calculate commission
-    const commissionAmount = (booking.price * booking.partner.commissionRate) / 100;
+    const commissionAmount =
+      (booking.price * booking.partner.commissionRate) / 100;
 
     booking.status = BookingStatus.COMPLETED;
     booking.completedAt = new Date();
@@ -514,7 +579,9 @@ export class BookingsService {
       },
     );
 
-    this.logger.log(`Booking ${id} completed by partner ${partnerId}. Commission: ${commissionAmount}€`);
+    this.logger.log(
+      `Booking ${id} completed by partner ${partnerId}. Commission: ${commissionAmount}€`,
+    );
 
     // Create commission record
     try {
@@ -529,11 +596,18 @@ export class BookingsService {
     return updatedBooking;
   }
 
-  async cancel(id: string, reason: string, tenantId: number, userId: string): Promise<Booking> {
+  async cancel(
+    id: string,
+    reason: string,
+    tenantId: number,
+    userId: string,
+  ): Promise<Booking> {
     const booking = await this.findBookingEntity(id, tenantId);
 
     if (!booking.canBeCancelled()) {
-      throw new BadRequestException(`Booking cannot be cancelled in status: ${booking.status}`);
+      throw new BadRequestException(
+        `Booking cannot be cancelled in status: ${booking.status}`,
+      );
     }
 
     booking.status = BookingStatus.CANCELLED;
@@ -568,7 +642,11 @@ export class BookingsService {
     return updatedBooking;
   }
 
-  async update(id: string, updateDto: UpdateBookingDto, tenantId: number): Promise<Booking> {
+  async update(
+    id: string,
+    updateDto: UpdateBookingDto,
+    tenantId: number,
+  ): Promise<Booking> {
     const booking = await this.findBookingEntity(id, tenantId);
 
     Object.assign(booking, updateDto);
@@ -608,7 +686,9 @@ export class BookingsService {
         relations: ['partner', 'service', 'vehicle', 'tenant'],
       });
 
-      this.logger.log(`Found ${bookings.length} bookings scheduled for tomorrow`);
+      this.logger.log(
+        `Found ${bookings.length} bookings scheduled for tomorrow`,
+      );
 
       // Send reminder email for each booking
       for (const booking of bookings) {
@@ -628,12 +708,15 @@ export class BookingsService {
               }),
               scheduledTime: booking.scheduledTime,
               vehicleRegistration: booking.vehicle?.registration || null,
-              partnerAddress: booking.partner.address || 'Adresse non renseignée',
+              partnerAddress:
+                booking.partner.address || 'Adresse non renseignée',
               partnerPhone: booking.partner.phone || null,
             },
           );
 
-          this.logger.log(`✅ Reminder sent for booking ${booking.id} to ${booking.tenant.email}`);
+          this.logger.log(
+            `✅ Reminder sent for booking ${booking.id} to ${booking.tenant.email}`,
+          );
         } catch (error) {
           this.logger.error(
             `❌ Failed to send reminder for booking ${booking.id}: ${error.message}`,
@@ -643,9 +726,14 @@ export class BookingsService {
         }
       }
 
-      this.logger.log(`✅ Booking reminder job completed. ${bookings.length} reminders sent.`);
+      this.logger.log(
+        `✅ Booking reminder job completed. ${bookings.length} reminders sent.`,
+      );
     } catch (error) {
-      this.logger.error(`❌ Error in booking reminder job: ${error.message}`, error.stack);
+      this.logger.error(
+        `❌ Error in booking reminder job: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -667,7 +755,9 @@ export class BookingsService {
       vehicleBrand: booking.vehicle?.brand || 'Unknown',
       vehicleModel: booking.vehicle?.model || 'Unknown',
       driverId: booking.driverId,
-      driverName: booking.driver ? `${booking.driver.firstName} ${booking.driver.lastName}` : null,
+      driverName: booking.driver
+        ? `${booking.driver.firstName} ${booking.driver.lastName}`
+        : null,
       serviceId: booking.serviceId,
       serviceName: booking.service?.name || 'Unknown',
       serviceDescription: booking.service?.description || null,

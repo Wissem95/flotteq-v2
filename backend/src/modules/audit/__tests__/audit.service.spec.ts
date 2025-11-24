@@ -58,7 +58,11 @@ describe('AuditService', () => {
         metadata: { ip: '127.0.0.1' },
       };
 
-      const expectedAuditLog = { id: 1, ...createDto, createdAt: expect.any(Date) };
+      const expectedAuditLog = {
+        id: 1,
+        ...createDto,
+        createdAt: expect.any(Date),
+      };
 
       mockRepository.create.mockReturnValue(expectedAuditLog);
       mockRepository.save.mockResolvedValue(expectedAuditLog);
@@ -108,55 +112,86 @@ describe('AuditService', () => {
         page: 1,
         totalPages: 1,
       });
-      expect(mockQueryBuilder.where).toHaveBeenCalledWith('audit.tenant_id = :tenantId', { tenantId });
+      expect(mockQueryBuilder.where).toHaveBeenCalledWith(
+        'audit.tenant_id = :tenantId',
+        { tenantId },
+      );
     });
 
     it('should filter by userId', async () => {
       const tenantId = 1;
-      const filters: AuditLogFilterDto = { userId: 'user-123', page: 1, limit: 50 };
+      const filters: AuditLogFilterDto = {
+        userId: 'user-123',
+        page: 1,
+        limit: 50,
+      };
 
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       await service.findAll(tenantId, filters);
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('audit.user_id = :userId', { userId: 'user-123' });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'audit.user_id = :userId',
+        { userId: 'user-123' },
+      );
     });
 
     it('should filter by entityType', async () => {
       const tenantId = 1;
-      const filters: AuditLogFilterDto = { entityType: 'Vehicle', page: 1, limit: 50 };
+      const filters: AuditLogFilterDto = {
+        entityType: 'Vehicle',
+        page: 1,
+        limit: 50,
+      };
 
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       await service.findAll(tenantId, filters);
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('audit.entity_type = :entityType', {
-        entityType: 'Vehicle',
-      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'audit.entity_type = :entityType',
+        {
+          entityType: 'Vehicle',
+        },
+      );
     });
 
     it('should filter by entityId', async () => {
       const tenantId = 1;
-      const filters: AuditLogFilterDto = { entityId: 'vehicle-123', page: 1, limit: 50 };
+      const filters: AuditLogFilterDto = {
+        entityId: 'vehicle-123',
+        page: 1,
+        limit: 50,
+      };
 
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       await service.findAll(tenantId, filters);
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('audit.entity_id = :entityId', {
-        entityId: 'vehicle-123',
-      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'audit.entity_id = :entityId',
+        {
+          entityId: 'vehicle-123',
+        },
+      );
     });
 
     it('should filter by action', async () => {
       const tenantId = 1;
-      const filters: AuditLogFilterDto = { action: AuditAction.DELETE, page: 1, limit: 50 };
+      const filters: AuditLogFilterDto = {
+        action: AuditAction.DELETE,
+        page: 1,
+        limit: 50,
+      };
 
       mockQueryBuilder.getManyAndCount.mockResolvedValue([[], 0]);
 
       await service.findAll(tenantId, filters);
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('audit.action = :action', { action: AuditAction.DELETE });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'audit.action = :action',
+        { action: AuditAction.DELETE },
+      );
     });
 
     it('should filter by date range', async () => {
@@ -172,17 +207,24 @@ describe('AuditService', () => {
 
       await service.findAll(tenantId, filters);
 
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('audit.created_at BETWEEN :startDate AND :endDate', {
-        startDate: '2025-01-01',
-        endDate: '2025-12-31',
-      });
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'audit.created_at BETWEEN :startDate AND :endDate',
+        {
+          startDate: '2025-01-01',
+          endDate: '2025-12-31',
+        },
+      );
     });
 
     it('should calculate total pages correctly', async () => {
       const tenantId = 1;
       const filters: AuditLogFilterDto = { page: 1, limit: 10 };
 
-      const mockData = Array(25).fill({ id: 1, tenantId, action: AuditAction.CREATE });
+      const mockData = Array(25).fill({
+        id: 1,
+        tenantId,
+        action: AuditAction.CREATE,
+      });
 
       mockQueryBuilder.getManyAndCount.mockResolvedValue([mockData, 25]);
 

@@ -65,7 +65,8 @@ export class CommissionsController {
   ): Promise<CommissionListResponseDto> {
     // If user is partner, only show their commissions
     // Check type='partner' instead of role because partner JWT has type='partner' and role='owner'
-    const partnerId = req.user.type === 'partner' ? req.user.partnerId : undefined;
+    const partnerId =
+      req.user.type === 'partner' ? req.user.partnerId : undefined;
 
     return this.commissionsService.findAll(filters, partnerId);
   }
@@ -75,7 +76,10 @@ export class CommissionsController {
     summary: 'Get commission statistics (Admin only)',
     description: 'Returns global commission statistics for admin dashboard',
   })
-  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
   async getStats(
     @Query('startDate') startDate?: string,
@@ -83,7 +87,9 @@ export class CommissionsController {
     @Request() req?: RequestWithUser,
   ): Promise<any> {
     if (req && req.user.role !== 'super_admin') {
-      throw new ForbiddenException('Only administrators can access commission statistics');
+      throw new ForbiddenException(
+        'Only administrators can access commission statistics',
+      );
     }
 
     const stats = await this.commissionsService.getStats(startDate, endDate);
@@ -99,11 +105,16 @@ export class CommissionsController {
     summary: 'Get pending commissions (Admin only)',
     description: 'Returns all pending commissions across all partners',
   })
-  @ApiResponse({ status: 200, description: 'Pending commissions retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Pending commissions retrieved successfully',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
   async getPendingCommissions(@Request() req: RequestWithUser): Promise<any> {
     if (req.user.role !== 'super_admin') {
-      throw new ForbiddenException('Only administrators can access all pending commissions');
+      throw new ForbiddenException(
+        'Only administrators can access all pending commissions',
+      );
     }
 
     const commissions = await this.commissionsService.getPendingCommissions();
@@ -118,7 +129,8 @@ export class CommissionsController {
   @Get('totals/:partnerId')
   @ApiOperation({
     summary: 'Get commission totals by partner',
-    description: 'Returns total amounts grouped by status. Partners can only see their own totals.',
+    description:
+      'Returns total amounts grouped by status. Partners can only see their own totals.',
   })
   @ApiParam({ name: 'partnerId', format: 'uuid' })
   @ApiQuery({ name: 'startDate', required: false, example: '2025-10-01' })
@@ -128,7 +140,10 @@ export class CommissionsController {
     description: 'Commission totals retrieved successfully',
     type: [CommissionTotalDto],
   })
-  @ApiResponse({ status: 403, description: 'Forbidden - Cannot access other partner totals' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Cannot access other partner totals',
+  })
   async getTotalByPartner(
     @Param('partnerId') partnerId: string,
     @Query('startDate') startDate?: string,
@@ -136,11 +151,21 @@ export class CommissionsController {
     @Request() req?: RequestWithUser,
   ): Promise<any> {
     // Check if partner is trying to access another partner's data
-    if (req && req.user.role === 'partner' && req.user.partnerId !== partnerId) {
-      throw new ForbiddenException('You can only access your own commission totals');
+    if (
+      req &&
+      req.user.role === 'partner' &&
+      req.user.partnerId !== partnerId
+    ) {
+      throw new ForbiddenException(
+        'You can only access your own commission totals',
+      );
     }
 
-    const totals = await this.commissionsService.getTotalByPartner(partnerId, startDate, endDate);
+    const totals = await this.commissionsService.getTotalByPartner(
+      partnerId,
+      startDate,
+      endDate,
+    );
 
     return {
       message: 'Commission totals retrieved successfully',
@@ -156,7 +181,8 @@ export class CommissionsController {
   @Get('export')
   @ApiOperation({
     summary: 'Export commissions to Excel (Admin only)',
-    description: 'Exports filtered commissions to Excel file for accounting purposes',
+    description:
+      'Exports filtered commissions to Excel file for accounting purposes',
   })
   @ApiResponse({
     status: 200,
@@ -174,14 +200,19 @@ export class CommissionsController {
     @Response() res: ExpressResponse,
   ): Promise<void> {
     if (req.user.role !== 'super_admin') {
-      throw new ForbiddenException('Only administrators can export commissions');
+      throw new ForbiddenException(
+        'Only administrators can export commissions',
+      );
     }
 
     const buffer = await this.commissionsService.exportToExcel(filters);
 
     const filename = `commissions_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    );
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Content-Length', buffer.length);
 
@@ -201,9 +232,13 @@ export class CommissionsController {
   })
   @ApiResponse({ status: 404, description: 'Commission not found' })
   @ApiResponse({ status: 403, description: 'Forbidden - Not your commission' })
-  async findOne(@Param('id') id: string, @Request() req: RequestWithUser): Promise<any> {
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     // Check type='partner' instead of role because partner JWT has type='partner' and role='owner'
-    const partnerId = req.user.type === 'partner' ? req.user.partnerId : undefined;
+    const partnerId =
+      req.user.type === 'partner' ? req.user.partnerId : undefined;
 
     const commission = await this.commissionsService.findOne(id, partnerId);
 
@@ -220,8 +255,14 @@ export class CommissionsController {
     description: 'Updates commission status to PAID with payment reference',
   })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiResponse({ status: 200, description: 'Commission marked as paid successfully' })
-  @ApiResponse({ status: 400, description: 'Commission cannot be marked as paid' })
+  @ApiResponse({
+    status: 200,
+    description: 'Commission marked as paid successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Commission cannot be marked as paid',
+  })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
   @ApiResponse({ status: 404, description: 'Commission not found' })
   async markAsPaid(
@@ -230,10 +271,16 @@ export class CommissionsController {
     @Request() req: RequestWithUser,
   ): Promise<any> {
     if (req.user.role !== 'super_admin') {
-      throw new ForbiddenException('Only administrators can mark commissions as paid');
+      throw new ForbiddenException(
+        'Only administrators can mark commissions as paid',
+      );
     }
 
-    const commission = await this.commissionsService.markAsPaid(id, markPaidDto, req.user.userId);
+    const commission = await this.commissionsService.markAsPaid(
+      id,
+      markPaidDto,
+      req.user.userId,
+    );
 
     return {
       message: 'Commission marked as paid successfully',

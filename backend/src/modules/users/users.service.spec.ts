@@ -75,7 +75,8 @@ describe('UsersService', () => {
 
       mockRepository.findOne
         .mockResolvedValueOnce(null) // First call: check if email exists
-        .mockResolvedValueOnce({ // Second call: get user with tenant for email
+        .mockResolvedValueOnce({
+          // Second call: get user with tenant for email
           ...savedUser,
           tenant: { id: 2, name: 'Test Tenant' },
         });
@@ -84,12 +85,19 @@ describe('UsersService', () => {
 
       const result = await service.create(createDto, mockUser as any);
 
-      expect(mockSubscriptionsService.enforceLimit).toHaveBeenCalledWith(2, 'users');
-      expect(mockSubscriptionsService.updateUsage).toHaveBeenCalledWith(2, 'users', 1);
+      expect(mockSubscriptionsService.enforceLimit).toHaveBeenCalledWith(
+        2,
+        'users',
+      );
+      expect(mockSubscriptionsService.updateUsage).toHaveBeenCalledWith(
+        2,
+        'users',
+        1,
+      );
       expect(mockEmailQueueService.queueWelcomeEmail).toHaveBeenCalledWith(
         'new@example.com',
         'New',
-        'Test Tenant'
+        'Test Tenant',
       );
       expect(result.id).toBe('new-id');
     });
@@ -102,7 +110,7 @@ describe('UsersService', () => {
       };
 
       await expect(
-        service.create({} as any, viewerUser as any)
+        service.create({} as any, viewerUser as any),
       ).rejects.toThrow(ForbiddenException);
     });
 
@@ -110,7 +118,7 @@ describe('UsersService', () => {
       mockRepository.findOne.mockResolvedValue(mockUser);
 
       await expect(
-        service.create({ email: 'test@example.com' } as any, mockUser as any)
+        service.create({ email: 'test@example.com' } as any, mockUser as any),
       ).rejects.toThrow(ConflictException);
     });
   });
@@ -127,9 +135,9 @@ describe('UsersService', () => {
 
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(
-        service.create(createDto, mockUser as any)
-      ).rejects.toThrow(ForbiddenException);
+      await expect(service.create(createDto, mockUser as any)).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should allow super_admin to assign any role', async () => {

@@ -1,4 +1,10 @@
-import { IsOptional, IsString, IsNumber, IsBoolean, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateServiceDto {
@@ -7,7 +13,9 @@ export class UpdateServiceDto {
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional({ example: 'Vidange moteur + filtre à huile + filtre à air' })
+  @ApiPropertyOptional({
+    example: 'Vidange moteur + filtre à huile + filtre à air',
+  })
   @IsOptional()
   @IsString()
   description?: string;

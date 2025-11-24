@@ -29,7 +29,9 @@ export class SubscriptionGuard implements CanActivate {
     const canAccess = await this.tenantsService.canAccess(user.tenantId);
 
     if (!canAccess) {
-      this.logger.warn(`Access denied for tenant ${user.tenantId} - subscription expired or inactive`);
+      this.logger.warn(
+        `Access denied for tenant ${user.tenantId} - subscription expired or inactive`,
+      );
       throw new ForbiddenException(
         'Your subscription has expired. Please update your payment method.',
       );

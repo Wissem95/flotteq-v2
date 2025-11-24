@@ -10,7 +10,16 @@ import { Subscription } from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Vehicle, Driver, Maintenance, Tenant, Subscription, User])],
+  imports: [
+    TypeOrmModule.forFeature([
+      Vehicle,
+      Driver,
+      Maintenance,
+      Tenant,
+      Subscription,
+      User,
+    ]),
+  ],
   controllers: [DashboardController],
   providers: [DashboardService],
   exports: [DashboardService],

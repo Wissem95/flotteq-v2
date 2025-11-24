@@ -18,7 +18,11 @@ export class QueryVehicleDto {
   @Min(1)
   limit?: number = 10;
 
-  @ApiProperty({ description: 'Filter by status', enum: VehicleStatus, required: false })
+  @ApiProperty({
+    description: 'Filter by status',
+    enum: VehicleStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(VehicleStatus)
   status?: VehicleStatus;

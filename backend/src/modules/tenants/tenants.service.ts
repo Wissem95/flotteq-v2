@@ -9,11 +9,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
 import { User } from '../../entities/user.entity';
-import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
+import {
+  Subscription,
+  SubscriptionStatus,
+} from '../../entities/subscription.entity';
 import { Document } from '../../entities/document.entity';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
-import { UpdateStorageQuotaDto, StorageUsageResponseDto } from './dto/update-storage-quota.dto';
+import {
+  UpdateStorageQuotaDto,
+  StorageUsageResponseDto,
+} from './dto/update-storage-quota.dto';
 import { StripeService } from '../../stripe/stripe.service';
 import { ConfigService } from '@nestjs/config';
 
@@ -41,10 +47,7 @@ export class TenantsService {
 
     // Vérifier l'unicité de l'email et du nom
     const existing = await this.tenantsRepository.findOne({
-      where: [
-        { email: createTenantDto.email },
-        { name: createTenantDto.name },
-      ],
+      where: [{ email: createTenantDto.email }, { name: createTenantDto.name }],
     });
 
     if (existing) {
@@ -84,12 +87,19 @@ export class TenantsService {
 
         savedTenant.stripeSubscriptionId = subscription.id;
         await this.tenantsRepository.save(savedTenant);
-        this.logger.log(`Stripe subscription created for tenant #${savedTenant.id}`);
+        this.logger.log(
+          `Stripe subscription created for tenant #${savedTenant.id}`,
+        );
       } else {
-        this.logger.warn('STRIPE_PRICE_ID not configured, skipping subscription creation');
+        this.logger.warn(
+          'STRIPE_PRICE_ID not configured, skipping subscription creation',
+        );
       }
     } catch (error) {
-      this.logger.error(`Failed to create Stripe resources for tenant #${savedTenant.id}`, error);
+      this.logger.error(
+        `Failed to create Stripe resources for tenant #${savedTenant.id}`,
+        error,
+      );
       // Don't fail tenant creation if Stripe fails, but log the error
     }
 
@@ -168,7 +178,9 @@ export class TenantsService {
     });
 
     if (!user || !user.tenantId) {
-      throw new NotFoundException('User not found or not associated with a tenant');
+      throw new NotFoundException(
+        'User not found or not associated with a tenant',
+      );
     }
 
     const tenant = await this.tenantsRepository.findOne({
@@ -280,7 +292,9 @@ export class TenantsService {
       // Prolonger la période
       const now = new Date();
       canceledSubscription.currentPeriodStart = now;
-      canceledSubscription.currentPeriodEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // +30 jours
+      canceledSubscription.currentPeriodEnd = new Date(
+        now.getTime() + 30 * 24 * 60 * 60 * 1000,
+      ); // +30 jours
       await this.subscriptionRepository.save(canceledSubscription);
       this.logger.log(`Subscription du tenant #${id} réactivée`);
     }
@@ -333,7 +347,9 @@ export class TenantsService {
    * Réinitialise automatiquement le quota personnalisé pour utiliser celui du nouveau plan
    */
   async changePlan(tenantId: number, newPlanId: number): Promise<Tenant> {
-    this.logger.log(`Changing plan for tenant ${tenantId} to plan ${newPlanId}`);
+    this.logger.log(
+      `Changing plan for tenant ${tenantId} to plan ${newPlanId}`,
+    );
 
     // Vérifier que le tenant existe
     const tenant = await this.tenantsRepository.findOne({
@@ -356,19 +372,25 @@ export class TenantsService {
       customStorageQuotaMb: undefined, // Reset quota personnalisé lors du changement de plan
     });
 
-    this.logger.log(`Updated tenant ${tenantId}: plan ${oldPlanId} → ${newPlanId}, custom quota ${oldCustomQuota} → null (will use plan quota)`);
+    this.logger.log(
+      `Updated tenant ${tenantId}: plan ${oldPlanId} → ${newPlanId}, custom quota ${oldCustomQuota} → null (will use plan quota)`,
+    );
 
     // Mettre à jour aussi la subscription active du tenant
     const updateResult = await this.subscriptionRepository.update(
       { tenantId, status: SubscriptionStatus.ACTIVE },
-      { planId: newPlanId }
+      { planId: newPlanId },
     );
 
     if (updateResult.affected && updateResult.affected > 0) {
-      this.logger.log(`Updated ${updateResult.affected} subscription(s) with new plan ${newPlanId}`);
+      this.logger.log(
+        `Updated ${updateResult.affected} subscription(s) with new plan ${newPlanId}`,
+      );
     }
 
-    this.logger.log(`Successfully changed plan for tenant ${tenantId} to plan ${newPlanId}`);
+    this.logger.log(
+      `Successfully changed plan for tenant ${tenantId} to plan ${newPlanId}`,
+    );
 
     // Retourner avec les relations
     const updatedTenant = await this.tenantsRepository.findOne({
@@ -411,7 +433,9 @@ export class TenantsService {
     const tenant = await this.findOne(tenantId);
 
     if (!tenant.plan) {
-      throw new NotFoundException(`Le tenant #${tenantId} n'a pas de plan associé`);
+      throw new NotFoundException(
+        `Le tenant #${tenantId} n'a pas de plan associé`,
+      );
     }
 
     // Calculer l'usage actuel
@@ -428,11 +452,11 @@ export class TenantsService {
     const fileCount = parseInt(usageResult?.fileCount || '0', 10);
 
     // Quota effectif = custom si défini, sinon celui du plan
-    const effectiveQuotaMb = tenant.customStorageQuotaMb || tenant.plan.maxStorageMb;
+    const effectiveQuotaMb =
+      tenant.customStorageQuotaMb || tenant.plan.maxStorageMb;
     const availableMb = Math.max(0, effectiveQuotaMb - usedMb);
-    const usagePercent = effectiveQuotaMb > 0
-      ? (usedMb / effectiveQuotaMb) * 100
-      : 0;
+    const usagePercent =
+      effectiveQuotaMb > 0 ? (usedMb / effectiveQuotaMb) * 100 : 0;
 
     return {
       tenantName: tenant.name,

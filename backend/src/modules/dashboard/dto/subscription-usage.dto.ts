@@ -1,18 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class UsagePercentageDto {
-  @ApiProperty({ example: 75.5, description: 'Percentage of vehicles used vs plan limit' })
+  @ApiProperty({
+    example: 75.5,
+    description: 'Percentage of vehicles used vs plan limit',
+  })
   vehicles: number;
 
-  @ApiProperty({ example: 60.0, description: 'Percentage of drivers used vs plan limit' })
+  @ApiProperty({
+    example: 60.0,
+    description: 'Percentage of drivers used vs plan limit',
+  })
   drivers: number;
 
-  @ApiProperty({ example: 45.2, description: 'Percentage of storage used vs plan limit' })
+  @ApiProperty({
+    example: 45.2,
+    description: 'Percentage of storage used vs plan limit',
+  })
   storage: number;
 }
 
 export class SubscriptionUsageDto {
-  @ApiProperty({ example: 'Professional', description: 'Current subscription plan name' })
+  @ApiProperty({
+    example: 'Professional',
+    description: 'Current subscription plan name',
+  })
   planName: string;
 
   @ApiProperty({ example: 50, description: 'Maximum vehicles allowed by plan' })
@@ -33,6 +45,9 @@ export class SubscriptionUsageDto {
   @ApiProperty({ example: 10240, description: 'Storage quota in MB' })
   storageQuotaMB: number;
 
-  @ApiProperty({ type: UsagePercentageDto, description: 'Usage percentages for each resource' })
+  @ApiProperty({
+    type: UsagePercentageDto,
+    description: 'Usage percentages for each resource',
+  })
   usagePercentage: UsagePercentageDto;
 }

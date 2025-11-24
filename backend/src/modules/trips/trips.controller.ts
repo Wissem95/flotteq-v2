@@ -40,7 +40,11 @@ export class TripsController {
     @Query('endDate') endDate?: string,
   ): Promise<MonthlyStatsResponseDto> {
     const user = (req as any).user;
-    return await this.tripsService.getMonthlyStats(user.tenantId, startDate, endDate);
+    return await this.tripsService.getMonthlyStats(
+      user.tenantId,
+      startDate,
+      endDate,
+    );
   }
 
   @Get('reports/drivers-performance')
@@ -51,7 +55,11 @@ export class TripsController {
     @Query('endDate') endDate?: string,
   ): Promise<DriversPerformanceResponseDto> {
     const user = (req as any).user;
-    return await this.tripsService.getDriversPerformance(user.tenantId, startDate, endDate);
+    return await this.tripsService.getDriversPerformance(
+      user.tenantId,
+      startDate,
+      endDate,
+    );
   }
 
   @Get(':id')

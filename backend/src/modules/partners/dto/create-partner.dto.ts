@@ -66,7 +66,9 @@ export class CreatePartnerDto {
   @Max(180)
   longitude?: number;
 
-  @ApiPropertyOptional({ example: 'Spécialiste réparation véhicules utilitaires' })
+  @ApiPropertyOptional({
+    example: 'Spécialiste réparation véhicules utilitaires',
+  })
   @IsOptional()
   @IsString()
   description?: string;
@@ -99,7 +101,8 @@ export class CreatePartnerDto {
   @IsString()
   @Length(8, 50)
   @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, {
-    message: 'Password must contain uppercase, lowercase, number and special character',
+    message:
+      'Password must contain uppercase, lowercase, number and special character',
   })
   ownerPassword: string;
 }

@@ -27,7 +27,10 @@ async function bootstrap() {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
   const port = configService.get('PORT', 3000);
-  const corsOrigin = configService.get('CORS_ORIGIN', 'http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:3001');
+  const corsOrigin = configService.get(
+    'CORS_ORIGIN',
+    'http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:3001',
+  );
 
   // Security
   app.use(helmet());

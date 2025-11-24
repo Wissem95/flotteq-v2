@@ -12,7 +12,10 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../../../entities/user.entity';
 import { Tenant } from '../../../entities/tenant.entity';
-import { Subscription, SubscriptionStatus } from '../../../entities/subscription.entity';
+import {
+  Subscription,
+  SubscriptionStatus,
+} from '../../../entities/subscription.entity';
 import { SubscriptionPlan } from '../../../entities/subscription-plan.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
@@ -41,7 +44,9 @@ export class AuthService {
     // 1. Valider planId AVANT toute création en base
     const planId = parseInt(dto.planId, 10);
     if (isNaN(planId)) {
-      throw new BadRequestException(`Invalid plan ID: ${dto.planId}. Must be a number.`);
+      throw new BadRequestException(
+        `Invalid plan ID: ${dto.planId}. Must be a number.`,
+      );
     }
 
     const plan = await this.subscriptionPlanRepository.findOne({
@@ -49,12 +54,16 @@ export class AuthService {
     });
 
     if (!plan) {
-      throw new BadRequestException(`Invalid plan ID: ${planId}. Plan not found.`);
+      throw new BadRequestException(
+        `Invalid plan ID: ${planId}. Plan not found.`,
+      );
     }
 
     // 2. Valider companyName
     if (!dto.companyName) {
-      throw new BadRequestException('Company name is required for registration');
+      throw new BadRequestException(
+        'Company name is required for registration',
+      );
     }
 
     // 3. Vérifier si email existe déjà
@@ -81,7 +90,10 @@ export class AuthService {
 
       // 4a-bis. Créer Stripe customer
       try {
-        const stripeCustomerId = await this.stripeService.createCustomer(tenant, dto.email);
+        const stripeCustomerId = await this.stripeService.createCustomer(
+          tenant,
+          dto.email,
+        );
         tenant.stripeCustomerId = stripeCustomerId;
         await queryRunner.manager.save(tenant);
       } catch (stripeError) {
@@ -130,7 +142,6 @@ export class AuthService {
       // 7. Retourner résultat sans données sensibles
       const { password, refreshToken, ...userWithoutSensitive } = user;
       return { user: userWithoutSensitive, ...tokens };
-
     } catch (error) {
       // 8. ROLLBACK en cas d'erreur
       await queryRunner.rollbackTransaction();
@@ -178,7 +189,7 @@ export class AuthService {
   async logout(userId: string) {
     // Cast explicite pour gérer le null avec TypeORM
     await this.userRepository.update(userId, {
-      refreshToken: null as any
+      refreshToken: null as any,
     });
     return { message: 'Logged out successfully' };
   }
@@ -238,7 +249,15 @@ export class AuthService {
   async validateUser(userId: string) {
     return this.userRepository.findOne({
       where: { id: userId },
-      select: ['id', 'email', 'tenantId', 'role', 'isActive', 'firstName', 'lastName'],
+      select: [
+        'id',
+        'email',
+        'tenantId',
+        'role',
+        'isActive',
+        'firstName',
+        'lastName',
+      ],
     });
   }
 
@@ -252,7 +271,7 @@ export class AuthService {
       // Ne pas révéler si l'email existe ou non (sécurité)
       return {
         message:
-          "Si cet email existe, un lien de réinitialisation a été envoyé.",
+          'Si cet email existe, un lien de réinitialisation a été envoyé.',
       };
     }
 
@@ -275,8 +294,7 @@ export class AuthService {
     );
 
     return {
-      message:
-        "Si cet email existe, un lien de réinitialisation a été envoyé.",
+      message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
     };
   }
 
@@ -324,12 +342,21 @@ export class AuthService {
     }
   }
 
-  async acceptInvitation(dto: { token: string; password: string; firstName: string; lastName: string }) {
+  async acceptInvitation(dto: {
+    token: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+  }) {
     const user = await this.userRepository.findOne({
       where: { invitationToken: dto.token },
     });
 
-    if (!user || !user.invitationExpiresAt || user.invitationExpiresAt < new Date()) {
+    if (
+      !user ||
+      !user.invitationExpiresAt ||
+      user.invitationExpiresAt < new Date()
+    ) {
       throw new BadRequestException('Token invalide ou expiré');
     }
 
@@ -349,12 +376,18 @@ export class AuthService {
     return { message: 'Compte activé avec succès' };
   }
 
-  async verifyInvitation(token: string): Promise<{ email: string; role: string }> {
+  async verifyInvitation(
+    token: string,
+  ): Promise<{ email: string; role: string }> {
     const user = await this.userRepository.findOne({
       where: { invitationToken: token },
     });
 
-    if (!user || !user.invitationExpiresAt || user.invitationExpiresAt < new Date()) {
+    if (
+      !user ||
+      !user.invitationExpiresAt ||
+      user.invitationExpiresAt < new Date()
+    ) {
       throw new BadRequestException('Token invalide ou expiré');
     }
 

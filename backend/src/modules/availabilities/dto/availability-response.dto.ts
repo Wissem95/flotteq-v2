@@ -7,7 +7,10 @@ export class AvailabilityResponseDto {
   @ApiProperty({ format: 'uuid' })
   partnerId: string;
 
-  @ApiProperty({ example: 1, description: 'Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday' })
+  @ApiProperty({
+    example: 1,
+    description: 'Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday',
+  })
   dayOfWeek: number;
 
   @ApiProperty({ example: 'Monday', description: 'Name of the day' })
@@ -22,7 +25,10 @@ export class AvailabilityResponseDto {
   @ApiProperty({ example: 30, description: 'Slot duration in minutes' })
   slotDuration: number;
 
-  @ApiProperty({ example: 18, description: 'Number of slots in this availability' })
+  @ApiProperty({
+    example: 18,
+    description: 'Number of slots in this availability',
+  })
   totalSlots: number;
 
   @ApiProperty({ example: '2025-10-19T12:00:00.000Z' })

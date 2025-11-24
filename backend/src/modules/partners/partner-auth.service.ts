@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -30,7 +26,16 @@ export class PartnerAuthService {
     // Find partner user with password field
     const partnerUser = await this.partnerUserRepository.findOne({
       where: { email },
-      select: ['id', 'email', 'password', 'firstName', 'lastName', 'role', 'isActive', 'partnerId'],
+      select: [
+        'id',
+        'email',
+        'password',
+        'firstName',
+        'lastName',
+        'role',
+        'isActive',
+        'partnerId',
+      ],
     });
 
     if (!partnerUser) {
@@ -114,7 +119,10 @@ export class PartnerAuthService {
     }
 
     // Check if partner is approved
-    if (partnerUser.partner && partnerUser.partner.status !== PartnerStatus.APPROVED) {
+    if (
+      partnerUser.partner &&
+      partnerUser.partner.status !== PartnerStatus.APPROVED
+    ) {
       return null;
     }
 

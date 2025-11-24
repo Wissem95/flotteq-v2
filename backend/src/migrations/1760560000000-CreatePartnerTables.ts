@@ -82,20 +82,40 @@ export class CreatePartnerTables1760560000000 implements MigrationInterface {
     `);
 
     // Create indexes for partners table
-    await queryRunner.query(`CREATE INDEX "idx_partners_company_name" ON "partners"("company_name")`);
-    await queryRunner.query(`CREATE INDEX "idx_partners_email" ON "partners"("email")`);
-    await queryRunner.query(`CREATE INDEX "idx_partners_status" ON "partners"("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_partners_type" ON "partners"("type")`);
-    await queryRunner.query(`CREATE INDEX "idx_partners_city" ON "partners"("city")`);
-    await queryRunner.query(`CREATE INDEX "idx_partners_lat_lng" ON "partners"("latitude", "longitude")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_partners_company_name" ON "partners"("company_name")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partners_email" ON "partners"("email")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partners_status" ON "partners"("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partners_type" ON "partners"("type")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partners_city" ON "partners"("city")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partners_lat_lng" ON "partners"("latitude", "longitude")`,
+    );
 
     // Create indexes for partner_users table
-    await queryRunner.query(`CREATE INDEX "idx_partner_users_email" ON "partner_users"("email")`);
-    await queryRunner.query(`CREATE INDEX "idx_partner_users_partner_id" ON "partner_users"("partner_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_partner_users_email" ON "partner_users"("email")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partner_users_partner_id" ON "partner_users"("partner_id")`,
+    );
 
     // Create indexes for partner_services table
-    await queryRunner.query(`CREATE INDEX "idx_partner_services_partner_id" ON "partner_services"("partner_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_partner_services_partner_active" ON "partner_services"("partner_id", "is_active")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_partner_services_partner_id" ON "partner_services"("partner_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_partner_services_partner_active" ON "partner_services"("partner_id", "is_active")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

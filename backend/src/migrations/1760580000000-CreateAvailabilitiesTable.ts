@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class CreateAvailabilitiesTable1760580000000 implements MigrationInterface {
+export class CreateAvailabilitiesTable1760580000000
+  implements MigrationInterface
+{
   name = 'CreateAvailabilitiesTable1760580000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -44,13 +46,23 @@ export class CreateAvailabilitiesTable1760580000000 implements MigrationInterfac
     `);
 
     // Create indexes for availabilities
-    await queryRunner.query(`CREATE INDEX "idx_availabilities_partner_id" ON "availabilities"("partner_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_availabilities_partner_day" ON "availabilities"("partner_id", "day_of_week")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_availabilities_partner_id" ON "availabilities"("partner_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_availabilities_partner_day" ON "availabilities"("partner_id", "day_of_week")`,
+    );
 
     // Create indexes for unavailabilities
-    await queryRunner.query(`CREATE INDEX "idx_unavailabilities_partner_id" ON "unavailabilities"("partner_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_unavailabilities_date" ON "unavailabilities"("date")`);
-    await queryRunner.query(`CREATE INDEX "idx_unavailabilities_partner_date" ON "unavailabilities"("partner_id", "date")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_unavailabilities_partner_id" ON "unavailabilities"("partner_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_unavailabilities_date" ON "unavailabilities"("date")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_unavailabilities_partner_date" ON "unavailabilities"("partner_id", "date")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

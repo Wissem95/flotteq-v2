@@ -3,7 +3,11 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { MaintenanceService } from './maintenance.service';
-import { Maintenance, MaintenanceStatus, MaintenanceType } from './entities/maintenance.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+  MaintenanceType,
+} from './entities/maintenance.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 
@@ -55,7 +59,9 @@ describe('MaintenanceService', () => {
     }).compile();
 
     service = module.get<MaintenanceService>(MaintenanceService);
-    repository = module.get<Repository<Maintenance>>(getRepositoryToken(Maintenance));
+    repository = module.get<Repository<Maintenance>>(
+      getRepositoryToken(Maintenance),
+    );
 
     jest.clearAllMocks();
   });
@@ -122,7 +128,9 @@ describe('MaintenanceService', () => {
     it('should throw NotFoundException if maintenance not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent', 1)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent', 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -149,7 +157,10 @@ describe('MaintenanceService', () => {
       };
 
       mockRepository.findOne.mockResolvedValue(mockMaintenance);
-      mockRepository.save.mockResolvedValue({ ...mockMaintenance, ...updateDto });
+      mockRepository.save.mockResolvedValue({
+        ...mockMaintenance,
+        ...updateDto,
+      });
 
       const result = await service.update(mockMaintenance.id, updateDto, 1);
 
@@ -160,7 +171,9 @@ describe('MaintenanceService', () => {
     it('should throw NotFoundException if maintenance not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.update('non-existent', {}, 1)).rejects.toThrow(NotFoundException);
+      await expect(service.update('non-existent', {}, 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -177,7 +190,9 @@ describe('MaintenanceService', () => {
     it('should throw NotFoundException if maintenance not found', async () => {
       mockRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.remove('non-existent', 1)).rejects.toThrow(NotFoundException);
+      await expect(service.remove('non-existent', 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -216,7 +231,9 @@ describe('MaintenanceService', () => {
         }),
       };
 
-      mockRepository.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
+      mockRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(mockQueryBuilder);
 
       const result = await service.getCostSummaryByVehicle('vehicle-1', 1);
 
@@ -236,7 +253,9 @@ describe('MaintenanceService', () => {
         getRawOne: jest.fn().mockResolvedValue({ total: '1200.00' }),
       };
 
-      mockRepository.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
+      mockRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(mockQueryBuilder);
 
       const result = await service.getTotalCostsByTenant(1);
 
@@ -251,7 +270,9 @@ describe('MaintenanceService', () => {
         getRawOne: jest.fn().mockResolvedValue({ total: null }),
       };
 
-      mockRepository.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
+      mockRepository.createQueryBuilder = jest
+        .fn()
+        .mockReturnValue(mockQueryBuilder);
 
       const result = await service.getTotalCostsByTenant(1);
 

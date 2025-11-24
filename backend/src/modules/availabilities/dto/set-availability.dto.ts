@@ -1,8 +1,20 @@
-import { IsNotEmpty, IsInt, Min, Max, Matches, Validate, ValidationArguments, ValidatorConstraint, ValidatorConstraintInterface } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsInt,
+  Min,
+  Max,
+  Matches,
+  Validate,
+  ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 @ValidatorConstraint({ name: 'isMultipleOfFive', async: false })
-export class IsMultipleOfFiveConstraint implements ValidatorConstraintInterface {
+export class IsMultipleOfFiveConstraint
+  implements ValidatorConstraintInterface
+{
   validate(value: any, args: ValidationArguments) {
     return typeof value === 'number' && value % 5 === 0;
   }
@@ -13,7 +25,10 @@ export class IsMultipleOfFiveConstraint implements ValidatorConstraintInterface 
 }
 
 export class SetAvailabilityDto {
-  @ApiProperty({ example: 1, description: 'Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday' })
+  @ApiProperty({
+    example: 1,
+    description: 'Day of week: 0=Sunday, 1=Monday, ..., 6=Saturday',
+  })
   @IsNotEmpty()
   @IsInt()
   @Min(0)
@@ -38,7 +53,7 @@ export class SetAvailabilityDto {
     example: 30,
     description: 'Slot duration in minutes (5-120, multiple of 5 preferred)',
     minimum: 5,
-    maximum: 120
+    maximum: 120,
   })
   @IsNotEmpty()
   @IsInt()

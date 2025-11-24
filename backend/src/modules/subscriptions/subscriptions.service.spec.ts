@@ -73,7 +73,9 @@ describe('SubscriptionsService', () => {
 
   describe('checkLimit', () => {
     it('should return true when under limit', async () => {
-      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(mockSubscription);
+      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(
+        mockSubscription,
+      );
 
       const result = await service.checkLimit(1, 'vehicles');
       expect(result).toBe(true); // 1 < 2
@@ -84,7 +86,9 @@ describe('SubscriptionsService', () => {
         ...mockSubscription,
         usage: { vehicles: 2, users: 1, drivers: 2 },
       };
-      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(fullSubscription);
+      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(
+        fullSubscription,
+      );
 
       const result = await service.checkLimit(1, 'vehicles');
       expect(result).toBe(false); // 2 >= 2
@@ -106,13 +110,19 @@ describe('SubscriptionsService', () => {
         ...mockSubscription,
         usage: { vehicles: 2, users: 1, drivers: 2 },
       };
-      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(fullSubscription);
+      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(
+        fullSubscription,
+      );
 
-      await expect(service.enforceLimit(1, 'vehicles')).rejects.toThrow(ForbiddenException);
+      await expect(service.enforceLimit(1, 'vehicles')).rejects.toThrow(
+        ForbiddenException,
+      );
     });
 
     it('should not throw when under limit', async () => {
-      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(mockSubscription);
+      mockRepositories.subscriptionRepo.findOne.mockResolvedValue(
+        mockSubscription,
+      );
 
       await expect(service.enforceLimit(1, 'vehicles')).resolves.not.toThrow();
     });

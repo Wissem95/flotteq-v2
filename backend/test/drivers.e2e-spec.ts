@@ -17,7 +17,9 @@ describe('DriversController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
@@ -38,13 +40,17 @@ describe('DriversController (e2e)', () => {
     `);
 
     // Password hash for 'Test12345' (bcrypt)
-    const passwordHash = '$2b$12$0XLtbTcy3k37sdRFXISD7OA3qapD/J8ipMmFIWgieRX7xoSjpT9te';
+    const passwordHash =
+      '$2b$12$0XLtbTcy3k37sdRFXISD7OA3qapD/J8ipMmFIWgieRX7xoSjpT9te';
 
-    await dataSource.query(`
+    await dataSource.query(
+      `
       INSERT INTO users (email, password, first_name, last_name, role, tenant_id)
       VALUES ('test-e2e@drivers.com', $1, 'E2E', 'Test', 'tenant_admin', 999)
       ON CONFLICT (email, tenant_id) DO UPDATE SET password = $1
-    `, [passwordHash]);
+    `,
+      [passwordHash],
+    );
 
     // Login with test user
     const loginResponse = await request(app.getHttpServer())
@@ -65,12 +71,14 @@ describe('DriversController (e2e)', () => {
     // Cleanup test data to avoid DB pollution
     try {
       if (vehicleId) {
-        await dataSource.query('DELETE FROM vehicles WHERE id = $1', [vehicleId]);
+        await dataSource.query('DELETE FROM vehicles WHERE id = $1', [
+          vehicleId,
+        ]);
       }
       // Driver is already deleted in last test, but cleanup any remaining test drivers
       await dataSource.query(
         'DELETE FROM drivers WHERE email LIKE $1 OR "licenseNumber" LIKE $2',
-        ['%@test.com', 'E2E%']
+        ['%@test.com', 'E2E%'],
       );
     } catch (error) {
       console.warn('Cleanup warning:', error.message);
@@ -267,12 +275,14 @@ describe('DriversController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .post(`/drivers/${driverId}/assign-vehicle`)
           .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '999')
+          .set('X-Tenant-ID', '999')
           .send({ vehicleId })
           .expect(201);
 
         expect(response.body.vehicles).toBeDefined();
-        const vehicle = response.body.vehicles.find((v: any) => v.id === vehicleId);
+        const vehicle = response.body.vehicles.find(
+          (v: any) => v.id === vehicleId,
+        );
         expect(vehicle).toBeDefined();
       });
 
@@ -280,7 +290,7 @@ describe('DriversController (e2e)', () => {
         await request(app.getHttpServer())
           .post(`/drivers/${driverId}/assign-vehicle`)
           .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '999')
+          .set('X-Tenant-ID', '999')
           .send({ vehicleId })
           .expect(400);
       });
@@ -290,7 +300,7 @@ describe('DriversController (e2e)', () => {
         const expiredDriverResponse = await request(app.getHttpServer())
           .post('/drivers')
           .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '999')
+          .set('X-Tenant-ID', '999')
           .send({
             firstName: 'Expired',
             lastName: 'License',
@@ -303,7 +313,7 @@ describe('DriversController (e2e)', () => {
         await request(app.getHttpServer())
           .post(`/drivers/${expiredDriverResponse.body.id}/assign-vehicle`)
           .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '999')
+          .set('X-Tenant-ID', '999')
           .send({ vehicleId })
           .expect(400);
       });
@@ -314,12 +324,14 @@ describe('DriversController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .post(`/drivers/${driverId}/unassign-vehicle`)
           .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '999')
+          .set('X-Tenant-ID', '999')
           .send({ vehicleId })
           .expect(201);
 
         expect(response.body.vehicles).toBeDefined();
-        const vehicle = response.body.vehicles.find((v: any) => v.id === vehicleId);
+        const vehicle = response.body.vehicles.find(
+          (v: any) => v.id === vehicleId,
+        );
         expect(vehicle).toBeUndefined();
       });
     });
@@ -329,7 +341,7 @@ describe('DriversController (e2e)', () => {
         const response = await request(app.getHttpServer())
           .get(`/drivers/${driverId}/vehicles`)
           .set('Authorization', `Bearer ${authToken}`)
-        .set('X-Tenant-ID', '999')
+          .set('X-Tenant-ID', '999')
           .expect(200);
 
         expect(Array.isArray(response.body)).toBe(true);

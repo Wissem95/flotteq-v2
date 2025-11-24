@@ -58,7 +58,9 @@ describe.skip('Partners E2E Tests (SKIP - requires full app setup)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     // Create admin user fixture
@@ -70,20 +72,24 @@ describe.skip('Partners E2E Tests (SKIP - requires full app setup)', () => {
   });
 
   const createAdminUser = async () => {
-    const response = await request(app.getHttpServer()).post('/auth/register').send({
-      email: 'admin-e2e@flotteq.com',
-      password: 'AdminPass123!',
-      firstName: 'Admin',
-      lastName: 'User',
-      companyName: 'FlotteQ',
-      planId: 1,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/auth/register')
+      .send({
+        email: 'admin-e2e@flotteq.com',
+        password: 'AdminPass123!',
+        firstName: 'Admin',
+        lastName: 'User',
+        companyName: 'FlotteQ',
+        planId: 1,
+      });
 
     // Login to get token
-    const loginResponse = await request(app.getHttpServer()).post('/auth/login').send({
-      email: 'admin-e2e@flotteq.com',
-      password: 'AdminPass123!',
-    });
+    const loginResponse = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({
+        email: 'admin-e2e@flotteq.com',
+        password: 'AdminPass123!',
+      });
 
     adminAuthToken = loginResponse.body.accessToken;
   };
@@ -103,7 +109,10 @@ describe.skip('Partners E2E Tests (SKIP - requires full app setup)', () => {
     });
 
     it('should reject duplicate email', () => {
-      return request(app.getHttpServer()).post('/partners').send(testPartner).expect(409);
+      return request(app.getHttpServer())
+        .post('/partners')
+        .send(testPartner)
+        .expect(409);
     });
 
     it('should reject invalid SIRET', () => {
@@ -206,7 +215,9 @@ describe.skip('Partners E2E Tests (SKIP - requires full app setup)', () => {
     });
 
     it('should reject without token', () => {
-      return request(app.getHttpServer()).get('/partners/auth/profile').expect(401);
+      return request(app.getHttpServer())
+        .get('/partners/auth/profile')
+        .expect(401);
     });
   });
 

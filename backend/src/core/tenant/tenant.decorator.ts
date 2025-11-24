@@ -28,7 +28,10 @@ export const CurrentTenant = createParamDecorator(
  * Usage: getTenantInfo(@TenantContext() context: { tenantId?: string; tenant?: any })
  */
 export const TenantContext = createParamDecorator(
-  (data: unknown, ctx: ExecutionContext): { tenantId?: string; tenant?: any } => {
+  (
+    data: unknown,
+    ctx: ExecutionContext,
+  ): { tenantId?: string; tenant?: any } => {
     const request = ctx.switchToHttp().getRequest<Request>();
     return {
       tenantId: request.tenantId,

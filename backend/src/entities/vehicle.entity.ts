@@ -85,16 +85,30 @@ export class Vehicle {
   @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
   purchasePrice: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true, name: 'current_value' })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    name: 'current_value',
+  })
   currentValue: number | null;
 
   @Column({ type: 'date', nullable: true, name: 'sold_date' })
   soldDate: Date | null;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'lastTechnicalInspection' })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    name: 'lastTechnicalInspection',
+  })
   lastTechnicalInspection: Date | null;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'nextTechnicalInspection' })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    name: 'nextTechnicalInspection',
+  })
   nextTechnicalInspection: Date | null;
 
   @Column({ type: 'simple-array', nullable: true })
@@ -106,7 +120,7 @@ export class Vehicle {
   @Column({ type: String, name: 'assigned_driver_id', nullable: true })
   assignedDriverId: string | null;
 
-  @ManyToOne(() => Driver, driver => driver.vehicles, { nullable: true })
+  @ManyToOne(() => Driver, (driver) => driver.vehicles, { nullable: true })
   @JoinColumn({ name: 'assigned_driver_id' })
   assignedDriver: Driver | null;
 

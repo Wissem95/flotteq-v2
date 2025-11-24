@@ -48,11 +48,16 @@ describe('Partner Email Notifications E2E', () => {
   });
 
   // Helper function to wait for a specific job to complete
-  const waitForJobCompletion = async (jobName: string, timeout = 5000): Promise<void> => {
+  const waitForJobCompletion = async (
+    jobName: string,
+    timeout = 5000,
+  ): Promise<void> => {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         emailQueue.removeListener('completed', handler);
-        reject(new Error(`Job ${jobName} did not complete within ${timeout}ms`));
+        reject(
+          new Error(`Job ${jobName} did not complete within ${timeout}ms`),
+        );
       }, timeout);
 
       const handler = (job: Job) => {
@@ -83,7 +88,9 @@ describe('Partner Email Notifications E2E', () => {
       // 2. Verify job was added to queue (this may already be completed if fast)
       const jobCounts = await emailQueue.getJobCounts();
       // Job might be completed, waiting, or active
-      expect(jobCounts.waiting + jobCounts.active + jobCounts.completed).toBeGreaterThan(0);
+      expect(
+        jobCounts.waiting + jobCounts.active + jobCounts.completed,
+      ).toBeGreaterThan(0);
 
       // 3. Wait for job to be processed
       await completionPromise;
@@ -196,7 +203,9 @@ describe('Partner Email Notifications E2E', () => {
         price: 150.0,
       };
 
-      const completionPromise = waitForJobCompletion('partner-booking-cancelled');
+      const completionPromise = waitForJobCompletion(
+        'partner-booking-cancelled',
+      );
 
       await emailQueueService.queuePartnerBookingCancelled(
         'garage@example.com',
@@ -272,12 +281,20 @@ describe('Partner Email Notifications E2E', () => {
 
       // Use a counter-based approach instead of individual listeners
       let completedCount = 0;
-      const expectedJobs = new Set(['partner-welcome', 'partner-approved', 'partner-rejected']);
+      const expectedJobs = new Set([
+        'partner-welcome',
+        'partner-approved',
+        'partner-rejected',
+      ]);
       const completedJobs = new Set<string>();
 
       const allCompletedPromise = new Promise<void>((resolve, reject) => {
         const timer = setTimeout(() => {
-          reject(new Error(`Only ${completedCount}/3 jobs completed: ${Array.from(completedJobs).join(', ')}`));
+          reject(
+            new Error(
+              `Only ${completedCount}/3 jobs completed: ${Array.from(completedJobs).join(', ')}`,
+            ),
+          );
         }, 10000);
 
         const handler = (job: Job) => {
@@ -298,9 +315,22 @@ describe('Partner Email Notifications E2E', () => {
 
       // Queue all 3 jobs
       await Promise.all([
-        emailQueueService.queuePartnerWelcomeEmail('user1@example.com', 'User1', 'Company1'),
-        emailQueueService.queuePartnerApprovedEmail('user2@example.com', 'User2', 'Company2'),
-        emailQueueService.queuePartnerRejectedEmail('user3@example.com', 'User3', 'Company3', 'Raison'),
+        emailQueueService.queuePartnerWelcomeEmail(
+          'user1@example.com',
+          'User1',
+          'Company1',
+        ),
+        emailQueueService.queuePartnerApprovedEmail(
+          'user2@example.com',
+          'User2',
+          'Company2',
+        ),
+        emailQueueService.queuePartnerRejectedEmail(
+          'user3@example.com',
+          'User3',
+          'Company3',
+          'Raison',
+        ),
       ]);
 
       // Wait for all to complete
@@ -308,9 +338,15 @@ describe('Partner Email Notifications E2E', () => {
 
       // All 3 emails should have been processed
       expect(sendEmailSpy).toHaveBeenCalledTimes(3);
-      expect(sendEmailSpy).toHaveBeenCalledWith(expect.objectContaining({ to: 'user1@example.com' }));
-      expect(sendEmailSpy).toHaveBeenCalledWith(expect.objectContaining({ to: 'user2@example.com' }));
-      expect(sendEmailSpy).toHaveBeenCalledWith(expect.objectContaining({ to: 'user3@example.com' }));
+      expect(sendEmailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'user1@example.com' }),
+      );
+      expect(sendEmailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'user2@example.com' }),
+      );
+      expect(sendEmailSpy).toHaveBeenCalledWith(
+        expect.objectContaining({ to: 'user3@example.com' }),
+      );
     }, 15000);
   });
 

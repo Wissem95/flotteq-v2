@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  ForbiddenException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { UserRole } from '../../entities/user.entity';
 
@@ -12,7 +17,7 @@ export class TenantGuard implements CanActivate {
 
     // Skip public routes (auth, health, docs)
     const publicRoutes = ['/auth', '/health', '/api/docs'];
-    if (publicRoutes.some(route => path.startsWith(route))) {
+    if (publicRoutes.some((route) => path.startsWith(route))) {
       return true;
     }
 
@@ -42,7 +47,9 @@ export class TenantGuard implements CanActivate {
     // Pour les routes avec un body contenant tenantId
     const bodyTenantId = request.body?.tenantId;
     if (bodyTenantId && bodyTenantId !== user.tenantId) {
-      throw new ForbiddenException('Vous ne pouvez créer que pour votre tenant');
+      throw new ForbiddenException(
+        'Vous ne pouvez créer que pour votre tenant',
+      );
     }
 
     // Injecter le tenantId dans la request pour faciliter l'accès

@@ -9,7 +9,12 @@ import {
   Logger,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -52,7 +57,8 @@ export class StripeController {
       throw new BadRequestException('Missing stripe-signature header');
     }
 
-    const rawBody = request.rawBody || Buffer.from(JSON.stringify(request.body));
+    const rawBody =
+      request.rawBody || Buffer.from(JSON.stringify(request.body));
 
     try {
       await this.stripeService.handleWebhook(signature, rawBody);
@@ -87,7 +93,10 @@ export class StripeController {
     }
 
     const returnUrl = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/billing`;
-    const url = await this.stripeService.createPortalSession(tenant.stripeCustomerId, returnUrl);
+    const url = await this.stripeService.createPortalSession(
+      tenant.stripeCustomerId,
+      returnUrl,
+    );
 
     return { url };
   }

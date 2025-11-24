@@ -71,7 +71,11 @@ export class Tenant {
   })
   subscriptionStatus: string;
 
-  @Column({ type: 'timestamp', nullable: true, name: 'subscription_started_at' })
+  @Column({
+    type: 'timestamp',
+    nullable: true,
+    name: 'subscription_started_at',
+  })
   subscriptionStartedAt: Date;
 
   @Column({ type: 'timestamp', nullable: true, name: 'subscription_ended_at' })

@@ -12,7 +12,10 @@ import { Booking, BookingStatus } from '../../entities/booking.entity';
 import { Partner } from '../../entities/partner.entity';
 import { Tenant } from '../../entities/tenant.entity';
 import { CreateRatingDto } from './dto/create-rating.dto';
-import { RatingResponseDto, RatingListResponseDto } from './dto/rating-response.dto';
+import {
+  RatingResponseDto,
+  RatingListResponseDto,
+} from './dto/rating-response.dto';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../../entities/audit-log.entity';
 
@@ -32,7 +35,11 @@ export class RatingsService {
     private auditService: AuditService,
   ) {}
 
-  async create(createRatingDto: CreateRatingDto, tenantId: number, userId: string): Promise<Rating> {
+  async create(
+    createRatingDto: CreateRatingDto,
+    tenantId: number,
+    userId: string,
+  ): Promise<Rating> {
     // Validate booking exists and belongs to tenant
     const booking = await this.bookingRepository.findOne({
       where: { id: createRatingDto.bookingId },
@@ -44,7 +51,9 @@ export class RatingsService {
     }
 
     if (booking.tenantId !== tenantId) {
-      throw new BadRequestException('This booking does not belong to your organization');
+      throw new BadRequestException(
+        'This booking does not belong to your organization',
+      );
     }
 
     // Validate booking is completed
@@ -88,7 +97,9 @@ export class RatingsService {
     // Update partner rating
     await this.updatePartnerRating(booking.partnerId);
 
-    this.logger.log(`Rating created for booking ${createRatingDto.bookingId} by tenant ${tenantId}`);
+    this.logger.log(
+      `Rating created for booking ${createRatingDto.bookingId} by tenant ${tenantId}`,
+    );
 
     return savedRating;
   }
@@ -109,7 +120,10 @@ export class RatingsService {
     }
 
     // Calculate average score
-    const totalScore = ratings.reduce((sum, rating) => sum + Number(rating.score), 0);
+    const totalScore = ratings.reduce(
+      (sum, rating) => sum + Number(rating.score),
+      0,
+    );
     const avgScore = totalScore / ratings.length;
 
     // Round to 2 decimal places
@@ -145,7 +159,9 @@ export class RatingsService {
 
     const ratings = await query.getMany();
 
-    const data: RatingResponseDto[] = ratings.map((rating) => this.toResponseDto(rating));
+    const data: RatingResponseDto[] = ratings.map((rating) =>
+      this.toResponseDto(rating),
+    );
 
     // Calculate average score
     let averageScore = 0;
@@ -183,7 +199,9 @@ export class RatingsService {
 
     const ratings = await query.getMany();
 
-    const data: RatingResponseDto[] = ratings.map((rating) => this.toResponseDto(rating));
+    const data: RatingResponseDto[] = ratings.map((rating) =>
+      this.toResponseDto(rating),
+    );
 
     return {
       ratings: data,

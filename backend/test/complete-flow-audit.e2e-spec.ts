@@ -121,7 +121,9 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     vehicleId = response.body.id;
 
     // Vérifier que le véhicule existe dans la base
-    const vehicle = await vehiclesRepository.findOne({ where: { id: vehicleId } });
+    const vehicle = await vehiclesRepository.findOne({
+      where: { id: vehicleId },
+    });
     expect(vehicle).toBeDefined();
     expect(vehicle!.brand).toBe('Toyota');
   });
@@ -162,7 +164,9 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     expect(response.body.currentKm).toBe(10000);
 
     // Vérifier dans la base
-    const vehicle = await vehiclesRepository.findOne({ where: { id: vehicleId } });
+    const vehicle = await vehiclesRepository.findOne({
+      where: { id: vehicleId },
+    });
     expect(vehicle.currentKm).toBe(10000);
   });
 

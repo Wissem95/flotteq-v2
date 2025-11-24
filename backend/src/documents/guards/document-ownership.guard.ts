@@ -39,10 +39,7 @@ export class DocumentOwnershipGuard implements CanActivate {
     // Récupérer le document
     let document;
     try {
-      document = await this.documentsService.findOne(
-        documentId,
-        user.tenantId,
-      );
+      document = await this.documentsService.findOne(documentId, user.tenantId);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -85,7 +82,9 @@ export class DocumentOwnershipGuard implements CanActivate {
     });
 
     if (!user) {
-      throw new ForbiddenException('Utilisateur non authentifié dans DocumentOwnershipGuard');
+      throw new ForbiddenException(
+        'Utilisateur non authentifié dans DocumentOwnershipGuard',
+      );
     }
 
     // TENANT_ADMIN, MANAGER, DRIVER peuvent uploader
@@ -103,11 +102,7 @@ export class DocumentOwnershipGuard implements CanActivate {
    * - Peut voir/télécharger ses propres uploads
    * - Ne peut pas supprimer (sauf ses propres uploads)
    */
-  private checkDriverAccess(
-    user: any,
-    document: any,
-    method: string,
-  ): boolean {
+  private checkDriverAccess(user: any, document: any, method: string): boolean {
     const isOwner = document.uploadedById === user.id;
 
     if (method === 'DELETE' && !isOwner) {
@@ -133,9 +128,7 @@ export class DocumentOwnershipGuard implements CanActivate {
    */
   private checkViewerAccess(method: string): boolean {
     if (method !== 'GET') {
-      throw new ForbiddenException(
-        'Les viewers ont un accès en lecture seule',
-      );
+      throw new ForbiddenException('Les viewers ont un accès en lecture seule');
     }
     return true;
   }

@@ -1,4 +1,11 @@
-import { IsOptional, IsString, IsDateString, IsEnum, IsInt, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsString,
+  IsDateString,
+  IsEnum,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { AuditAction } from '../../../entities/audit-log.entity';
 

@@ -65,6 +65,9 @@ export class FixUsageSync {
 
     await this.subscriptionRepo.save(subscription);
 
-    console.log(`Synced subscription for tenant ${tenantId}:`, subscription.usage);
+    console.log(
+      `Synced subscription for tenant ${tenantId}:`,
+      subscription.usage,
+    );
   }
 }

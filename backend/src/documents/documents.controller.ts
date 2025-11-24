@@ -50,10 +50,16 @@ export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post('upload')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @ApiOperation({
     summary: 'Upload un document lié à une entité',
-    description: 'Upload un fichier PDF/image et l\'associe à un véhicule, conducteur ou maintenance',
+    description:
+      "Upload un fichier PDF/image et l'associe à un véhicule, conducteur ou maintenance",
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
@@ -69,18 +75,26 @@ export class DocumentsController {
         entityType: {
           type: 'string',
           enum: ['vehicle', 'driver', 'maintenance'],
-          description: 'Type d\'entité à associer',
+          description: "Type d'entité à associer",
         },
         entityId: {
           type: 'string',
           format: 'uuid',
-          description: 'UUID de l\'entité',
+          description: "UUID de l'entité",
         },
       },
     },
   })
-  @ApiResponse({ status: 201, description: 'Document uploadé avec succès', type: Document })
-  @ApiResponse({ status: 400, description: 'Validation échouée (entityId invalide, format fichier incorrect)' })
+  @ApiResponse({
+    status: 201,
+    description: 'Document uploadé avec succès',
+    type: Document,
+  })
+  @ApiResponse({
+    status: 400,
+    description:
+      'Validation échouée (entityId invalide, format fichier incorrect)',
+  })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
   @ApiResponse({ status: 403, description: 'Permissions insuffisantes' })
   @ApiResponse({ status: 413, description: 'Quota de stockage dépassé' })
@@ -102,19 +116,33 @@ export class DocumentsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Liste les documents du tenant avec filtres optionnels' })
-  @ApiResponse({ status: 200, description: 'Liste des documents', type: [Document] })
+  @ApiOperation({
+    summary: 'Liste les documents du tenant avec filtres optionnels',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Liste des documents',
+    type: [Document],
+  })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
   async findAll(
     @Query() query: QueryDocumentsDto,
     @TenantId() tenantId: number,
   ) {
-    return this.documentsService.findAll(tenantId, query.entityType, query.entityId);
+    return this.documentsService.findAll(
+      tenantId,
+      query.entityType,
+      query.entityId,
+    );
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Récupère les métadonnées d\'un document' })
-  @ApiResponse({ status: 200, description: 'Métadonnées du document', type: Document })
+  @ApiOperation({ summary: "Récupère les métadonnées d'un document" })
+  @ApiResponse({
+    status: 200,
+    description: 'Métadonnées du document',
+    type: Document,
+  })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   async findOne(
@@ -156,7 +184,8 @@ export class DocumentsController {
   @Get('alerts/expiring')
   @ApiOperation({
     summary: 'Liste des documents expirant bientôt',
-    description: 'Récupère les documents avec date d\'expiration dans les X prochains jours',
+    description:
+      "Récupère les documents avec date d'expiration dans les X prochains jours",
   })
   @ApiResponse({
     status: 200,
@@ -172,18 +201,28 @@ export class DocumentsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @ApiOperation({ summary: 'Supprime un document (soft delete)' })
   @ApiResponse({ status: 200, description: 'Document supprimé' })
   @ApiResponse({ status: 401, description: 'Non authentifié' })
-  @ApiResponse({ status: 403, description: 'Seul l\'uploader, manager ou admin peut supprimer' })
+  @ApiResponse({
+    status: 403,
+    description: "Seul l'uploader, manager ou admin peut supprimer",
+  })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: number,
     @Req() req: any,
   ) {
-    const isSuperAdmin = req.user?.role === UserRole.SUPER_ADMIN || req.user?.role === UserRole.SUPPORT;
+    const isSuperAdmin =
+      req.user?.role === UserRole.SUPER_ADMIN ||
+      req.user?.role === UserRole.SUPPORT;
     await this.documentsService.remove(id, tenantId, isSuperAdmin);
     return { message: 'Document supprimé' };
   }

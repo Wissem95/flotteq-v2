@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MaintenanceController } from './maintenance.controller';
 import { MaintenanceService } from './maintenance.service';
-import { Maintenance, MaintenanceStatus, MaintenanceType } from './entities/maintenance.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+  MaintenanceType,
+} from './entities/maintenance.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 
@@ -130,7 +134,11 @@ describe('MaintenanceController', () => {
       const result = await controller.update(mockMaintenance.id, updateDto, 1);
 
       expect(result.status).toEqual(MaintenanceStatus.COMPLETED);
-      expect(service.update).toHaveBeenCalledWith(mockMaintenance.id, updateDto, 1);
+      expect(service.update).toHaveBeenCalledWith(
+        mockMaintenance.id,
+        updateDto,
+        1,
+      );
     });
   });
 
@@ -157,7 +165,9 @@ describe('MaintenanceController', () => {
         },
       ];
 
-      mockMaintenanceService.getUpcomingMaintenances.mockResolvedValue(mockAlerts);
+      mockMaintenanceService.getUpcomingMaintenances.mockResolvedValue(
+        mockAlerts,
+      );
 
       const result = await controller.getUpcomingAlerts(1);
 
@@ -187,7 +197,9 @@ describe('MaintenanceController', () => {
         },
       ];
 
-      mockMaintenanceService.getMaintenancesByKmAlert.mockResolvedValue(mockKmAlerts);
+      mockMaintenanceService.getMaintenancesByKmAlert.mockResolvedValue(
+        mockKmAlerts,
+      );
 
       const result = await controller.getKmAlerts(1);
 
@@ -216,12 +228,17 @@ describe('MaintenanceController', () => {
         averageCost: 166.67,
       };
 
-      mockMaintenanceService.getCostSummaryByVehicle.mockResolvedValue(mockSummary);
+      mockMaintenanceService.getCostSummaryByVehicle.mockResolvedValue(
+        mockSummary,
+      );
 
       const result = await controller.getVehicleCostSummary('vehicle-1', 1);
 
       expect(result).toEqual(mockSummary);
-      expect(service.getCostSummaryByVehicle).toHaveBeenCalledWith('vehicle-1', 1);
+      expect(service.getCostSummaryByVehicle).toHaveBeenCalledWith(
+        'vehicle-1',
+        1,
+      );
     });
   });
 });

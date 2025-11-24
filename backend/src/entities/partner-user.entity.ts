@@ -99,7 +99,10 @@ export class PartnerUser {
 
   // Check if user can manage partner
   canManagePartner(): boolean {
-    return this.role === PartnerUserRole.OWNER || this.role === PartnerUserRole.MANAGER;
+    return (
+      this.role === PartnerUserRole.OWNER ||
+      this.role === PartnerUserRole.MANAGER
+    );
   }
 
   // Check if user is owner

@@ -7,7 +7,10 @@ import { AvailabilitiesService } from '../availabilities/availabilities.service'
 import { SearchPartnersDto } from './dto/search-partners.dto';
 import { PaginatedResponse } from '../../common/dto/paginated-response.dto';
 import { SimpleCacheService } from '../../common/cache/simple-cache.service';
-import { MarketplacePartnerDto, MarketplaceServiceDto } from './dto/marketplace-partner.dto';
+import {
+  MarketplacePartnerDto,
+  MarketplaceServiceDto,
+} from './dto/marketplace-partner.dto';
 import * as crypto from 'crypto';
 
 /**
@@ -49,14 +52,19 @@ export class SearchService {
     private cacheService: SimpleCacheService,
   ) {}
 
-  async searchPartners(dto: SearchPartnersDto): Promise<PaginatedResponse<MarketplacePartnerDto>> {
+  async searchPartners(
+    dto: SearchPartnersDto,
+  ): Promise<PaginatedResponse<MarketplacePartnerDto>> {
     const startTime = Date.now();
 
     // Generate cache key from search parameters
     const cacheKey = this.generateCacheKey(dto);
 
     // Try to get from cache first
-    const cached = await this.cacheService.get<PaginatedResponse<MarketplacePartnerDto>>(cacheKey);
+    const cached =
+      await this.cacheService.get<PaginatedResponse<MarketplacePartnerDto>>(
+        cacheKey,
+      );
     if (cached) {
       const cacheTime = Date.now() - startTime;
       this.logger.debug(`Cache HIT for key ${cacheKey} (${cacheTime}ms)`);
@@ -75,13 +83,17 @@ export class SearchService {
       },
     });
 
-    this.logger.debug(`Found ${partners.length} approved partners with coordinates`);
+    this.logger.debug(
+      `Found ${partners.length} approved partners with coordinates`,
+    );
 
     // Step 2: Filter by type if provided
     let filteredPartners = partners;
     if (dto.type) {
       filteredPartners = filteredPartners.filter((p) => p.type === dto.type);
-      this.logger.debug(`Filtered by type ${dto.type}: ${filteredPartners.length} partners`);
+      this.logger.debug(
+        `Filtered by type ${dto.type}: ${filteredPartners.length} partners`,
+      );
     }
 
     // Step 3: Calculate distance and filter by radius
@@ -104,8 +116,12 @@ export class SearchService {
     // Step 4: Filter by rating if provided
     let ratedPartners = partnersWithDistance;
     if (dto.minRating !== undefined) {
-      ratedPartners = ratedPartners.filter((p) => Number(p.rating) >= dto.minRating!);
-      this.logger.debug(`Filtered by rating >=${dto.minRating}: ${ratedPartners.length} partners`);
+      ratedPartners = ratedPartners.filter(
+        (p) => Number(p.rating) >= dto.minRating!,
+      );
+      this.logger.debug(
+        `Filtered by rating >=${dto.minRating}: ${ratedPartners.length} partners`,
+      );
     }
 
     // Step 5: Get services and filter by service type and price
@@ -129,7 +145,9 @@ export class SearchService {
     let serviceFilteredPartners = partnersWithServices;
     if (dto.serviceType) {
       serviceFilteredPartners = serviceFilteredPartners.filter((p) =>
-        p.services.some((s) => s.name.toLowerCase().includes(dto.serviceType!.toLowerCase())),
+        p.services.some((s) =>
+          s.name.toLowerCase().includes(dto.serviceType!.toLowerCase()),
+        ),
       );
       this.logger.debug(
         `Filtered by service type "${dto.serviceType}": ${serviceFilteredPartners.length} partners`,
@@ -164,10 +182,13 @@ export class SearchService {
         if (dto.date) {
           try {
             // Use default duration of 60 minutes for availability check
-            const slots = await this.availabilitiesService.getAvailableSlots(partner.id, {
-              date: dto.date,
-              duration: 60,
-            });
+            const slots = await this.availabilitiesService.getAvailableSlots(
+              partner.id,
+              {
+                date: dto.date,
+                duration: 60,
+              },
+            );
 
             hasAvailability = slots.availableCount > 0;
           } catch (error) {
@@ -191,7 +212,8 @@ export class SearchService {
     const partnersWithScore = partnersWithAvailability.map((partner) => {
       const avgPrice =
         partner.services.length > 0
-          ? partner.services.reduce((sum, s) => sum + Number(s.price), 0) / partner.services.length
+          ? partner.services.reduce((sum, s) => sum + Number(s.price), 0) /
+            partner.services.length
           : 0;
 
       const relevanceScore = this.calculateRelevanceScore(
@@ -208,7 +230,9 @@ export class SearchService {
     });
 
     // Sort by relevance score (highest first)
-    const sortedPartners = partnersWithScore.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    const sortedPartners = partnersWithScore.sort(
+      (a, b) => b.relevanceScore - a.relevanceScore,
+    );
 
     // Step 8: Apply pagination
     const page = dto.page || 1;
@@ -221,7 +245,9 @@ export class SearchService {
     // Step 9: Transform to marketplace DTOs and calculate next available slots
     const marketplaceDtos = await Promise.all(
       paginatedPartners.map(async (partner) => {
-        const nextAvailableSlot = await this.calculateNextAvailableSlot(partner.id);
+        const nextAvailableSlot = await this.calculateNextAvailableSlot(
+          partner.id,
+        );
         return this.transformToMarketplaceDto(partner, nextAvailableSlot);
       }),
     );
@@ -258,7 +284,12 @@ export class SearchService {
    * @param lng2 Longitude of point 2
    * @returns Distance in kilometers
    */
-  private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number,
+  ): number {
     const R = 6371; // Earth radius in kilometers
     const dLat = this.toRad(lat2 - lat1);
     const dLng = this.toRad(lng2 - lng1);
@@ -304,12 +335,16 @@ export class SearchService {
     const ratingScore = (Number(partner.rating) / 5) * 100 * 0.3;
 
     // Price score (20%): Lower price is better (assuming max price of 200€)
-    const priceScore = avgPrice > 0 ? Math.max(0, (1 - Math.min(avgPrice / 200, 1)) * 100) * 0.2 : 20;
+    const priceScore =
+      avgPrice > 0
+        ? Math.max(0, (1 - Math.min(avgPrice / 200, 1)) * 100) * 0.2
+        : 20;
 
     // Availability score (10%): Available partners get bonus
     const availabilityScore = partner.hasAvailability ? 10 : 0;
 
-    const totalScore = distanceScore + ratingScore + priceScore + availabilityScore;
+    const totalScore =
+      distanceScore + ratingScore + priceScore + availabilityScore;
 
     return Math.round(totalScore * 100) / 100; // Round to 2 decimal places
   }
@@ -343,7 +378,9 @@ export class SearchService {
    * Calculate next available slot for a partner within the next 7 days
    * Returns the earliest available slot or null if none found
    */
-  private async calculateNextAvailableSlot(partnerId: string): Promise<Date | null> {
+  private async calculateNextAvailableSlot(
+    partnerId: string,
+  ): Promise<Date | null> {
     try {
       const today = new Date();
       const nextWeek = new Date(today);
@@ -355,10 +392,13 @@ export class SearchService {
         checkDate.setDate(checkDate.getDate() + i);
         const dateString = checkDate.toISOString().split('T')[0]; // YYYY-MM-DD
 
-        const slots = await this.availabilitiesService.getAvailableSlots(partnerId, {
-          date: dateString,
-          duration: 60, // Default 60 minutes
-        });
+        const slots = await this.availabilitiesService.getAvailableSlots(
+          partnerId,
+          {
+            date: dateString,
+            duration: 60, // Default 60 minutes
+          },
+        );
 
         if (slots.availableCount > 0 && slots.slots.length > 0) {
           // Return the first available slot
@@ -384,12 +424,14 @@ export class SearchService {
     partner: PartnerSearchResult,
     nextAvailableSlot: Date | null,
   ): MarketplacePartnerDto {
-    const marketplaceServices: MarketplaceServiceDto[] = partner.services.map((service) => ({
-      id: service.id,
-      name: service.name,
-      price: Number(service.price),
-      durationMinutes: service.durationMinutes,
-    }));
+    const marketplaceServices: MarketplaceServiceDto[] = partner.services.map(
+      (service) => ({
+        id: service.id,
+        name: service.name,
+        price: Number(service.price),
+        durationMinutes: service.durationMinutes,
+      }),
+    );
 
     return {
       id: partner.id,

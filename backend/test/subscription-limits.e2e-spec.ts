@@ -49,7 +49,9 @@ describe('Subscription Limits Enforcement (e2e)', () => {
     usersRepository = moduleFixture.get(getRepositoryToken(User));
     tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
     vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
-    subscriptionsRepository = moduleFixture.get(getRepositoryToken(Subscription));
+    subscriptionsRepository = moduleFixture.get(
+      getRepositoryToken(Subscription),
+    );
 
     // Setup : créer tenant avec plan Freemium (max 3 véhicules)
     const registerResponse = await request(app.getHttpServer())

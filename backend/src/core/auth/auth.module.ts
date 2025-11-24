@@ -34,12 +34,7 @@ import { StripeModule } from '../../stripe/stripe.module';
     StripeModule,
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    JwtAuthGuard,
-    TenantAuthGuard,
-  ],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, TenantAuthGuard],
   exports: [AuthService, JwtAuthGuard, TenantAuthGuard],
 })
 export class AuthModule {}

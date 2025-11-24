@@ -14,7 +14,10 @@ import { User, UserRole } from '../../entities/user.entity';
 import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { ReportFilterDto } from './dto/report-filter.dto';
-import { ReportResponseDto, ReportListResponseDto } from './dto/report-response.dto';
+import {
+  ReportResponseDto,
+  ReportListResponseDto,
+} from './dto/report-response.dto';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../../entities/audit-log.entity';
@@ -47,7 +50,9 @@ export class ReportsService {
     });
 
     if (!vehicle) {
-      throw new NotFoundException('Vehicle not found or does not belong to your organization');
+      throw new NotFoundException(
+        'Vehicle not found or does not belong to your organization',
+      );
     }
 
     // Validate driver exists and belongs to tenant
@@ -84,9 +89,16 @@ export class ReportsService {
     });
 
     // Send email notification to tenant admins
-    await this.sendReportCreatedNotification(savedReport, driver, vehicle, tenantId);
+    await this.sendReportCreatedNotification(
+      savedReport,
+      driver,
+      vehicle,
+      tenantId,
+    );
 
-    this.logger.log(`Report ${savedReport.id} created by driver ${driverId} for vehicle ${vehicle.registration}`);
+    this.logger.log(
+      `Report ${savedReport.id} created by driver ${driverId} for vehicle ${vehicle.registration}`,
+    );
 
     return savedReport;
   }
@@ -122,10 +134,7 @@ export class ReportsService {
       query.andWhere('report.driver_id = :driverId', { driverId });
     }
 
-    query
-      .orderBy('report.created_at', 'DESC')
-      .skip(skip)
-      .take(limit);
+    query.orderBy('report.created_at', 'DESC').skip(skip).take(limit);
 
     const [reports, total] = await query.getManyAndCount();
 
@@ -160,11 +169,17 @@ export class ReportsService {
     });
   }
 
-  async acknowledge(id: string, userId: string, tenantId: number): Promise<Report> {
+  async acknowledge(
+    id: string,
+    userId: string,
+    tenantId: number,
+  ): Promise<Report> {
     const report = await this.findOne(id, tenantId);
 
     if (!report.canBeAcknowledged()) {
-      throw new BadRequestException('Report cannot be acknowledged in its current status');
+      throw new BadRequestException(
+        'Report cannot be acknowledged in its current status',
+      );
     }
 
     report.status = ReportStatus.ACKNOWLEDGED;
@@ -200,7 +215,9 @@ export class ReportsService {
     const report = await this.findOne(id, tenantId);
 
     if (!report.canBeResolved()) {
-      throw new BadRequestException('Report cannot be resolved in its current status');
+      throw new BadRequestException(
+        'Report cannot be resolved in its current status',
+      );
     }
 
     report.status = ReportStatus.RESOLVED;
@@ -244,7 +261,12 @@ export class ReportsService {
     }
 
     if (updateReportDto.status === ReportStatus.RESOLVED) {
-      return this.resolve(id, userId, tenantId, updateReportDto.resolutionNotes);
+      return this.resolve(
+        id,
+        userId,
+        tenantId,
+        updateReportDto.resolutionNotes,
+      );
     }
 
     // Update other fields
@@ -309,8 +331,13 @@ export class ReportsService {
     try {
       await fs.mkdir(uploadDir, { recursive: true });
     } catch (error) {
-      this.logger.error(`Failed to create upload directory: ${uploadDir}`, error);
-      throw new BadRequestException('Erreur lors de la création du dossier upload');
+      this.logger.error(
+        `Failed to create upload directory: ${uploadDir}`,
+        error,
+      );
+      throw new BadRequestException(
+        'Erreur lors de la création du dossier upload',
+      );
     }
 
     const photoUrls: string[] = [];
@@ -337,7 +364,10 @@ export class ReportsService {
 
         this.logger.log(`Photo uploaded for report ${reportId}: ${photoUrl}`);
       } catch (error) {
-        this.logger.error(`Failed to process photo for report ${reportId}`, error);
+        this.logger.error(
+          `Failed to process photo for report ${reportId}`,
+          error,
+        );
         throw new BadRequestException('Erreur lors du traitement de la photo');
       }
     }
@@ -409,7 +439,9 @@ export class ReportsService {
       vehicleId: report.vehicleId,
       vehicleRegistration: report.vehicle?.registration,
       driverId: report.driverId,
-      driverName: report.driver ? `${report.driver.firstName} ${report.driver.lastName}` : undefined,
+      driverName: report.driver
+        ? `${report.driver.firstName} ${report.driver.lastName}`
+        : undefined,
       type: report.type,
       description: report.description,
       notes: report.notes,

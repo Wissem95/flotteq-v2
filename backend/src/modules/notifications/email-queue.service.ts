@@ -8,7 +8,11 @@ export class EmailQueueService {
 
   constructor(@InjectQueue('email') private emailQueue: Queue) {}
 
-  async queueWelcomeEmail(email: string, firstName: string, tenantName: string) {
+  async queueWelcomeEmail(
+    email: string,
+    firstName: string,
+    tenantName: string,
+  ) {
     try {
       await this.emailQueue.add(
         'welcome',
@@ -29,7 +33,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Welcome email queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue welcome email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue welcome email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -62,7 +69,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Maintenance reminder queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue maintenance reminder: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue maintenance reminder: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -94,12 +104,19 @@ export class EmailQueueService {
       );
       this.logger.log(`Document expiring alert queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue document expiring alert: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue document expiring alert: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
 
-  async queuePasswordResetEmail(email: string, firstName: string, resetUrl: string) {
+  async queuePasswordResetEmail(
+    email: string,
+    firstName: string,
+    resetUrl: string,
+  ) {
     try {
       await this.emailQueue.add(
         'password-reset',
@@ -117,13 +134,20 @@ export class EmailQueueService {
       );
       this.logger.log(`Password reset email queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue password reset email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue password reset email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
 
   // Partner-related emails
-  async queuePartnerWelcomeEmail(email: string, firstName: string, companyName: string) {
+  async queuePartnerWelcomeEmail(
+    email: string,
+    firstName: string,
+    companyName: string,
+  ) {
     try {
       await this.emailQueue.add(
         'partner-welcome',
@@ -141,12 +165,19 @@ export class EmailQueueService {
       );
       this.logger.log(`Partner welcome email queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue partner welcome email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue partner welcome email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
 
-  async queuePartnerApprovedEmail(email: string, firstName: string, companyName: string) {
+  async queuePartnerApprovedEmail(
+    email: string,
+    firstName: string,
+    companyName: string,
+  ) {
     try {
       await this.emailQueue.add(
         'partner-approved',
@@ -164,7 +195,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Partner approved email queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue partner approved email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue partner approved email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -193,7 +227,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Partner rejected email queued for ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue partner rejected email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue partner rejected email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -221,7 +258,10 @@ export class EmailQueueService {
       );
       this.logger.log(`New booking email queued for partner ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue partner booking new email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue partner booking new email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -248,7 +288,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Booking cancelled email queued for partner ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue partner booking cancelled email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue partner booking cancelled email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -275,7 +318,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Booking confirmed email queued for tenant ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue booking confirmed email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue booking confirmed email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -302,7 +348,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Booking rejected email queued for tenant ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue booking rejected email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue booking rejected email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -329,7 +378,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Booking completed email queued for tenant ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue booking completed email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue booking completed email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -356,7 +408,10 @@ export class EmailQueueService {
       );
       this.logger.log(`Booking reminder email queued for tenant ${email}`);
     } catch (error) {
-      this.logger.error(`Failed to queue booking reminder email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue booking reminder email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }
@@ -378,7 +433,7 @@ export class EmailQueueService {
 
       for (const email of recipients) {
         await this.emailQueue.add(
-          'send',  // Uses existing processor
+          'send', // Uses existing processor
           {
             to: email,
             subject: options.subject,
@@ -395,9 +450,14 @@ export class EmailQueueService {
         );
       }
 
-      this.logger.log(`Generic email queued: ${options.subject} to ${recipients.length} recipient(s)`);
+      this.logger.log(
+        `Generic email queued: ${options.subject} to ${recipients.length} recipient(s)`,
+      );
     } catch (error) {
-      this.logger.error(`Failed to queue generic email: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to queue generic email: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }

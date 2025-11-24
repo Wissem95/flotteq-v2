@@ -30,8 +30,22 @@ export class AuditService {
   async findAll(
     tenantId: number,
     filters: AuditLogFilterDto,
-  ): Promise<{ data: AuditLog[]; total: number; page: number; totalPages: number }> {
-    const { userId, entityType, entityId, action, startDate, endDate, page = 1, limit = 50 } = filters;
+  ): Promise<{
+    data: AuditLog[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const {
+      userId,
+      entityType,
+      entityId,
+      action,
+      startDate,
+      endDate,
+      page = 1,
+      limit = 50,
+    } = filters;
 
     const query = this.auditLogRepository
       .createQueryBuilder('audit')

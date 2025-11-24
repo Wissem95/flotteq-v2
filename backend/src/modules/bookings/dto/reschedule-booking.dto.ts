@@ -2,7 +2,10 @@ import { IsNotEmpty, IsDateString, Matches } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class RescheduleBookingDto {
-  @ApiProperty({ example: '2025-10-25', description: 'New scheduled date (YYYY-MM-DD)' })
+  @ApiProperty({
+    example: '2025-10-25',
+    description: 'New scheduled date (YYYY-MM-DD)',
+  })
   @IsNotEmpty()
   @IsDateString()
   scheduledDate: string;

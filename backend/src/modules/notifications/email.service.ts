@@ -154,7 +154,11 @@ export class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(email: string, firstName: string, resetUrl: string) {
+  async sendPasswordResetEmail(
+    email: string,
+    firstName: string,
+    resetUrl: string,
+  ) {
     await this.sendEmail({
       to: email,
       subject: 'Réinitialisation de votre mot de passe FlotteQ',
@@ -187,7 +191,11 @@ export class EmailService {
     });
   }
 
-  async sendPartnerWelcomeEmail(email: string, firstName: string, companyName: string) {
+  async sendPartnerWelcomeEmail(
+    email: string,
+    firstName: string,
+    companyName: string,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Bienvenue ${companyName} sur FlotteQ`,
@@ -202,7 +210,11 @@ export class EmailService {
     });
   }
 
-  async sendPartnerApprovedEmail(email: string, firstName: string, companyName: string) {
+  async sendPartnerApprovedEmail(
+    email: string,
+    firstName: string,
+    companyName: string,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `${companyName} - Votre compte partenaire est approuvé !`,
@@ -235,7 +247,11 @@ export class EmailService {
     });
   }
 
-  async sendPartnerBookingNew(email: string, companyName: string, bookingData: any) {
+  async sendPartnerBookingNew(
+    email: string,
+    companyName: string,
+    bookingData: any,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Nouvelle réservation #${bookingData.bookingId || 'N/A'}`,
@@ -248,7 +264,11 @@ export class EmailService {
     });
   }
 
-  async sendPartnerBookingCancelled(email: string, companyName: string, bookingData: any) {
+  async sendPartnerBookingCancelled(
+    email: string,
+    companyName: string,
+    bookingData: any,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Réservation annulée #${bookingData.bookingId || 'N/A'}`,
@@ -261,7 +281,11 @@ export class EmailService {
     });
   }
 
-  async sendBookingConfirmed(email: string, tenantName: string, bookingData: any) {
+  async sendBookingConfirmed(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Réservation confirmée #${bookingData.bookingId || 'N/A'}`,
@@ -274,7 +298,11 @@ export class EmailService {
     });
   }
 
-  async sendBookingRejected(email: string, tenantName: string, bookingData: any) {
+  async sendBookingRejected(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Réservation refusée #${bookingData.bookingId || 'N/A'}`,
@@ -287,7 +315,11 @@ export class EmailService {
     });
   }
 
-  async sendBookingCompleted(email: string, tenantName: string, bookingData: any) {
+  async sendBookingCompleted(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Service terminé #${bookingData.bookingId || 'N/A'}`,
@@ -300,7 +332,11 @@ export class EmailService {
     });
   }
 
-  async sendBookingReminder(email: string, tenantName: string, bookingData: any) {
+  async sendBookingReminder(
+    email: string,
+    tenantName: string,
+    bookingData: any,
+  ) {
     await this.sendEmail({
       to: email,
       subject: `Rappel : Rendez-vous demain - ${bookingData.partnerName}`,

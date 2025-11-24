@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddProfilePhotoToDrivers1760950000000 implements MigrationInterface {
+export class AddProfilePhotoToDrivers1760950000000
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.addColumn(
       'drivers',

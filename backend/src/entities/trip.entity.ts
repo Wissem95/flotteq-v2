@@ -85,7 +85,10 @@ export class Trip {
   @Column({ type: 'int', name: 'start_fuel_level' })
   startFuelLevel: number;
 
-  @ApiPropertyOptional({ type: [String], description: 'URLs photos état départ' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'URLs photos état départ',
+  })
   @Column({ type: 'simple-array', nullable: true, name: 'start_photos' })
   startPhotos: string[] | null;
 
@@ -93,7 +96,10 @@ export class Trip {
   @Column({ type: 'text', nullable: true, name: 'start_notes' })
   startNotes: string | null;
 
-  @ApiPropertyOptional({ type: Array, description: 'Liste défauts constatés départ' })
+  @ApiPropertyOptional({
+    type: Array,
+    description: 'Liste défauts constatés départ',
+  })
   @Column({ type: 'jsonb', nullable: true, name: 'start_defects' })
   startDefects: VehicleDefect[] | null;
 
@@ -106,23 +112,38 @@ export class Trip {
   startLocation: Location | null;
 
   // ===== ÉTAT DES LIEUX RETOUR =====
-  @ApiPropertyOptional({ example: 103150, description: 'Kilométrage au retour' })
+  @ApiPropertyOptional({
+    example: 103150,
+    description: 'Kilométrage au retour',
+  })
   @Column({ type: 'int', nullable: true, name: 'end_km' })
   endKm: number | null;
 
-  @ApiPropertyOptional({ example: 45, description: 'Niveau carburant retour (0-100%)' })
+  @ApiPropertyOptional({
+    example: 45,
+    description: 'Niveau carburant retour (0-100%)',
+  })
   @Column({ type: 'int', nullable: true, name: 'end_fuel_level' })
   endFuelLevel: number | null;
 
-  @ApiPropertyOptional({ type: [String], description: 'URLs photos état retour' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'URLs photos état retour',
+  })
   @Column({ type: 'simple-array', nullable: true, name: 'end_photos' })
   endPhotos: string[] | null;
 
-  @ApiPropertyOptional({ example: 'Nouveau défaut constaté', description: 'Notes état retour' })
+  @ApiPropertyOptional({
+    example: 'Nouveau défaut constaté',
+    description: 'Notes état retour',
+  })
   @Column({ type: 'text', nullable: true, name: 'end_notes' })
   endNotes: string | null;
 
-  @ApiPropertyOptional({ type: Array, description: 'Liste défauts constatés retour' })
+  @ApiPropertyOptional({
+    type: Array,
+    description: 'Liste défauts constatés retour',
+  })
   @Column({ type: 'jsonb', nullable: true, name: 'end_defects' })
   endDefects: VehicleDefect[] | null;
 
@@ -135,7 +156,10 @@ export class Trip {
   endLocation: Location | null;
 
   // ===== DONNÉES CALCULÉES =====
-  @ApiPropertyOptional({ example: 327, description: 'Distance parcourue en km' })
+  @ApiPropertyOptional({
+    example: 327,
+    description: 'Distance parcourue en km',
+  })
   @Column({ type: 'int', nullable: true, name: 'distance_km' })
   distanceKm: number | null;
 
@@ -171,7 +195,7 @@ export class Trip {
   getNewDefects(): VehicleDefect[] {
     if (!this.endDefects || !this.startDefects) return this.endDefects || [];
 
-    const startDefectIds = new Set(this.startDefects.map(d => d.id));
-    return this.endDefects.filter(d => !startDefectIds.has(d.id));
+    const startDefectIds = new Set(this.startDefects.map((d) => d.id));
+    return this.endDefects.filter((d) => !startDefectIds.has(d.id));
   }
 }

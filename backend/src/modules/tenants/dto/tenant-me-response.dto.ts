@@ -14,12 +14,21 @@ export class TenantMeResponseDto {
   @ApiProperty({ example: 'contact@acme.com', description: 'Company email' })
   email: string;
 
-  @ApiPropertyOptional({ example: '123 Main St, Paris 75001', description: 'Company address' })
+  @ApiPropertyOptional({
+    example: '123 Main St, Paris 75001',
+    description: 'Company address',
+  })
   address?: string;
 
-  @ApiPropertyOptional({ example: '+33 1 23 45 67 89', description: 'Company phone' })
+  @ApiPropertyOptional({
+    example: '+33 1 23 45 67 89',
+    description: 'Company phone',
+  })
   phone?: string;
 
-  @ApiProperty({ example: '2024-01-15T10:00:00.000Z', description: 'Account creation date' })
+  @ApiProperty({
+    example: '2024-01-15T10:00:00.000Z',
+    description: 'Account creation date',
+  })
   createdAt: Date;
 }

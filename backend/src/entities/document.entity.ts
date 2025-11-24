@@ -35,7 +35,10 @@ export enum DocumentType {
 
 @Entity('documents')
 export class Document {
-  @ApiProperty({ format: 'uuid', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' })
+  @ApiProperty({
+    format: 'uuid',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -83,11 +86,17 @@ export class Document {
   })
   documentType?: DocumentType;
 
-  @ApiPropertyOptional({ example: '2025-12-31T00:00:00Z', description: 'Date d\'expiration du document' })
+  @ApiPropertyOptional({
+    example: '2025-12-31T00:00:00Z',
+    description: "Date d'expiration du document",
+  })
   @Column({ name: 'expiry_date', type: 'timestamp', nullable: true })
   expiryDate?: Date;
 
-  @ApiPropertyOptional({ example: 'Document renouvelé suite à contrôle', description: 'Notes optionnelles' })
+  @ApiPropertyOptional({
+    example: 'Document renouvelé suite à contrôle',
+    description: 'Notes optionnelles',
+  })
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes?: string;
 

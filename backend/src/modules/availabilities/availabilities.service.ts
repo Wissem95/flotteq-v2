@@ -155,9 +155,7 @@ export class AvailabilitiesService {
       },
     });
 
-    this.logger.log(
-      `Availability ${id} updated for partner ${partnerId}`,
-    );
+    this.logger.log(`Availability ${id} updated for partner ${partnerId}`);
 
     return updated;
   }
@@ -270,7 +268,9 @@ export class AvailabilitiesService {
     this.logger.log(`Availability ${id} deleted for partner ${partnerId}`);
   }
 
-  async getAllAvailabilities(partnerId: string): Promise<AvailabilityResponseDto[]> {
+  async getAllAvailabilities(
+    partnerId: string,
+  ): Promise<AvailabilityResponseDto[]> {
     const availabilities = await this.availabilityRepository.find({
       where: { partnerId },
       order: { dayOfWeek: 'ASC' },
@@ -325,7 +325,9 @@ export class AvailabilitiesService {
     today.setHours(0, 0, 0, 0);
 
     if (targetDate < today) {
-      throw new BadRequestException('Cannot create unavailability for past dates');
+      throw new BadRequestException(
+        'Cannot create unavailability for past dates',
+      );
     }
 
     // Create unavailability
@@ -384,8 +386,8 @@ export class AvailabilitiesService {
     unavailability.date = new Date(dto.date);
     unavailability.reason = dto.reason;
     unavailability.isFullDay = dto.isFullDay;
-    unavailability.startTime = dto.isFullDay ? null : (dto.startTime || null);
-    unavailability.endTime = dto.isFullDay ? null : (dto.endTime || null);
+    unavailability.startTime = dto.isFullDay ? null : dto.startTime || null;
+    unavailability.endTime = dto.isFullDay ? null : dto.endTime || null;
 
     const updated = await this.unavailabilityRepository.save(unavailability);
 
@@ -533,7 +535,9 @@ export class AvailabilitiesService {
 
     // Check each slot
     const now = new Date();
-    const minAdvanceTime = new Date(now.getTime() + advanceNoticeHours * 60 * 60 * 1000);
+    const minAdvanceTime = new Date(
+      now.getTime() + advanceNoticeHours * 60 * 60 * 1000,
+    );
 
     const slotsWithAvailability: AvailableSlotDto[] = allSlots.map((slot) => {
       const slotDateTime = this.parseDateTime(date, slot.time);
@@ -580,7 +584,9 @@ export class AvailabilitiesService {
       };
     });
 
-    const availableCount = slotsWithAvailability.filter((s) => s.available).length;
+    const availableCount = slotsWithAvailability.filter(
+      (s) => s.available,
+    ).length;
     const unavailableCount = slotsWithAvailability.length - availableCount;
 
     return {
@@ -647,7 +653,9 @@ export class AvailabilitiesService {
     }
 
     // Check if ranges overlap
-    return unavailability.startTime < slotEnd && slotStart < unavailability.endTime;
+    return (
+      unavailability.startTime < slotEnd && slotStart < unavailability.endTime
+    );
   }
 
   private isSlotOverlappingBooking(

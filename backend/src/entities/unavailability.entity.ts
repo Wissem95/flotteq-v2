@@ -41,11 +41,17 @@ export class Unavailability {
   @Column({ type: 'boolean', default: true, name: 'is_full_day' })
   isFullDay: boolean;
 
-  @ApiPropertyOptional({ example: '09:00', description: 'Start time if partial unavailability' })
+  @ApiPropertyOptional({
+    example: '09:00',
+    description: 'Start time if partial unavailability',
+  })
   @Column({ type: 'time', nullable: true, name: 'start_time' })
   startTime: string | null;
 
-  @ApiPropertyOptional({ example: '12:00', description: 'End time if partial unavailability' })
+  @ApiPropertyOptional({
+    example: '12:00',
+    description: 'End time if partial unavailability',
+  })
   @Column({ type: 'time', nullable: true, name: 'end_time' })
   endTime: string | null;
 

@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsString, IsDateString, IsOptional, IsNumber, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateMaintenanceFromTemplateDto {

@@ -4,7 +4,10 @@ export class DashboardStatsDto {
   @ApiProperty({ example: 25, description: 'Total number of vehicles' })
   totalVehicles: number;
 
-  @ApiProperty({ example: 20, description: 'Number of active/available vehicles' })
+  @ApiProperty({
+    example: 20,
+    description: 'Number of active/available vehicles',
+  })
   activeVehicles: number;
 
   @ApiProperty({ example: 15, description: 'Total number of drivers' })

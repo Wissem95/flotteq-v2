@@ -10,7 +10,11 @@ import { MaintenanceTemplate } from './entities/maintenance-template.entity';
 @Module({
   imports: [TypeOrmModule.forFeature([Maintenance, MaintenanceTemplate])],
   controllers: [MaintenanceController],
-  providers: [MaintenanceService, MaintenanceTemplateService, MaintenanceNotificationService],
+  providers: [
+    MaintenanceService,
+    MaintenanceTemplateService,
+    MaintenanceNotificationService,
+  ],
   exports: [MaintenanceService, MaintenanceTemplateService],
 })
 export class MaintenanceModule {}

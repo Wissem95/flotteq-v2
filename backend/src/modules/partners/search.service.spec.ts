@@ -2,7 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SearchService } from './search.service';
-import { Partner, PartnerStatus, PartnerType } from '../../entities/partner.entity';
+import {
+  Partner,
+  PartnerStatus,
+  PartnerType,
+} from '../../entities/partner.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { AvailabilitiesService } from '../availabilities/availabilities.service';
 import { SearchPartnersDto } from './dto/search-partners.dto';
@@ -149,7 +153,9 @@ describe('SearchService', () => {
     });
 
     it('should calculate distance for partner near Paris as approximately 5-10 km', async () => {
-      partnerRepository.find.mockResolvedValue([mockPartnerNearParis as Partner]);
+      partnerRepository.find.mockResolvedValue([
+        mockPartnerNearParis as Partner,
+      ]);
       partnerServiceRepository.find.mockResolvedValue([]);
 
       const dto: SearchPartnersDto = {
@@ -208,9 +214,15 @@ describe('SearchService', () => {
   describe('Filter by Partner Type', () => {
     it('should filter partners by type', async () => {
       const garagePartner = { ...mockPartnerParis, type: PartnerType.GARAGE };
-      const ctCenterPartner = { ...mockPartnerNearParis, type: PartnerType.CT_CENTER };
+      const ctCenterPartner = {
+        ...mockPartnerNearParis,
+        type: PartnerType.CT_CENTER,
+      };
 
-      partnerRepository.find.mockResolvedValue([garagePartner, ctCenterPartner] as Partner[]);
+      partnerRepository.find.mockResolvedValue([
+        garagePartner,
+        ctCenterPartner,
+      ] as Partner[]);
       partnerServiceRepository.find.mockResolvedValue([]);
 
       const dto: SearchPartnersDto = {
@@ -377,7 +389,9 @@ describe('SearchService', () => {
       // Close partner with high rating should score higher
       // Distance (0km) + rating (4.5/5) = high score
       expect(result.data[0].id).toBe('close-high-rating');
-      expect(result.data[0].relevanceScore).toBeGreaterThan(result.data[1].relevanceScore!);
+      expect(result.data[0].relevanceScore).toBeGreaterThan(
+        result.data[1].relevanceScore!,
+      );
     });
   });
 
@@ -511,10 +525,13 @@ describe('SearchService', () => {
 
       expect(result.data.length).toBe(1);
       expect(result.data[0].hasAvailability).toBe(true);
-      expect(availabilitiesService.getAvailableSlots).toHaveBeenCalledWith('partner-paris', {
-        date: '2025-10-15',
-        duration: 60,
-      });
+      expect(availabilitiesService.getAvailableSlots).toHaveBeenCalledWith(
+        'partner-paris',
+        {
+          date: '2025-10-15',
+          duration: 60,
+        },
+      );
     });
 
     it('should handle availability check failure gracefully', async () => {

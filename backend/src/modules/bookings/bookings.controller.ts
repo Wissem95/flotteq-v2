@@ -12,14 +12,23 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiParam,
+} from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { BookingsPaymentService } from './bookings-payment.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { UpdateBookingDto } from './dto/update-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 import { BookingFilterDto } from './dto/booking-filter.dto';
-import { BookingResponseDto, BookingListResponseDto } from './dto/booking-response.dto';
+import {
+  BookingResponseDto,
+  BookingListResponseDto,
+} from './dto/booking-response.dto';
 import { HybridAuthGuard } from '../../core/auth/guards/hybrid-auth.guard';
 import { TenantGuard } from '../../core/tenant/tenant.guard';
 
@@ -43,14 +52,28 @@ export class BookingsController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new booking (Tenant)' })
-  @ApiResponse({ status: 201, description: 'Booking created successfully', type: BookingResponseDto })
+  @ApiResponse({
+    status: 201,
+    description: 'Booking created successfully',
+    type: BookingResponseDto,
+  })
   @ApiResponse({ status: 400, description: 'Bad request - validation failed' })
-  @ApiResponse({ status: 404, description: 'Partner, service, or vehicle not found' })
-  async create(@Body() createBookingDto: CreateBookingDto, @Request() req: RequestWithUser): Promise<any> {
+  @ApiResponse({
+    status: 404,
+    description: 'Partner, service, or vehicle not found',
+  })
+  async create(
+    @Body() createBookingDto: CreateBookingDto,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     const tenantId = req.user.tenantId;
     const userId = req.user.userId;
 
-    const booking = await this.bookingsService.create(createBookingDto, tenantId, userId);
+    const booking = await this.bookingsService.create(
+      createBookingDto,
+      tenantId,
+      userId,
+    );
 
     return {
       message: 'Booking created successfully',
@@ -59,9 +82,18 @@ export class BookingsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all bookings for tenant or partner with filters' })
-  @ApiResponse({ status: 200, description: 'Bookings retrieved successfully', type: BookingListResponseDto })
-  async findAll(@Query() filters: BookingFilterDto, @Request() req: RequestWithUser): Promise<BookingListResponseDto> {
+  @ApiOperation({
+    summary: 'Get all bookings for tenant or partner with filters',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Bookings retrieved successfully',
+    type: BookingListResponseDto,
+  })
+  async findAll(
+    @Query() filters: BookingFilterDto,
+    @Request() req: RequestWithUser,
+  ): Promise<BookingListResponseDto> {
     // If partner, use findByPartner method
     if (req.user.partnerId) {
       return this.bookingsService.findByPartner(req.user.partnerId, filters);
@@ -75,17 +107,28 @@ export class BookingsController {
   @Get('my-bookings')
   @ApiOperation({
     summary: 'Get tenant bookings history (alias for GET /bookings)',
-    description: 'Returns all bookings for the authenticated tenant user. This is an alias endpoint for better API clarity - it calls the same underlying service as GET /bookings.'
+    description:
+      'Returns all bookings for the authenticated tenant user. This is an alias endpoint for better API clarity - it calls the same underlying service as GET /bookings.',
   })
-  @ApiResponse({ status: 200, description: 'Tenant bookings retrieved successfully', type: BookingListResponseDto })
-  async getMyBookings(@Query() filters: BookingFilterDto, @Request() req: RequestWithUser): Promise<BookingListResponseDto> {
+  @ApiResponse({
+    status: 200,
+    description: 'Tenant bookings retrieved successfully',
+    type: BookingListResponseDto,
+  })
+  async getMyBookings(
+    @Query() filters: BookingFilterDto,
+    @Request() req: RequestWithUser,
+  ): Promise<BookingListResponseDto> {
     // Reuse findAll method - it already filters by tenantId for tenant users
     return this.findAll(filters, req);
   }
 
   @Get('upcoming')
   @ApiOperation({ summary: 'Get upcoming bookings (next 7 days)' })
-  @ApiResponse({ status: 200, description: 'Upcoming bookings retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Upcoming bookings retrieved successfully',
+  })
   async findUpcoming(@Request() req: RequestWithUser): Promise<any> {
     const tenantId = req.user.tenantId;
     const bookings = await this.bookingsService.findUpcoming(tenantId, 7);
@@ -100,9 +143,16 @@ export class BookingsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get booking by ID' })
   @ApiParam({ name: 'id', format: 'uuid' })
-  @ApiResponse({ status: 200, description: 'Booking found', type: BookingResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Booking found',
+    type: BookingResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'Booking not found' })
-  async findOne(@Param('id') id: string, @Request() req: RequestWithUser): Promise<any> {
+  async findOne(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     const tenantId = req.user.tenantId;
     const booking = await this.bookingsService.findOne(id, tenantId);
 
@@ -116,9 +166,15 @@ export class BookingsController {
   @ApiOperation({ summary: 'Confirm booking (Partner only)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Booking confirmed successfully' })
-  @ApiResponse({ status: 400, description: 'Booking cannot be confirmed in current status' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking cannot be confirmed in current status',
+  })
   @ApiResponse({ status: 404, description: 'Booking not found' })
-  async confirm(@Param('id') id: string, @Request() req: RequestWithUser): Promise<any> {
+  async confirm(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     const partnerId = req.user.partnerId; // Assumes partner JWT contains partnerId
     const userId = req.user.userId;
 
@@ -141,7 +197,10 @@ export class BookingsController {
   @ApiOperation({ summary: 'Reject booking (Partner only)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Booking rejected successfully' })
-  @ApiResponse({ status: 400, description: 'Booking cannot be rejected in current status' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking cannot be rejected in current status',
+  })
   async reject(
     @Param('id') id: string,
     @Body('reason') reason: string,
@@ -157,7 +216,12 @@ export class BookingsController {
       };
     }
 
-    const booking = await this.bookingsService.reject(id, partnerId, reason, userId);
+    const booking = await this.bookingsService.reject(
+      id,
+      partnerId,
+      reason,
+      userId,
+    );
 
     return {
       message: 'Booking rejected successfully',
@@ -169,7 +233,10 @@ export class BookingsController {
   @ApiOperation({ summary: 'Reschedule booking (Tenant)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Booking rescheduled successfully' })
-  @ApiResponse({ status: 400, description: 'Booking cannot be rescheduled in current status' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking cannot be rescheduled in current status',
+  })
   async reschedule(
     @Param('id') id: string,
     @Body() rescheduleDto: RescheduleBookingDto,
@@ -178,7 +245,12 @@ export class BookingsController {
     const tenantId = req.user.tenantId;
     const userId = req.user.userId;
 
-    const booking = await this.bookingsService.reschedule(id, rescheduleDto, tenantId, userId);
+    const booking = await this.bookingsService.reschedule(
+      id,
+      rescheduleDto,
+      tenantId,
+      userId,
+    );
 
     return {
       message: 'Booking rescheduled successfully',
@@ -190,7 +262,10 @@ export class BookingsController {
   @ApiOperation({ summary: 'Start work on booking (Partner only)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Booking started successfully' })
-  async startWork(@Param('id') id: string, @Request() req: RequestWithUser): Promise<any> {
+  async startWork(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     const partnerId = req.user.partnerId;
     const userId = req.user.userId;
 
@@ -213,7 +288,10 @@ export class BookingsController {
   @ApiOperation({ summary: 'Complete booking (Partner only)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Booking completed successfully' })
-  @ApiResponse({ status: 400, description: 'Booking cannot be completed in current status' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking cannot be completed in current status',
+  })
   async complete(
     @Param('id') id: string,
     @Body('partnerNotes') partnerNotes: string,
@@ -229,7 +307,12 @@ export class BookingsController {
       };
     }
 
-    const booking = await this.bookingsService.complete(id, partnerId, partnerNotes, userId);
+    const booking = await this.bookingsService.complete(
+      id,
+      partnerId,
+      partnerNotes,
+      userId,
+    );
 
     return {
       message: 'Booking completed successfully',
@@ -242,7 +325,10 @@ export class BookingsController {
   @ApiOperation({ summary: 'Cancel booking (Tenant)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 200, description: 'Booking cancelled successfully' })
-  @ApiResponse({ status: 400, description: 'Booking cannot be cancelled in current status' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking cannot be cancelled in current status',
+  })
   async cancel(
     @Param('id') id: string,
     @Body('reason') reason: string,
@@ -251,7 +337,12 @@ export class BookingsController {
     const tenantId = req.user.tenantId;
     const userId = req.user.userId;
 
-    const booking = await this.bookingsService.cancel(id, reason, tenantId, userId);
+    const booking = await this.bookingsService.cancel(
+      id,
+      reason,
+      tenantId,
+      userId,
+    );
 
     return {
       message: 'Booking cancelled successfully',
@@ -283,7 +374,10 @@ export class BookingsController {
   @ApiOperation({ summary: 'Delete booking (soft delete)' })
   @ApiParam({ name: 'id', format: 'uuid' })
   @ApiResponse({ status: 204, description: 'Booking deleted successfully' })
-  async remove(@Param('id') id: string, @Request() req: RequestWithUser): Promise<void> {
+  async remove(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<void> {
     const tenantId = req.user.tenantId;
     await this.bookingsService.remove(id, tenantId);
   }
@@ -294,7 +388,13 @@ export class BookingsController {
   @ApiResponse({ status: 200, description: 'Payment intent created' })
   @ApiResponse({ status: 400, description: 'Booking cannot be paid' })
   @ApiResponse({ status: 403, description: 'Not your booking' })
-  async createPayment(@Param('id') id: string, @Request() req: RequestWithUser): Promise<any> {
-    return this.bookingsPaymentService.createPaymentIntent(id, req.user.tenantId);
+  async createPayment(
+    @Param('id') id: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
+    return this.bookingsPaymentService.createPaymentIntent(
+      id,
+      req.user.tenantId,
+    );
   }
 }

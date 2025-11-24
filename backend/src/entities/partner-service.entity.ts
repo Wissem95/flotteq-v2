@@ -32,7 +32,9 @@ export class PartnerService {
   @Column()
   name: string;
 
-  @ApiPropertyOptional({ example: 'Vidange moteur + filtre à huile + filtre à air' })
+  @ApiPropertyOptional({
+    example: 'Vidange moteur + filtre à huile + filtre à air',
+  })
   @Column({ type: 'text', nullable: true })
   description: string | null;
 

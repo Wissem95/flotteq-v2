@@ -34,10 +34,13 @@ export class MaintenanceNotificationService {
         const tenantId = tenant.tenantId;
 
         // Check date-based alerts
-        const upcomingMaintenances = await this.maintenanceService.getUpcomingMaintenances(tenantId, 7);
+        const upcomingMaintenances =
+          await this.maintenanceService.getUpcomingMaintenances(tenantId, 7);
 
         if (upcomingMaintenances.length > 0) {
-          this.logger.log(`Found ${upcomingMaintenances.length} upcoming maintenances for tenant ${tenantId}`);
+          this.logger.log(
+            `Found ${upcomingMaintenances.length} upcoming maintenances for tenant ${tenantId}`,
+          );
 
           for (const maintenance of upcomingMaintenances) {
             await this.sendMaintenanceAlert(maintenance);
@@ -45,10 +48,13 @@ export class MaintenanceNotificationService {
         }
 
         // Check km-based alerts
-        const kmAlerts = await this.maintenanceService.getMaintenancesByKmAlert(tenantId);
+        const kmAlerts =
+          await this.maintenanceService.getMaintenancesByKmAlert(tenantId);
 
         if (kmAlerts.length > 0) {
-          this.logger.log(`Found ${kmAlerts.length} km-based alerts for tenant ${tenantId}`);
+          this.logger.log(
+            `Found ${kmAlerts.length} km-based alerts for tenant ${tenantId}`,
+          );
 
           for (const alert of kmAlerts) {
             await this.sendMaintenanceAlert(alert);
@@ -67,7 +73,9 @@ export class MaintenanceNotificationService {
    * In production, this would integrate with an email service (SendGrid, AWS SES, etc.)
    */
   private async sendMaintenanceAlert(alert: any): Promise<void> {
-    this.logger.log(`Sending alert for maintenance ${alert.maintenanceId}: ${alert.alertReason}`);
+    this.logger.log(
+      `Sending alert for maintenance ${alert.maintenanceId}: ${alert.alertReason}`,
+    );
 
     // TODO: Integrate with email service
     // Example: await this.emailService.send({
@@ -78,20 +86,28 @@ export class MaintenanceNotificationService {
     // });
 
     // For now, just log the alert
-    this.logger.log(JSON.stringify({
-      type: 'MAINTENANCE_ALERT',
-      vehicleRegistration: alert.vehicleRegistration,
-      maintenanceType: alert.type,
-      alertReason: alert.alertReason,
-      scheduledDate: alert.scheduledDate,
-    }));
+    this.logger.log(
+      JSON.stringify({
+        type: 'MAINTENANCE_ALERT',
+        vehicleRegistration: alert.vehicleRegistration,
+        maintenanceType: alert.type,
+        alertReason: alert.alertReason,
+        scheduledDate: alert.scheduledDate,
+      }),
+    );
   }
 
   /**
    * Manual trigger for sending alerts (useful for testing)
    */
-  async sendManualAlert(maintenanceId: string, tenantId: number): Promise<void> {
-    const maintenance = await this.maintenanceService.findOne(maintenanceId, tenantId);
+  async sendManualAlert(
+    maintenanceId: string,
+    tenantId: number,
+  ): Promise<void> {
+    const maintenance = await this.maintenanceService.findOne(
+      maintenanceId,
+      tenantId,
+    );
 
     const alert = {
       maintenanceId: maintenance.id,
@@ -99,7 +115,8 @@ export class MaintenanceNotificationService {
       type: maintenance.type,
       scheduledDate: maintenance.scheduledDate,
       daysUntil: Math.ceil(
-        (new Date(maintenance.scheduledDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+        (new Date(maintenance.scheduledDate).getTime() - new Date().getTime()) /
+          (1000 * 60 * 60 * 24),
       ),
       alertReason: 'Manual alert triggered',
     };
@@ -121,12 +138,18 @@ export class MaintenanceNotificationService {
         .getRawMany();
 
       for (const tenant of tenants) {
-        const overdueMaintenances = await this.maintenanceService.getUpcomingMaintenances(tenant.tenantId, -30);
+        const overdueMaintenances =
+          await this.maintenanceService.getUpcomingMaintenances(
+            tenant.tenantId,
+            -30,
+          );
 
-        const overdue = overdueMaintenances.filter(m => m.daysUntil < 0);
+        const overdue = overdueMaintenances.filter((m) => m.daysUntil < 0);
 
         if (overdue.length > 0) {
-          this.logger.warn(`Found ${overdue.length} overdue maintenances for tenant ${tenant.tenantId}`);
+          this.logger.warn(
+            `Found ${overdue.length} overdue maintenances for tenant ${tenant.tenantId}`,
+          );
 
           for (const maintenance of overdue) {
             await this.sendMaintenanceAlert({

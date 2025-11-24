@@ -1,4 +1,10 @@
-import { Injectable, BadRequestException, ForbiddenException, NotFoundException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+  NotFoundException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Booking } from '../../entities/booking.entity';
@@ -59,50 +65,56 @@ export class BookingsPaymentService {
     }
 
     if (!booking.partner.stripeOnboardingCompleted) {
-      throw new BadRequestException('Partner must complete Stripe onboarding first');
+      throw new BadRequestException(
+        'Partner must complete Stripe onboarding first',
+      );
     }
 
     // Calculer montants
     const totalAmountCents = Math.round(Number(booking.price) * 100); // en centimes
     const commissionRate = Number(booking.partner.commissionRate || 10);
-    const commissionAmountCents = Math.round(totalAmountCents * (commissionRate / 100));
+    const commissionAmountCents = Math.round(
+      totalAmountCents * (commissionRate / 100),
+    );
     const partnerAmountCents = totalAmountCents - commissionAmountCents;
 
     this.logger.log(
-      `Creating payment: Total ${totalAmountCents}¢, Commission ${commissionAmountCents}¢ (${commissionRate}%), Partner ${partnerAmountCents}¢`
+      `Creating payment: Total ${totalAmountCents}¢, Commission ${commissionAmountCents}¢ (${commissionRate}%), Partner ${partnerAmountCents}¢`,
     );
 
     // Créer PaymentIntent avec Destination Charge
-    const paymentIntent = await this.stripeService.stripe.paymentIntents.create({
-      amount: totalAmountCents,
-      currency: 'eur',
+    const paymentIntent = await this.stripeService.stripe.paymentIntents.create(
+      {
+        amount: totalAmountCents,
+        currency: 'eur',
 
-      // Split automatique : Commission FlotteQ + Transfer Partner
-      application_fee_amount: commissionAmountCents,
-      transfer_data: {
-        destination: booking.partner.stripeAccountId,
+        // Split automatique : Commission FlotteQ + Transfer Partner
+        application_fee_amount: commissionAmountCents,
+        transfer_data: {
+          destination: booking.partner.stripeAccountId,
+        },
+
+        // Metadata pour webhook
+        metadata: {
+          bookingId: booking.id,
+          partnerId: booking.partnerId,
+          tenantId: tenantId.toString(),
+          commissionAmount: (commissionAmountCents / 100).toString(),
+          commissionRate: commissionRate.toString(),
+          type: 'booking_payment',
+        },
+
+        // Description
+        description: `${booking.service?.name || 'Service'} - ${booking.vehicle?.registration || 'Véhicule'}`,
+
+        // Capture automatique
+        capture_method: 'automatic',
       },
-
-      // Metadata pour webhook
-      metadata: {
-        bookingId: booking.id,
-        partnerId: booking.partnerId,
-        tenantId: tenantId.toString(),
-        commissionAmount: (commissionAmountCents / 100).toString(),
-        commissionRate: commissionRate.toString(),
-        type: 'booking_payment',
-      },
-
-      // Description
-      description: `${booking.service?.name || 'Service'} - ${booking.vehicle?.registration || 'Véhicule'}`,
-
-      // Capture automatique
-      capture_method: 'automatic',
-    });
+    );
 
     // Créer commission en DB (status: pending)
     const existingCommission = await this.commissionRepository.findOne({
-      where: { bookingId: booking.id }
+      where: { bookingId: booking.id },
     });
 
     if (!existingCommission) {
@@ -114,7 +126,9 @@ export class BookingsPaymentService {
       });
 
       await this.commissionRepository.save(commission);
-      this.logger.log(`Commission created for booking ${booking.id}: ${commission.amount}€`);
+      this.logger.log(
+        `Commission created for booking ${booking.id}: ${commission.amount}€`,
+      );
     }
 
     return {
@@ -131,9 +145,12 @@ export class BookingsPaymentService {
    * IDEMPOTENT : Peut être appelé plusieurs fois sans effet secondaire
    */
   async handlePaymentSuccess(paymentIntentId: string) {
-    this.logger.log(`Handling payment success for PaymentIntent ${paymentIntentId}`);
+    this.logger.log(
+      `Handling payment success for PaymentIntent ${paymentIntentId}`,
+    );
 
-    const paymentIntent = await this.stripeService.stripe.paymentIntents.retrieve(paymentIntentId);
+    const paymentIntent =
+      await this.stripeService.stripe.paymentIntents.retrieve(paymentIntentId);
 
     const bookingId = paymentIntent.metadata?.bookingId;
 
@@ -168,7 +185,7 @@ export class BookingsPaymentService {
 
     // Marquer commission payée (ou créer si n'existe pas)
     let commission = await this.commissionRepository.findOne({
-      where: { bookingId }
+      where: { bookingId },
     });
 
     if (!commission) {
@@ -185,7 +202,9 @@ export class BookingsPaymentService {
       });
 
       await this.commissionRepository.save(commission);
-      this.logger.log(`Commission created and marked as paid for booking ${booking.id}: ${commission.amount}€`);
+      this.logger.log(
+        `Commission created and marked as paid for booking ${booking.id}: ${commission.amount}€`,
+      );
     } else if (commission.status !== CommissionStatus.PAID) {
       // Mettre à jour commission existante
       commission.status = CommissionStatus.PAID;
@@ -193,7 +212,9 @@ export class BookingsPaymentService {
       commission.paymentReference = paymentIntentId;
       await this.commissionRepository.save(commission);
 
-      this.logger.log(`Commission ${commission.id} marked as paid. Amount: ${commission.amount}€`);
+      this.logger.log(
+        `Commission ${commission.id} marked as paid. Amount: ${commission.amount}€`,
+      );
     } else {
       this.logger.log(`Commission ${commission.id} already marked as paid`);
     }

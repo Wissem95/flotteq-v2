@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
-  ParseUUIDPipe
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
@@ -17,7 +17,10 @@ import { UpdateDriverDto } from './dto/update-driver.dto';
 import { AssignVehicleDto } from './dto/assign-vehicle.dto';
 import { JwtAuthGuard } from '../core/auth/guards/jwt-auth.guard';
 import { DriverStatus } from '../entities/driver.entity';
-import { SubscriptionLimitGuard, CheckLimit } from '../common/guards/subscription-limit.guard';
+import {
+  SubscriptionLimitGuard,
+  CheckLimit,
+} from '../common/guards/subscription-limit.guard';
 import { SubscriptionsService } from './subscriptions/subscriptions.service';
 import { TenantId } from '../core/tenant/tenant.decorator';
 import { Auditable } from '../common/decorators/auditable.decorator';
@@ -34,7 +37,10 @@ export class DriversController {
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('drivers')
   @Auditable('Driver')
-  async create(@Body() createDriverDto: CreateDriverDto, @TenantId() tenantId: number) {
+  async create(
+    @Body() createDriverDto: CreateDriverDto,
+    @TenantId() tenantId: number,
+  ) {
     const driver = await this.driversService.create(createDriverDto);
     // Incrémenter l'usage après création réussie
     await this.subscriptionsService.updateUsage(tenantId, 'drivers', 1);
@@ -83,7 +89,10 @@ export class DriversController {
 
   @Delete(':id')
   @Auditable('Driver')
-  async remove(@Param('id', ParseUUIDPipe) id: string, @TenantId() tenantId: number) {
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: number,
+  ) {
     const result = await this.driversService.remove(id);
     // Décrémenter l'usage après suppression réussie
     await this.subscriptionsService.updateUsage(tenantId, 'drivers', -1);

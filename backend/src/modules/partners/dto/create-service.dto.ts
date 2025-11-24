@@ -1,4 +1,10 @@
-import { IsNotEmpty, IsString, IsNumber, IsOptional, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsNumber,
+  IsOptional,
+  Min,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateServiceDto {
@@ -7,7 +13,9 @@ export class CreateServiceDto {
   @IsString()
   name: string;
 
-  @ApiPropertyOptional({ example: 'Vidange moteur + filtre à huile + filtre à air' })
+  @ApiPropertyOptional({
+    example: 'Vidange moteur + filtre à huile + filtre à air',
+  })
   @IsOptional()
   @IsString()
   description?: string;

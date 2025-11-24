@@ -9,7 +9,12 @@ import { TenantsModule } from './tenants/tenants.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Driver, Vehicle]), DashboardModule, TenantsModule, SubscriptionsModule],
+  imports: [
+    TypeOrmModule.forFeature([Driver, Vehicle]),
+    DashboardModule,
+    TenantsModule,
+    SubscriptionsModule,
+  ],
   controllers: [DriversController],
   providers: [DriversService],
   exports: [DriversService],

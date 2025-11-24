@@ -11,13 +11,20 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { ReportsService } from './reports.service';
-import { CreateReportDto } from './dto/create-report.dto';
 import { UpdateReportDto } from './dto/update-report.dto';
 import { ReportFilterDto } from './dto/report-filter.dto';
-import { ReportResponseDto, ReportListResponseDto } from './dto/report-response.dto';
+import {
+  ReportResponseDto,
+  ReportListResponseDto,
+} from './dto/report-response.dto';
 import { Report } from '../../entities/report.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../entities/user.entity';
@@ -43,7 +50,10 @@ export class ReportsController {
   @Get(':id')
   @ApiOperation({ summary: 'Get report by ID' })
   @ApiResponse({ status: 200, type: ReportResponseDto })
-  async findOne(@Req() req: Request, @Param('id') id: string): Promise<ReportResponseDto> {
+  async findOne(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ): Promise<ReportResponseDto> {
     const user = (req as any).user;
     const report = await this.reportsService.findOne(id, user.tenantId);
 
@@ -53,7 +63,9 @@ export class ReportsController {
       vehicleId: report.vehicleId,
       vehicleRegistration: report.vehicle?.registration,
       driverId: report.driverId,
-      driverName: report.driver ? `${report.driver.firstName} ${report.driver.lastName}` : undefined,
+      driverName: report.driver
+        ? `${report.driver.firstName} ${report.driver.lastName}`
+        : undefined,
       type: report.type,
       description: report.description,
       notes: report.notes,
@@ -80,7 +92,10 @@ export class ReportsController {
   @ApiResponse({ status: 200, type: ReportResponseDto })
   @Roles(UserRole.TENANT_ADMIN)
   @HttpCode(HttpStatus.OK)
-  async acknowledge(@Req() req: Request, @Param('id') id: string): Promise<Report> {
+  async acknowledge(
+    @Req() req: Request,
+    @Param('id') id: string,
+  ): Promise<Report> {
     const user = (req as any).user;
     return this.reportsService.acknowledge(id, user.sub, user.tenantId);
   }
@@ -96,7 +111,12 @@ export class ReportsController {
     @Body() body: { resolutionNotes?: string },
   ): Promise<Report> {
     const user = (req as any).user;
-    return this.reportsService.resolve(id, user.sub, user.tenantId, body.resolutionNotes);
+    return this.reportsService.resolve(
+      id,
+      user.sub,
+      user.tenantId,
+      body.resolutionNotes,
+    );
   }
 
   @Patch(':id')
@@ -109,6 +129,11 @@ export class ReportsController {
     @Body() updateReportDto: UpdateReportDto,
   ): Promise<Report> {
     const user = (req as any).user;
-    return this.reportsService.update(id, updateReportDto, user.sub, user.tenantId);
+    return this.reportsService.update(
+      id,
+      updateReportDto,
+      user.sub,
+      user.tenantId,
+    );
   }
 }

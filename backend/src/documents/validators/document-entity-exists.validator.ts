@@ -24,7 +24,10 @@ export class DocumentEntityExistsConstraint
 {
   constructor(private dataSource: DataSource) {}
 
-  async validate(entityId: string, args: ValidationArguments): Promise<boolean> {
+  async validate(
+    entityId: string,
+    args: ValidationArguments,
+  ): Promise<boolean> {
     if (!entityId) return false;
 
     const object = args.object as any;
@@ -47,7 +50,10 @@ export class DocumentEntityExistsConstraint
     const entityName = entityMap[entityType];
     if (!entityName) {
       // For partner entities, skip validation (will be implemented in Sprint 2)
-      return entityType === DocumentEntityType.PARTNER || entityType === DocumentEntityType.PARTNER_SERVICE;
+      return (
+        entityType === DocumentEntityType.PARTNER ||
+        entityType === DocumentEntityType.PARTNER_SERVICE
+      );
     }
 
     try {
@@ -68,7 +74,7 @@ export class DocumentEntityExistsConstraint
 }
 
 export function ValidateDocumentEntity(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

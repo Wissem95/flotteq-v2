@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, Logger, Inject } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  Inject,
+} from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
 import { Repository, DataSource, MoreThan, LessThan, IsNull } from 'typeorm';
 import { Driver, DriverStatus } from '../entities/driver.entity';
@@ -35,13 +41,19 @@ export class DriversService {
     }
     // Sinon, retourner tenantId (converti en number)
     const tenantId = (this.request as any).tenantId;
-    return tenantId ? (typeof tenantId === 'string' ? parseInt(tenantId) : tenantId) : null;
+    return tenantId
+      ? typeof tenantId === 'string'
+        ? parseInt(tenantId)
+        : tenantId
+      : null;
   }
 
   async create(createDriverDto: CreateDriverDto): Promise<Driver> {
     const tenantId = this.getTenantId();
     if (!tenantId) {
-      throw new BadRequestException('Tenant ID is required for creating drivers');
+      throw new BadRequestException(
+        'Tenant ID is required for creating drivers',
+      );
     }
 
     // Vérifier si l'email existe déjà pour ce tenant
@@ -105,7 +117,9 @@ export class DriversService {
       if (!driver.userId) {
         driver.userId = existingUser.id;
         await this.driverRepository.save(driver);
-        this.logger.log(`Linked driver ${driver.id} to existing user ${existingUser.id}`);
+        this.logger.log(
+          `Linked driver ${driver.id} to existing user ${existingUser.id}`,
+        );
       }
       return existingUser;
     }
@@ -130,11 +144,17 @@ export class DriversService {
     driver.userId = savedUser.id;
     await this.driverRepository.save(driver);
 
-    this.logger.log(`User created: ${savedUser.id} for driver ${driver.id} with temp password`);
+    this.logger.log(
+      `User created: ${savedUser.id} for driver ${driver.id} with temp password`,
+    );
     return savedUser;
   }
 
-  async findAll(page = 1, limit = 10, status?: DriverStatus): Promise<{ data: Driver[]; total: number; page: number; limit: number }> {
+  async findAll(
+    page = 1,
+    limit = 10,
+    status?: DriverStatus,
+  ): Promise<{ data: Driver[]; total: number; page: number; limit: number }> {
     const tenantId = this.getTenantId();
     const skip = (page - 1) * limit;
 
@@ -193,7 +213,10 @@ export class DriversService {
     }
 
     // Vérifier l'unicité du permis si modifié
-    if (updateDriverDto.licenseNumber && updateDriverDto.licenseNumber !== driver.licenseNumber) {
+    if (
+      updateDriverDto.licenseNumber &&
+      updateDriverDto.licenseNumber !== driver.licenseNumber
+    ) {
       const existingLicense = await this.driverRepository.findOne({
         where: { licenseNumber: updateDriverDto.licenseNumber, tenantId },
       });
@@ -218,7 +241,9 @@ export class DriversService {
     });
 
     if (assignedVehicles > 0) {
-      throw new BadRequestException(`Cannot delete driver with ${assignedVehicles} assigned vehicle(s)`);
+      throw new BadRequestException(
+        `Cannot delete driver with ${assignedVehicles} assigned vehicle(s)`,
+      );
     }
 
     await this.driverRepository.remove(driver);
@@ -237,7 +262,9 @@ export class DriversService {
 
     // Vérifier que le driver est actif
     if (driver.status !== DriverStatus.ACTIVE) {
-      throw new BadRequestException('Driver must be active to be assigned to a vehicle');
+      throw new BadRequestException(
+        'Driver must be active to be assigned to a vehicle',
+      );
     }
 
     // Vérifier que le véhicule existe et appartient au même tenant
@@ -251,7 +278,9 @@ export class DriversService {
 
     // Vérifier que le véhicule n'a pas déjà un conducteur
     if (vehicle.assignedDriverId) {
-      throw new BadRequestException('Vehicle is already assigned to another driver');
+      throw new BadRequestException(
+        'Vehicle is already assigned to another driver',
+      );
     }
 
     // Assigner le véhicule
@@ -334,6 +363,8 @@ export class DriversService {
     });
 
     // Filtrer ceux qui n'ont aucun véhicule assigné
-    return activeDrivers.filter(driver => !driver.vehicles || driver.vehicles.length === 0);
+    return activeDrivers.filter(
+      (driver) => !driver.vehicles || driver.vehicles.length === 0,
+    );
   }
 }

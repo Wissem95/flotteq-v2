@@ -23,7 +23,12 @@ import { SuperAdminGuard } from '../../common/guards/super-admin.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { User } from '../../entities/user.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 
 @Controller('tenants')
 @ApiTags('tenants')
@@ -88,7 +93,7 @@ export class TenantsController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Soft delete d\'un tenant' })
+  @ApiOperation({ summary: "Soft delete d'un tenant" })
   @ApiResponse({ status: 200, description: 'Tenant désactivé avec succès' })
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.tenantsService.remove(id);
@@ -114,14 +119,19 @@ export class TenantsController {
   }
 
   @Get(':id/storage-usage')
-  @ApiOperation({ summary: 'Obtenir l\'usage de stockage d\'un tenant' })
-  @ApiResponse({ status: 200, description: 'Usage de stockage retourné avec succès' })
+  @ApiOperation({ summary: "Obtenir l'usage de stockage d'un tenant" })
+  @ApiResponse({
+    status: 200,
+    description: 'Usage de stockage retourné avec succès',
+  })
   getStorageUsage(@Param('id', ParseIntPipe) id: number) {
     return this.tenantsService.getStorageUsage(id);
   }
 
   @Patch(':id/storage-quota')
-  @ApiOperation({ summary: 'Mettre à jour le quota de stockage personnalisé d\'un tenant' })
+  @ApiOperation({
+    summary: "Mettre à jour le quota de stockage personnalisé d'un tenant",
+  })
   @ApiResponse({ status: 200, description: 'Quota mis à jour avec succès' })
   updateStorageQuota(
     @Param('id', ParseIntPipe) id: number,

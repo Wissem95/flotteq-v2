@@ -21,7 +21,10 @@ export class StorageQuotaInterceptor implements NestInterceptor {
     private readonly tenantsService: TenantsService,
   ) {}
 
-  async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
+  async intercept(
+    context: ExecutionContext,
+    next: CallHandler,
+  ): Promise<Observable<any>> {
     const request = context.switchToHttp().getRequest();
     const file = request.file; // Multer file (déjà uploadé)
     const tenantId = request.user?.tenantId;
@@ -36,13 +39,14 @@ export class StorageQuotaInterceptor implements NestInterceptor {
     }
 
     // Calculer l'usage actuel du tenant
-    const currentUsage = await this.documentsService.getTenantStorageUsage(tenantId);
+    const currentUsage =
+      await this.documentsService.getTenantStorageUsage(tenantId);
 
     // Récupérer le plan du tenant
     const tenant = await this.tenantsService.findOne(tenantId);
 
     if (!tenant || !tenant.plan) {
-      throw new PayloadTooLargeException('Plan d\'abonnement introuvable');
+      throw new PayloadTooLargeException("Plan d'abonnement introuvable");
     }
 
     const plan = tenant.plan;
@@ -56,7 +60,7 @@ export class StorageQuotaInterceptor implements NestInterceptor {
       const fileMb = (file.size / 1024 / 1024).toFixed(2);
 
       throw new PayloadTooLargeException(
-        `Quota de stockage dépassé. Utilisé: ${usedMb}MB / ${effectiveQuotaMb}MB. Ce fichier (${fileMb}MB) dépasse la limite.`
+        `Quota de stockage dépassé. Utilisé: ${usedMb}MB / ${effectiveQuotaMb}MB. Ce fichier (${fileMb}MB) dépasse la limite.`,
       );
     }
 

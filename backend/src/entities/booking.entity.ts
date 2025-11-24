@@ -101,7 +101,13 @@ export class Booking {
   price: number;
 
   @ApiProperty({ example: 8.99, description: 'Commission amount in EUR' })
-  @Column({ type: 'decimal', precision: 10, scale: 2, default: 0, name: 'commission_amount' })
+  @Column({
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+    name: 'commission_amount',
+  })
   commissionAmount: number;
 
   @ApiPropertyOptional({ example: 'Please check the brakes too' })
@@ -171,11 +177,15 @@ export class Booking {
   }
 
   canBeCancelled(): boolean {
-    return [BookingStatus.PENDING, BookingStatus.CONFIRMED].includes(this.status);
+    return [BookingStatus.PENDING, BookingStatus.CONFIRMED].includes(
+      this.status,
+    );
   }
 
   canBeRescheduled(): boolean {
-    return [BookingStatus.PENDING, BookingStatus.CONFIRMED].includes(this.status);
+    return [BookingStatus.PENDING, BookingStatus.CONFIRMED].includes(
+      this.status,
+    );
   }
 
   isPaid(): boolean {

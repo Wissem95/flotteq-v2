@@ -10,7 +10,12 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PartnersService } from './partners.service';
 import { SearchService } from './search.service';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
@@ -56,11 +61,13 @@ export class PartnersController {
   @Post('search')
   @ApiOperation({
     summary: 'Search partners by geolocation (Tenant)',
-    description: 'Authenticated tenant users can search for approved partners within a specified radius, with optional filters for type, services, price, rating, and availability. Returns simplified marketplace DTOs with next available slots.'
+    description:
+      'Authenticated tenant users can search for approved partners within a specified radius, with optional filters for type, services, price, rating, and availability. Returns simplified marketplace DTOs with next available slots.',
   })
   @ApiResponse({
     status: 200,
-    description: 'Partners search results with pagination. Returns MarketplacePartnerDto objects with simplified fields and next available booking slot.',
+    description:
+      'Partners search results with pagination. Returns MarketplacePartnerDto objects with simplified fields and next available booking slot.',
     schema: {
       example: {
         data: [
@@ -72,13 +79,18 @@ export class PartnersController {
             rating: 4.5,
             totalReviews: 127,
             services: [
-              { id: '123e4567-e89b-12d3-a456-426614174000', name: 'Vidange complète', price: 89.99, durationMinutes: 60 }
+              {
+                id: '123e4567-e89b-12d3-a456-426614174000',
+                name: 'Vidange complète',
+                price: 89.99,
+                durationMinutes: 60,
+              },
             ],
             distance: 3.2,
             nextAvailableSlot: '2025-10-25T09:00:00.000Z',
             relevanceScore: 87.5,
-            hasAvailability: true
-          }
+            hasAvailability: true,
+          },
         ],
         meta: {
           total: 15,
@@ -86,17 +98,20 @@ export class PartnersController {
           limit: 20,
           totalPages: 1,
           hasNextPage: false,
-          hasPreviousPage: false
-        }
-      }
-    }
+          hasPreviousPage: false,
+        },
+      },
+    },
   })
   @ApiResponse({ status: 400, description: 'Invalid search parameters.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized - Authentication required.' })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Authentication required.',
+  })
   async searchPartners(
     @CurrentUser() user: User,
     @Body() searchPartnersDto: SearchPartnersDto,
-  ): Promise<{ data: MarketplacePartnerDto[], meta: any }> {
+  ): Promise<{ data: MarketplacePartnerDto[]; meta: any }> {
     return this.searchService.searchPartners(searchPartnersDto);
   }
 
@@ -105,7 +120,9 @@ export class PartnersController {
   @UseGuards(JwtAuthGuard, TenantGuard, RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get all partners with pagination and filters (admin only)' })
+  @ApiOperation({
+    summary: 'Get all partners with pagination and filters (admin only)',
+  })
   @ApiResponse({
     status: 200,
     description: 'Partners list retrieved with pagination.',
@@ -190,7 +207,11 @@ export class PartnersController {
   @UseGuards(HybridAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current commission rate for partner' })
-  @ApiResponse({ status: 200, description: 'Commission rate retrieved', schema: { example: { commissionRate: 10 } } })
+  @ApiResponse({
+    status: 200,
+    description: 'Commission rate retrieved',
+    schema: { example: { commissionRate: 10 } },
+  })
   async getOwnCommissionRate(@Request() req: RequestWithUser) {
     const partnerId = req.user.partnerId;
     if (!partnerId) {

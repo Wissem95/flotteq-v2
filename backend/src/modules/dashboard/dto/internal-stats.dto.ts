@@ -42,7 +42,12 @@ export class InternalSubscriptionsDto {
 
 export class ActivityLogDto {
   id: string;
-  type: 'TENANT_CREATED' | 'PLAN_CHANGED' | 'SUBSCRIPTION_CANCELLED' | 'PAYMENT_SUCCEEDED' | 'PAYMENT_FAILED';
+  type:
+    | 'TENANT_CREATED'
+    | 'PLAN_CHANGED'
+    | 'SUBSCRIPTION_CANCELLED'
+    | 'PAYMENT_SUCCEEDED'
+    | 'PAYMENT_FAILED';
   tenantId: number;
   tenantName: string;
   description: string;

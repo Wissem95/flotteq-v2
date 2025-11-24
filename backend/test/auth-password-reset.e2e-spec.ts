@@ -20,7 +20,9 @@ describe('Auth Password Reset (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     usersRepository = moduleFixture.get(getRepositoryToken(User));
@@ -53,7 +55,9 @@ describe('Auth Password Reset (e2e)', () => {
         .send({ email: testUser.email })
         .expect(201)
         .expect((res) => {
-          expect(res.body.message).toBe('Si cet email existe, un lien de réinitialisation a été envoyé.');
+          expect(res.body.message).toBe(
+            'Si cet email existe, un lien de réinitialisation a été envoyé.',
+          );
         });
     });
 
@@ -63,7 +67,9 @@ describe('Auth Password Reset (e2e)', () => {
         .send({ email: 'nonexistent@test.com' })
         .expect(201)
         .expect((res) => {
-          expect(res.body.message).toBe('Si cet email existe, un lien de réinitialisation a été envoyé.');
+          expect(res.body.message).toBe(
+            'Si cet email existe, un lien de réinitialisation a été envoyé.',
+          );
         });
     });
 
@@ -76,7 +82,7 @@ describe('Auth Password Reset (e2e)', () => {
 
     it('should return 400 for missing email', async () => {
       // Wait a bit to avoid rate limiting from previous tests
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return request(app.getHttpServer())
         .post('/auth/forgot-password')
@@ -104,15 +110,20 @@ describe('Auth Password Reset (e2e)', () => {
         })
         .expect(201);
 
-      expect(response.body.message).toBe('Mot de passe réinitialisé avec succès');
+      expect(response.body.message).toBe(
+        'Mot de passe réinitialisé avec succès',
+      );
 
       // Verify password was actually changed
       const updatedUser = await usersRepository.findOne({
         where: { id: testUser.id },
-        select: ['id', 'password']
+        select: ['id', 'password'],
       });
       expect(updatedUser).toBeDefined();
-      const isPasswordCorrect = await bcrypt.compare('NewPassword123', updatedUser!.password);
+      const isPasswordCorrect = await bcrypt.compare(
+        'NewPassword123',
+        updatedUser!.password,
+      );
       expect(isPasswordCorrect).toBe(true);
     });
 
@@ -124,7 +135,7 @@ describe('Auth Password Reset (e2e)', () => {
       );
 
       // Wait a bit to ensure it's expired
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return request(app.getHttpServer())
         .post('/auth/reset-password')

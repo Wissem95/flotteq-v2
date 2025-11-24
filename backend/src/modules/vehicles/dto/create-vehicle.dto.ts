@@ -1,6 +1,19 @@
-import { IsNotEmpty, IsString, IsInt, IsEnum, IsOptional, IsDateString, IsNumber, Min } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsString,
+  IsInt,
+  IsEnum,
+  IsOptional,
+  IsDateString,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { VehicleStatus, TransmissionType, FuelType } from '../../../entities/vehicle.entity';
+import {
+  VehicleStatus,
+  TransmissionType,
+  FuelType,
+} from '../../../entities/vehicle.entity';
 
 export class CreateVehicleDto {
   @ApiProperty({ description: 'Vehicle registration number' })
@@ -34,7 +47,11 @@ export class CreateVehicleDto {
   @IsString()
   color: string;
 
-  @ApiProperty({ description: 'Transmission type', enum: TransmissionType, required: false })
+  @ApiProperty({
+    description: 'Transmission type',
+    enum: TransmissionType,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(TransmissionType)
   transmission?: TransmissionType;
@@ -61,17 +78,26 @@ export class CreateVehicleDto {
   @Min(0)
   purchasePrice?: number;
 
-  @ApiProperty({ description: 'Last technical inspection date', required: false })
+  @ApiProperty({
+    description: 'Last technical inspection date',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   lastTechnicalInspection?: string;
 
-  @ApiProperty({ description: 'Next technical inspection date', required: false })
+  @ApiProperty({
+    description: 'Next technical inspection date',
+    required: false,
+  })
   @IsOptional()
   @IsDateString()
   nextTechnicalInspection?: string;
 
-  @ApiProperty({ description: 'Initial mileage at purchase (km)', required: false })
+  @ApiProperty({
+    description: 'Initial mileage at purchase (km)',
+    required: false,
+  })
   @IsOptional()
   @IsInt()
   @Min(0)
@@ -83,7 +109,11 @@ export class CreateVehicleDto {
   @Min(0)
   currentKm?: number;
 
-  @ApiProperty({ description: 'Vehicle status', enum: VehicleStatus, required: false })
+  @ApiProperty({
+    description: 'Vehicle status',
+    enum: VehicleStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(VehicleStatus)
   status?: VehicleStatus;

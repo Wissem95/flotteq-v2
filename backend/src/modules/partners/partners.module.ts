@@ -38,7 +38,13 @@ import { StripeModule } from '../../stripe/stripe.module';
     StripeModule,
   ],
   controllers: [PartnersController, PartnerAuthController],
-  providers: [PartnersService, PartnerAuthService, SearchService, PartnerJwtStrategy, SimpleCacheService],
+  providers: [
+    PartnersService,
+    PartnerAuthService,
+    SearchService,
+    PartnerJwtStrategy,
+    SimpleCacheService,
+  ],
   exports: [PartnersService, PartnerAuthService],
 })
 export class PartnersModule {}

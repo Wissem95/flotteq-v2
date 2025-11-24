@@ -7,7 +7,12 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuditService } from './audit.service';
 import { AuditLogFilterDto } from './dto/audit-log-filter.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
@@ -27,17 +32,25 @@ export class AuditController {
   @Get()
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Récupérer les logs d\'audit avec filtres' })
-  @ApiResponse({ status: 200, description: 'Logs d\'audit récupérés avec succès.' })
+  @ApiOperation({ summary: "Récupérer les logs d'audit avec filtres" })
+  @ApiResponse({
+    status: 200,
+    description: "Logs d'audit récupérés avec succès.",
+  })
   @ApiResponse({ status: 403, description: 'Accès refusé - Admin seulement.' })
-  async findAll(@TenantId() tenantId: number, @Query() filters: AuditLogFilterDto) {
+  async findAll(
+    @TenantId() tenantId: number,
+    @Query() filters: AuditLogFilterDto,
+  ) {
     return this.auditService.findAll(tenantId, filters);
   }
 
   @Get('entity/:entityType/:entityId')
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Récupérer l\'historique d\'audit d\'une entité spécifique' })
+  @ApiOperation({
+    summary: "Récupérer l'historique d'audit d'une entité spécifique",
+  })
   @ApiResponse({ status: 200, description: 'Historique récupéré avec succès.' })
   @ApiResponse({ status: 403, description: 'Accès refusé.' })
   async findByEntity(

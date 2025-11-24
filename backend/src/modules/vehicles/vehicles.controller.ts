@@ -29,7 +29,10 @@ import { QueryVehicleDto } from './dto/query-vehicle.dto';
 import { JwtAuthGuard } from '../../core/auth/guards/jwt-auth.guard';
 import { TenantGuard } from '../../core/tenant/tenant.guard';
 import { TenantId } from '../../core/tenant/tenant.decorator';
-import { SubscriptionLimitGuard, CheckLimit } from '../../common/guards/subscription-limit.guard';
+import {
+  SubscriptionLimitGuard,
+  CheckLimit,
+} from '../../common/guards/subscription-limit.guard';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -47,7 +50,12 @@ export class VehiclesController {
   ) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('vehicles')
   @Auditable('Vehicle')
@@ -57,12 +65,19 @@ export class VehiclesController {
     description: 'Le véhicule a été créé avec succès.',
   })
   @ApiResponse({ status: 409, description: 'Véhicule déjà existant.' })
-  @ApiResponse({ status: 403, description: 'Limite de véhicules atteinte pour votre plan ou rôle insuffisant.' })
+  @ApiResponse({
+    status: 403,
+    description:
+      'Limite de véhicules atteinte pour votre plan ou rôle insuffisant.',
+  })
   async create(
     @Body() createVehicleDto: CreateVehicleDto,
     @TenantId() tenantId: number,
   ) {
-    const vehicle = await this.vehiclesService.create(createVehicleDto, tenantId);
+    const vehicle = await this.vehiclesService.create(
+      createVehicleDto,
+      tenantId,
+    );
     // Incrémenter l'usage après création réussie
     await this.subscriptionsService.updateUsage(tenantId, 'vehicles', 1);
     return vehicle;
@@ -74,7 +89,11 @@ export class VehiclesController {
     status: 200,
     description: 'Liste des véhicules récupérée avec succès.',
   })
-  findAll(@Query() query: QueryVehicleDto, @TenantId() tenantId: number, @Req() req: any) {
+  findAll(
+    @Query() query: QueryVehicleDto,
+    @TenantId() tenantId: number,
+    @Req() req: any,
+  ) {
     // Si super_admin, ignorer le filtre tenant (voir tous les véhicules)
     const userRole = req.user?.role;
     const isSuperAdmin = ['super_admin', 'support'].includes(userRole);
@@ -92,7 +111,10 @@ export class VehiclesController {
   }
 
   @Get(':id/timeline')
-  @ApiOperation({ summary: 'Récupérer la timeline d\'un véhicule (maintenances, documents, événements)' })
+  @ApiOperation({
+    summary:
+      "Récupérer la timeline d'un véhicule (maintenances, documents, événements)",
+  })
   @ApiResponse({ status: 200, description: 'Timeline récupérée avec succès.' })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
   getTimeline(
@@ -103,8 +125,11 @@ export class VehiclesController {
   }
 
   @Get(':id/costs')
-  @ApiOperation({ summary: 'Analyse des coûts d\'un véhicule' })
-  @ApiResponse({ status: 200, description: 'Analyse des coûts récupérée avec succès.' })
+  @ApiOperation({ summary: "Analyse des coûts d'un véhicule" })
+  @ApiResponse({
+    status: 200,
+    description: 'Analyse des coûts récupérée avec succès.',
+  })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
   getCostAnalysis(
     @Param('id', ParseUUIDPipe) id: string,
@@ -117,16 +142,18 @@ export class VehiclesController {
   @ApiOperation({ summary: 'Calcul du TCO (Total Cost of Ownership)' })
   @ApiResponse({ status: 200, description: 'TCO calculé avec succès.' })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
-  getTCO(
-    @Param('id', ParseUUIDPipe) id: string,
-    @TenantId() tenantId: number,
-  ) {
+  getTCO(@Param('id', ParseUUIDPipe) id: string, @TenantId() tenantId: number) {
     return this.vehiclesService.calculateTCO(id, tenantId);
   }
 
   @Get(':id/mileage-history')
-  @ApiOperation({ summary: 'Récupérer l\'historique du kilométrage d\'un véhicule' })
-  @ApiResponse({ status: 200, description: 'Historique du kilométrage récupéré avec succès.' })
+  @ApiOperation({
+    summary: "Récupérer l'historique du kilométrage d'un véhicule",
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Historique du kilométrage récupéré avec succès.',
+  })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
   getMileageHistory(
     @Param('id', ParseUUIDPipe) id: string,
@@ -147,7 +174,12 @@ export class VehiclesController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @Auditable('Vehicle')
   @ApiOperation({ summary: 'Mettre à jour un véhicule' })
   @ApiResponse({
@@ -155,7 +187,10 @@ export class VehiclesController {
     description: 'Le véhicule a été mis à jour avec succès.',
   })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
-  @ApiResponse({ status: 409, description: 'Conflit avec un véhicule existant.' })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflit avec un véhicule existant.',
+  })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -166,9 +201,17 @@ export class VehiclesController {
   }
 
   @Delete(':id/driver')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
-  @ApiOperation({ summary: 'Désassigner le conducteur d\'un véhicule' })
-  @ApiResponse({ status: 200, description: 'Conducteur désassigné avec succès.' })
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
+  @ApiOperation({ summary: "Désassigner le conducteur d'un véhicule" })
+  @ApiResponse({
+    status: 200,
+    description: 'Conducteur désassigné avec succès.',
+  })
   @ApiResponse({ status: 400, description: 'Aucun conducteur assigné.' })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
@@ -180,12 +223,20 @@ export class VehiclesController {
   }
 
   @Post(':id/photos')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @UseInterceptors(FilesInterceptor('photos', 10, multerConfig))
   @ApiOperation({ summary: 'Upload de photos pour un véhicule (max 10)' })
   @ApiConsumes('multipart/form-data')
   @ApiResponse({ status: 200, description: 'Photos uploadées avec succès.' })
-  @ApiResponse({ status: 400, description: 'Fichiers invalides ou limite dépassée.' })
+  @ApiResponse({
+    status: 400,
+    description: 'Fichiers invalides ou limite dépassée.',
+  })
   @ApiResponse({ status: 404, description: 'Véhicule non trouvé.' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
   async uploadPhotos(
@@ -197,8 +248,13 @@ export class VehiclesController {
   }
 
   @Delete(':id/photos')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
-  @ApiOperation({ summary: 'Supprimer une photo d\'un véhicule' })
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
+  @ApiOperation({ summary: "Supprimer une photo d'un véhicule" })
   @ApiResponse({ status: 200, description: 'Photo supprimée avec succès.' })
   @ApiResponse({ status: 404, description: 'Véhicule ou photo non trouvé.' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant.' })
@@ -211,7 +267,12 @@ export class VehiclesController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @Auditable('Vehicle')
   @ApiOperation({ summary: 'Supprimer un véhicule' })
   @ApiResponse({
@@ -226,7 +287,9 @@ export class VehiclesController {
     @Req() req: any,
   ) {
     // Super admins et support peuvent supprimer n'importe quel véhicule
-    const isSuperAdmin = req.user?.role === UserRole.SUPER_ADMIN || req.user?.role === UserRole.SUPPORT;
+    const isSuperAdmin =
+      req.user?.role === UserRole.SUPER_ADMIN ||
+      req.user?.role === UserRole.SUPPORT;
     await this.vehiclesService.remove(id, tenantId, isSuperAdmin);
     return { message: 'Vehicle deleted successfully' };
   }

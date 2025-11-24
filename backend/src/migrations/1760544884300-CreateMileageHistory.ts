@@ -42,9 +42,15 @@ export class CreateMileageHistory1760544884300 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`ALTER TABLE "mileage_history" DROP CONSTRAINT "FK_mileage_history_tenant"`);
-    await queryRunner.query(`ALTER TABLE "mileage_history" DROP CONSTRAINT "FK_mileage_history_vehicle"`);
-    await queryRunner.query(`DROP INDEX "IDX_mileage_history_vehicle_recorded"`);
+    await queryRunner.query(
+      `ALTER TABLE "mileage_history" DROP CONSTRAINT "FK_mileage_history_tenant"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "mileage_history" DROP CONSTRAINT "FK_mileage_history_vehicle"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX "IDX_mileage_history_vehicle_recorded"`,
+    );
     await queryRunner.query(`DROP TABLE "mileage_history"`);
   }
 }

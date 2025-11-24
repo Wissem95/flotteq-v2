@@ -12,8 +12,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Document, DocumentEntityType } from '../../entities/document.entity';
-import { Maintenance, MaintenanceStatus } from '../maintenance/entities/maintenance.entity';
-import { MileageHistory, MileageSource } from '../../entities/mileage-history.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+} from '../maintenance/entities/maintenance.entity';
+import {
+  MileageHistory,
+  MileageSource,
+} from '../../entities/mileage-history.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { QueryVehicleDto } from './dto/query-vehicle.dto';
@@ -27,7 +33,6 @@ import {
   VehicleCostAnalysisDto,
   MaintenanceCostByTypeDto,
 } from './dto/vehicle-cost-analysis.dto';
-import { MileageHistoryItemDto } from './dto/mileage-history.dto';
 import { VehicleTCODto } from './dto/vehicle-tco.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 
@@ -49,11 +54,11 @@ export class VehiclesService {
 
   private getMaintenanceTypeLabel(type: string): string {
     const labels: Record<string, string> = {
-      'preventive': 'Maintenance préventive',
-      'corrective': 'Maintenance corrective',
-      'inspection': 'Contrôle technique',
-      'tire_change': 'Changement de pneus',
-      'oil_change': 'Vidange',
+      preventive: 'Maintenance préventive',
+      corrective: 'Maintenance corrective',
+      inspection: 'Contrôle technique',
+      tire_change: 'Changement de pneus',
+      oil_change: 'Vidange',
     };
     return labels[type] || type;
   }
@@ -96,15 +101,27 @@ export class VehiclesService {
     });
 
     // SYNCHRONISATION HYBRIDE à la création : currentKm ↔ mileage
-    if (createVehicleDto.currentKm !== undefined && createVehicleDto.currentKm > 0 && !createVehicleDto.mileage) {
+    if (
+      createVehicleDto.currentKm !== undefined &&
+      createVehicleDto.currentKm > 0 &&
+      !createVehicleDto.mileage
+    ) {
       vehicle.mileage = createVehicleDto.currentKm; // Sync mileage depuis currentKm
     }
-    if (createVehicleDto.mileage !== undefined && createVehicleDto.mileage > 0 && !createVehicleDto.currentKm) {
+    if (
+      createVehicleDto.mileage !== undefined &&
+      createVehicleDto.mileage > 0 &&
+      !createVehicleDto.currentKm
+    ) {
       vehicle.currentKm = createVehicleDto.mileage; // Sync currentKm depuis mileage
     }
 
-    const savedVehicle = await this.vehicleRepository.save(vehicle) as unknown as Vehicle;
-    this.logger.log(`Vehicle ${savedVehicle.id} created for tenant ${tenantId}`);
+    const savedVehicle = (await this.vehicleRepository.save(
+      vehicle,
+    )) as unknown as Vehicle;
+    this.logger.log(
+      `Vehicle ${savedVehicle.id} created for tenant ${tenantId}`,
+    );
 
     // Note: L'incrémentation de l'usage est faite dans le controller après création réussie
 
@@ -118,8 +135,7 @@ export class VehiclesService {
     const { page = 1, limit = 10, ...filters } = queryDto;
     const skip = (page - 1) * limit;
 
-    const queryBuilder = this.vehicleRepository
-      .createQueryBuilder('vehicle');
+    const queryBuilder = this.vehicleRepository.createQueryBuilder('vehicle');
 
     // Filtrer par tenant uniquement si tenantId est fourni (non super_admin)
     if (tenantId !== null) {
@@ -176,7 +192,11 @@ export class VehiclesService {
     };
   }
 
-  async findOne(id: string, tenantId: number, skipTenantCheck = false): Promise<Vehicle> {
+  async findOne(
+    id: string,
+    tenantId: number,
+    skipTenantCheck = false,
+  ): Promise<Vehicle> {
     const where: any = { id };
 
     // Si skipTenantCheck est false, on filtre par tenant
@@ -211,7 +231,9 @@ export class VehiclesService {
       .andWhere('m.status = :status', { status: MaintenanceStatus.COMPLETED })
       .getRawOne();
 
-    const totalMaintenanceCosts = parseFloat(maintenanceResult?.totalCost || '0');
+    const totalMaintenanceCosts = parseFloat(
+      maintenanceResult?.totalCost || '0',
+    );
 
     // Calculer les kilomètres parcourus
     const initialMileage = vehicle.initialMileage || 0;
@@ -227,7 +249,8 @@ export class VehiclesService {
     const currentValue = parseFloat(vehicle.currentValue?.toString() || '0');
 
     // Calcul du TCO
-    const totalTCO = purchasePrice + totalMaintenanceCosts + estimatedFuelCosts - currentValue;
+    const totalTCO =
+      purchasePrice + totalMaintenanceCosts + estimatedFuelCosts - currentValue;
 
     // TCO par km (éviter division par zéro)
     const tcoPerKm = kmTraveled > 0 ? totalTCO / kmTraveled : 0;
@@ -279,7 +302,10 @@ export class VehiclesService {
   /**
    * Récupère l'historique complet du kilométrage d'un véhicule
    */
-  async getMileageHistory(vehicleId: string, tenantId: number): Promise<MileageHistory[]> {
+  async getMileageHistory(
+    vehicleId: string,
+    tenantId: number,
+  ): Promise<MileageHistory[]> {
     return this.mileageHistoryRepository.find({
       where: { vehicleId, tenantId },
       order: { recordedAt: 'DESC' },
@@ -329,16 +355,27 @@ export class VehiclesService {
     }
 
     // Vérifier si le kilométrage a changé pour enregistrer dans l'historique
-    const kmChanged = (updateVehicleDto.currentKm && updateVehicleDto.currentKm !== vehicle.currentKm && updateVehicleDto.currentKm > 0) ||
-                      (updateVehicleDto.mileage && updateVehicleDto.mileage !== vehicle.mileage && updateVehicleDto.mileage > 0);
+    const kmChanged =
+      (updateVehicleDto.currentKm &&
+        updateVehicleDto.currentKm !== vehicle.currentKm &&
+        updateVehicleDto.currentKm > 0) ||
+      (updateVehicleDto.mileage &&
+        updateVehicleDto.mileage !== vehicle.mileage &&
+        updateVehicleDto.mileage > 0);
 
     Object.assign(vehicle, updateVehicleDto);
 
     // SYNCHRONISATION HYBRIDE : currentKm ↔ mileage
-    if (updateVehicleDto.currentKm !== undefined && updateVehicleDto.currentKm > 0) {
+    if (
+      updateVehicleDto.currentKm !== undefined &&
+      updateVehicleDto.currentKm > 0
+    ) {
       vehicle.mileage = updateVehicleDto.currentKm; // Sync mileage avec currentKm
     }
-    if (updateVehicleDto.mileage !== undefined && updateVehicleDto.mileage > 0) {
+    if (
+      updateVehicleDto.mileage !== undefined &&
+      updateVehicleDto.mileage > 0
+    ) {
       vehicle.currentKm = updateVehicleDto.mileage; // Sync currentKm avec mileage
     }
 
@@ -354,7 +391,10 @@ export class VehiclesService {
           tenantId,
         );
       } catch (error) {
-        this.logger.warn(`Failed to record mileage history for vehicle ${id}`, error);
+        this.logger.warn(
+          `Failed to record mileage history for vehicle ${id}`,
+          error,
+        );
       }
     }
 
@@ -382,7 +422,7 @@ export class VehiclesService {
       .update(Vehicle)
       .set({
         assignedDriverId: null,
-        status: VehicleStatus.AVAILABLE
+        status: VehicleStatus.AVAILABLE,
       })
       .where('id = :id', { id: vehicleId })
       .andWhere('tenantId = :tenantId', { tenantId })
@@ -398,17 +438,32 @@ export class VehiclesService {
     return updatedVehicle!;
   }
 
-  async remove(id: string, tenantId: number, skipTenantCheck = false): Promise<void> {
+  async remove(
+    id: string,
+    tenantId: number,
+    skipTenantCheck = false,
+  ): Promise<void> {
     const vehicle = await this.findOne(id, tenantId, skipTenantCheck);
     await this.vehicleRepository.softRemove(vehicle);
-    this.logger.log(`Vehicle ${id} soft deleted for tenant ${vehicle.tenantId}`);
+    this.logger.log(
+      `Vehicle ${id} soft deleted for tenant ${vehicle.tenantId}`,
+    );
 
     // Décrémenter l'usage de la subscription (utiliser le vrai tenant du véhicule)
     try {
-      await this.subscriptionsService.updateUsage(vehicle.tenantId, 'vehicles', -1);
-      this.logger.log(`Updated subscription usage for tenant ${vehicle.tenantId}: -1 vehicle`);
+      await this.subscriptionsService.updateUsage(
+        vehicle.tenantId,
+        'vehicles',
+        -1,
+      );
+      this.logger.log(
+        `Updated subscription usage for tenant ${vehicle.tenantId}: -1 vehicle`,
+      );
     } catch (error) {
-      this.logger.warn(`Failed to update subscription usage for tenant ${vehicle.tenantId}`, error);
+      this.logger.warn(
+        `Failed to update subscription usage for tenant ${vehicle.tenantId}`,
+        error,
+      );
     }
   }
 
@@ -539,7 +594,7 @@ export class VehiclesService {
       const dateB = new Date(b.date).getTime();
 
       // Protection contre les dates invalides (NaN)
-      if (isNaN(dateA)) return 1;  // Mettre à la fin
+      if (isNaN(dateA)) return 1; // Mettre à la fin
       if (isNaN(dateB)) return -1; // Mettre à la fin
 
       return dateB - dateA;
@@ -573,13 +628,16 @@ export class VehiclesService {
 
     // Calculer le coût total des maintenances
     const totalMaintenanceCost = completedMaintenances.reduce(
-      (sum, m) => sum + parseFloat((m.actualCost || m.estimatedCost).toString()),
+      (sum, m) =>
+        sum + parseFloat((m.actualCost || m.estimatedCost).toString()),
       0,
     );
 
     const totalMaintenanceCount = completedMaintenances.length;
     const averageMaintenanceCost =
-      totalMaintenanceCount > 0 ? totalMaintenanceCost / totalMaintenanceCount : 0;
+      totalMaintenanceCount > 0
+        ? totalMaintenanceCost / totalMaintenanceCount
+        : 0;
 
     // Grouper par type de maintenance
     const costsByTypeMap = new Map<string, MaintenanceCostByTypeDto>();
@@ -602,12 +660,15 @@ export class VehiclesService {
     const costsByType = Array.from(costsByTypeMap.values());
 
     // Coût total de possession
-    const purchasePrice = vehicle.purchasePrice ? parseFloat(vehicle.purchasePrice.toString()) : 0;
+    const purchasePrice = vehicle.purchasePrice
+      ? parseFloat(vehicle.purchasePrice.toString())
+      : 0;
     const totalOwnershipCost = purchasePrice + totalMaintenanceCost;
 
     // Coût par kilomètre
     const kmParcourus = vehicle.currentKm - (vehicle.initialMileage || 0);
-    const costPerKm = kmParcourus > 0 ? totalOwnershipCost / kmParcourus : undefined;
+    const costPerKm =
+      kmParcourus > 0 ? totalOwnershipCost / kmParcourus : undefined;
 
     return {
       vehicleId,
@@ -640,14 +701,24 @@ export class VehiclesService {
       );
     }
 
-    const uploadDir = path.join(process.cwd(), 'uploads', 'vehicles', vehicleId);
+    const uploadDir = path.join(
+      process.cwd(),
+      'uploads',
+      'vehicles',
+      vehicleId,
+    );
 
     // Créer le dossier s'il n'existe pas
     try {
       await fs.mkdir(uploadDir, { recursive: true });
     } catch (error) {
-      this.logger.error(`Failed to create upload directory: ${uploadDir}`, error);
-      throw new BadRequestException('Erreur lors de la création du dossier upload');
+      this.logger.error(
+        `Failed to create upload directory: ${uploadDir}`,
+        error,
+      );
+      throw new BadRequestException(
+        'Erreur lors de la création du dossier upload',
+      );
     }
 
     const photoUrls: string[] = [];
@@ -682,20 +753,29 @@ export class VehiclesService {
 
         this.logger.log(`Photo uploaded: ${photoUrl}`);
       } catch (error) {
-        this.logger.error(`Failed to process image: ${file.originalname}`, error);
-        throw new BadRequestException(`Erreur lors du traitement de l'image ${file.originalname}`);
+        this.logger.error(
+          `Failed to process image: ${file.originalname}`,
+          error,
+        );
+        throw new BadRequestException(
+          `Erreur lors du traitement de l'image ${file.originalname}`,
+        );
       }
     }
 
     // Mettre à jour le véhicule avec les nouvelles URLs (photos + thumbnails)
     const currentThumbnails = vehicle.photoThumbnails || [];
-    const thumbnailUrls = photoUrls.map(url => url.replace(/\/([^/]+)$/, '/thumb-$1'));
+    const thumbnailUrls = photoUrls.map((url) =>
+      url.replace(/\/([^/]+)$/, '/thumb-$1'),
+    );
 
     vehicle.photos = [...currentPhotos, ...photoUrls];
     vehicle.photoThumbnails = [...currentThumbnails, ...thumbnailUrls];
     const updatedVehicle = await this.vehicleRepository.save(vehicle);
 
-    this.logger.log(`${photoUrls.length} photo(s) added to vehicle ${vehicleId}`);
+    this.logger.log(
+      `${photoUrls.length} photo(s) added to vehicle ${vehicleId}`,
+    );
     return updatedVehicle;
   }
 
@@ -718,8 +798,20 @@ export class VehiclesService {
     // Supprimer le fichier physique
     try {
       const filename = path.basename(photoUrl);
-      const filepath = path.join(process.cwd(), 'uploads', 'vehicles', vehicleId, filename);
-      const thumbnailPath = path.join(process.cwd(), 'uploads', 'vehicles', vehicleId, `thumb-${filename}`);
+      const filepath = path.join(
+        process.cwd(),
+        'uploads',
+        'vehicles',
+        vehicleId,
+        filename,
+      );
+      const thumbnailPath = path.join(
+        process.cwd(),
+        'uploads',
+        'vehicles',
+        vehicleId,
+        `thumb-${filename}`,
+      );
 
       await fs.unlink(filepath);
       await fs.unlink(thumbnailPath).catch(() => {
@@ -734,7 +826,10 @@ export class VehiclesService {
 
     // Retirer l'URL du tableau (et son thumbnail)
     vehicle.photos.splice(photoIndex, 1);
-    if (vehicle.photoThumbnails && vehicle.photoThumbnails.length > photoIndex) {
+    if (
+      vehicle.photoThumbnails &&
+      vehicle.photoThumbnails.length > photoIndex
+    ) {
       vehicle.photoThumbnails.splice(photoIndex, 1);
     }
     const updatedVehicle = await this.vehicleRepository.save(vehicle);

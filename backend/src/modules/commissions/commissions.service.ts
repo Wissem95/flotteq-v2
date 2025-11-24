@@ -12,7 +12,11 @@ import { Commission, CommissionStatus } from '../../entities/commission.entity';
 import { Booking } from '../../entities/booking.entity';
 import { Partner } from '../../entities/partner.entity';
 import { CommissionFilterDto } from './dto/commission-filter.dto';
-import { CommissionResponseDto, CommissionListResponseDto, CommissionTotalDto } from './dto/commission-response.dto';
+import {
+  CommissionResponseDto,
+  CommissionListResponseDto,
+  CommissionTotalDto,
+} from './dto/commission-response.dto';
 import { MarkPaidDto } from './dto/mark-paid.dto';
 import { AuditService } from '../audit/audit.service';
 import { AuditAction } from '../../entities/audit-log.entity';
@@ -41,7 +45,9 @@ export class CommissionsService {
     });
 
     if (existingCommission) {
-      throw new ConflictException(`Commission already exists for booking ${booking.id}`);
+      throw new ConflictException(
+        `Commission already exists for booking ${booking.id}`,
+      );
     }
 
     // Load partner to get commission rate
@@ -54,7 +60,8 @@ export class CommissionsService {
     }
 
     // Calculate commission amount
-    const amount = (Number(booking.price) * Number(partner.commissionRate)) / 100;
+    const amount =
+      (Number(booking.price) * Number(partner.commissionRate)) / 100;
 
     // Create commission
     const commission = this.commissionRepository.create({
@@ -98,7 +105,13 @@ export class CommissionsService {
     // Utiliser find() avec relations au lieu de queryBuilder
     const commissions = await this.commissionRepository.find({
       where,
-      relations: ['partner', 'booking', 'booking.tenant', 'booking.vehicle', 'booking.service'],
+      relations: [
+        'partner',
+        'booking',
+        'booking.tenant',
+        'booking.vehicle',
+        'booking.service',
+      ],
       order: { createdAt: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -132,7 +145,13 @@ export class CommissionsService {
 
     const commission = await this.commissionRepository.findOne({
       where: query,
-      relations: ['partner', 'booking', 'booking.tenant', 'booking.vehicle', 'booking.service'],
+      relations: [
+        'partner',
+        'booking',
+        'booking.tenant',
+        'booking.vehicle',
+        'booking.service',
+      ],
     });
 
     if (!commission) {
@@ -145,11 +164,17 @@ export class CommissionsService {
   /**
    * Mark commission as paid (Admin only)
    */
-  async markAsPaid(id: string, markPaidDto: MarkPaidDto, userId: string): Promise<Commission> {
+  async markAsPaid(
+    id: string,
+    markPaidDto: MarkPaidDto,
+    userId: string,
+  ): Promise<Commission> {
     const commission = await this.findOne(id);
 
     if (!commission.canBePaid()) {
-      throw new BadRequestException(`Commission cannot be marked as paid. Current status: ${commission.status}`);
+      throw new BadRequestException(
+        `Commission cannot be marked as paid. Current status: ${commission.status}`,
+      );
     }
 
     const oldStatus = commission.status;
@@ -203,9 +228,13 @@ export class CommissionsService {
         endDate: new Date(endDate),
       });
     } else if (startDate) {
-      query.andWhere('commission.created_at >= :startDate', { startDate: new Date(startDate) });
+      query.andWhere('commission.created_at >= :startDate', {
+        startDate: new Date(startDate),
+      });
     } else if (endDate) {
-      query.andWhere('commission.created_at <= :endDate', { endDate: new Date(endDate) });
+      query.andWhere('commission.created_at <= :endDate', {
+        endDate: new Date(endDate),
+      });
     }
 
     query.groupBy('commission.status');
@@ -225,7 +254,13 @@ export class CommissionsService {
   async getPendingCommissions(): Promise<Commission[]> {
     return this.commissionRepository.find({
       where: { status: CommissionStatus.PENDING },
-      relations: ['partner', 'booking', 'booking.tenant', 'booking.vehicle', 'booking.service'],
+      relations: [
+        'partner',
+        'booking',
+        'booking.tenant',
+        'booking.vehicle',
+        'booking.service',
+      ],
       order: { createdAt: 'DESC' },
     });
   }
@@ -236,23 +271,35 @@ export class CommissionsService {
   async getStats(startDate?: string, endDate?: string): Promise<any> {
     const now = new Date();
     const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const currentMonthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
+    const currentMonthEnd = new Date(
+      now.getFullYear(),
+      now.getMonth() + 1,
+      0,
+      23,
+      59,
+      59,
+    );
 
     // Total commissions this month
     const totalThisMonth = await this.commissionRepository
       .createQueryBuilder('commission')
       .select('COALESCE(SUM(commission.amount), 0)', 'total')
-      .where('commission.created_at >= :start AND commission.created_at <= :end', {
-        start: currentMonthStart,
-        end: currentMonthEnd,
-      })
+      .where(
+        'commission.created_at >= :start AND commission.created_at <= :end',
+        {
+          start: currentMonthStart,
+          end: currentMonthEnd,
+        },
+      )
       .getRawOne();
 
     // Pending commissions amount
     const pendingAmount = await this.commissionRepository
       .createQueryBuilder('commission')
       .select('COALESCE(SUM(commission.amount), 0)', 'total')
-      .where('commission.status = :status', { status: CommissionStatus.PENDING })
+      .where('commission.status = :status', {
+        status: CommissionStatus.PENDING,
+      })
       .getRawOne();
 
     // Active partners count
@@ -275,16 +322,30 @@ export class CommissionsService {
     const evolutionData = [];
     for (let i = 11; i >= 0; i--) {
       const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthStart = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1);
-      const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0, 23, 59, 59);
+      const monthStart = new Date(
+        monthDate.getFullYear(),
+        monthDate.getMonth(),
+        1,
+      );
+      const monthEnd = new Date(
+        monthDate.getFullYear(),
+        monthDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+      );
 
       const monthCommissions = await this.commissionRepository
         .createQueryBuilder('commission')
         .select('COALESCE(SUM(commission.amount), 0)', 'commissions')
-        .where('commission.created_at >= :start AND commission.created_at <= :end', {
-          start: monthStart,
-          end: monthEnd,
-        })
+        .where(
+          'commission.created_at >= :start AND commission.created_at <= :end',
+          {
+            start: monthStart,
+            end: monthEnd,
+          },
+        )
         .getRawOne();
 
       const monthRevenue = await this.bookingRepository
@@ -297,7 +358,10 @@ export class CommissionsService {
         .getRawOne();
 
       evolutionData.push({
-        month: monthDate.toLocaleString('fr-FR', { month: 'short', year: 'numeric' }),
+        month: monthDate.toLocaleString('fr-FR', {
+          month: 'short',
+          year: 'numeric',
+        }),
         commissions: parseFloat(monthCommissions.commissions) || 0,
         revenue: parseFloat(monthRevenue.revenue) || 0,
       });
@@ -328,11 +392,16 @@ export class CommissionsService {
         const commissionsData = await this.commissionRepository
           .createQueryBuilder('commission')
           .select('COALESCE(SUM(commission.amount), 0)', 'total')
-          .where('commission.partner_id = :partnerId', { partnerId: partner.partnerId })
-          .andWhere('commission.created_at >= :start AND commission.created_at <= :end', {
-            start: currentMonthStart,
-            end: currentMonthEnd,
+          .where('commission.partner_id = :partnerId', {
+            partnerId: partner.partnerId,
           })
+          .andWhere(
+            'commission.created_at >= :start AND commission.created_at <= :end',
+            {
+              start: currentMonthStart,
+              end: currentMonthEnd,
+            },
+          )
           .getRawOne();
 
         return {
@@ -343,7 +412,7 @@ export class CommissionsService {
           revenue: parseFloat(partner.revenue) || 0,
           commissions: parseFloat(commissionsData.total) || 0,
         };
-      })
+      }),
     );
 
     return {
@@ -359,16 +428,21 @@ export class CommissionsService {
   /**
    * Export commissions to Excel
    */
-  async exportToExcel(filters: CommissionFilterDto, partnerId?: string): Promise<Buffer> {
+  async exportToExcel(
+    filters: CommissionFilterDto,
+    partnerId?: string,
+  ): Promise<Buffer> {
     // Get all commissions without pagination
     const query = this.commissionRepository
       .createQueryBuilder('commission')
       .leftJoinAndSelect('commission.partner', 'partner')
       .leftJoinAndSelect('commission.booking', 'booking')
-      .withDeleted();  // Inclure les entités soft-deleted
+      .withDeleted(); // Inclure les entités soft-deleted
 
     if (filters.partnerId) {
-      query.andWhere('commission.partner_id = :partnerId', { partnerId: filters.partnerId });
+      query.andWhere('commission.partner_id = :partnerId', {
+        partnerId: filters.partnerId,
+      });
     } else if (partnerId) {
       query.andWhere('commission.partner_id = :partnerId', { partnerId });
     }
@@ -427,13 +501,18 @@ export class CommissionsService {
         booking: commission.bookingId,
         amount: Number(commission.amount).toFixed(2),
         status: commission.status,
-        paidAt: commission.paidAt ? commission.paidAt.toISOString().replace('T', ' ').substring(0, 19) : '',
+        paidAt: commission.paidAt
+          ? commission.paidAt.toISOString().replace('T', ' ').substring(0, 19)
+          : '',
         reference: commission.paymentReference || '',
       });
     });
 
     // Add totals row
-    const totalAmount = commissions.reduce((sum, c) => sum + Number(c.amount), 0);
+    const totalAmount = commissions.reduce(
+      (sum, c) => sum + Number(c.amount),
+      0,
+    );
     worksheet.addRow({});
     const totalRow = worksheet.addRow({
       date: '',
@@ -467,22 +546,30 @@ export class CommissionsService {
       paymentReference: commission.paymentReference,
       createdAt: commission.createdAt,
       updatedAt: commission.updatedAt,
-      booking: commission.booking ? {
-        tenant: commission.booking.tenant ? {
-          id: commission.booking.tenant.id,
-          name: commission.booking.tenant.name,
-        } : undefined,
-        vehicle: commission.booking.vehicle ? {
-          id: commission.booking.vehicle.id,
-          registration: commission.booking.vehicle.registration,
-          brand: commission.booking.vehicle.brand,
-          model: commission.booking.vehicle.model,
-        } : undefined,
-        service: commission.booking.service ? {
-          id: commission.booking.service.id,
-          name: commission.booking.service.name,
-        } : undefined,
-      } : undefined,
+      booking: commission.booking
+        ? {
+            tenant: commission.booking.tenant
+              ? {
+                  id: commission.booking.tenant.id,
+                  name: commission.booking.tenant.name,
+                }
+              : undefined,
+            vehicle: commission.booking.vehicle
+              ? {
+                  id: commission.booking.vehicle.id,
+                  registration: commission.booking.vehicle.registration,
+                  brand: commission.booking.vehicle.brand,
+                  model: commission.booking.vehicle.model,
+                }
+              : undefined,
+            service: commission.booking.service
+              ? {
+                  id: commission.booking.service.id,
+                  name: commission.booking.service.name,
+                }
+              : undefined,
+          }
+        : undefined,
     };
   }
 }

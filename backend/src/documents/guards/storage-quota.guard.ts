@@ -35,13 +35,14 @@ export class StorageQuotaGuard implements CanActivate {
     }
 
     // Calculer l'usage actuel du tenant
-    const currentUsage = await this.documentsService.getTenantStorageUsage(tenantId);
+    const currentUsage =
+      await this.documentsService.getTenantStorageUsage(tenantId);
 
     // Récupérer le plan du tenant
     const tenant = await this.tenantsService.findOne(tenantId);
 
     if (!tenant || !tenant.plan) {
-      throw new PayloadTooLargeException('Plan d\'abonnement introuvable');
+      throw new PayloadTooLargeException("Plan d'abonnement introuvable");
     }
 
     const plan = tenant.plan;
@@ -53,7 +54,7 @@ export class StorageQuotaGuard implements CanActivate {
       const fileMb = (file.size / 1024 / 1024).toFixed(2);
 
       throw new PayloadTooLargeException(
-        `Quota de stockage dépassé. Utilisé: ${usedMb}MB / ${plan.maxStorageMb}MB. Ce fichier (${fileMb}MB) dépasse la limite.`
+        `Quota de stockage dépassé. Utilisé: ${usedMb}MB / ${plan.maxStorageMb}MB. Ce fichier (${fileMb}MB) dépasse la limite.`,
       );
     }
 

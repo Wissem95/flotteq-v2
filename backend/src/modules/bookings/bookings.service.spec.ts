@@ -142,10 +142,18 @@ describe('BookingsService', () => {
     }).compile();
 
     service = module.get<BookingsService>(BookingsService);
-    bookingRepository = module.get<Repository<Booking>>(getRepositoryToken(Booking));
-    partnerRepository = module.get<Repository<Partner>>(getRepositoryToken(Partner));
-    partnerServiceRepository = module.get<Repository<PartnerService>>(getRepositoryToken(PartnerService));
-    vehicleRepository = module.get<Repository<Vehicle>>(getRepositoryToken(Vehicle));
+    bookingRepository = module.get<Repository<Booking>>(
+      getRepositoryToken(Booking),
+    );
+    partnerRepository = module.get<Repository<Partner>>(
+      getRepositoryToken(Partner),
+    );
+    partnerServiceRepository = module.get<Repository<PartnerService>>(
+      getRepositoryToken(PartnerService),
+    );
+    vehicleRepository = module.get<Repository<Vehicle>>(
+      getRepositoryToken(Vehicle),
+    );
     emailQueueService = module.get<EmailQueueService>(EmailQueueService);
     auditService = module.get<AuditService>(AuditService);
 
@@ -168,9 +176,15 @@ describe('BookingsService', () => {
     };
 
     it('should create a booking successfully', async () => {
-      mockRepositories.partnerRepository.findOne.mockResolvedValue(mockBooking.partner);
-      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(mockBooking.service);
-      mockRepositories.vehicleRepository.findOne.mockResolvedValue(mockBooking.vehicle);
+      mockRepositories.partnerRepository.findOne.mockResolvedValue(
+        mockBooking.partner,
+      );
+      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(
+        mockBooking.service,
+      );
+      mockRepositories.vehicleRepository.findOne.mockResolvedValue(
+        mockBooking.vehicle,
+      );
       mockRepositories.bookingRepository.create.mockReturnValue(mockBooking);
       mockRepositories.bookingRepository.save.mockResolvedValue(mockBooking);
 
@@ -186,46 +200,82 @@ describe('BookingsService', () => {
     it('should throw NotFoundException if partner not found', async () => {
       mockRepositories.partnerRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if partner is not approved', async () => {
-      const unapprovedPartner = { ...mockBooking.partner, canOfferServices: () => false };
-      mockRepositories.partnerRepository.findOne.mockResolvedValue(unapprovedPartner);
+      const unapprovedPartner = {
+        ...mockBooking.partner,
+        canOfferServices: () => false,
+      };
+      mockRepositories.partnerRepository.findOne.mockResolvedValue(
+        unapprovedPartner,
+      );
 
-      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw NotFoundException if service not found', async () => {
-      mockRepositories.partnerRepository.findOne.mockResolvedValue(mockBooking.partner);
+      mockRepositories.partnerRepository.findOne.mockResolvedValue(
+        mockBooking.partner,
+      );
       mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if service is not bookable', async () => {
-      const inactiveService = { ...mockBooking.service, isBookable: () => false };
-      mockRepositories.partnerRepository.findOne.mockResolvedValue(mockBooking.partner);
-      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(inactiveService);
+      const inactiveService = {
+        ...mockBooking.service,
+        isBookable: () => false,
+      };
+      mockRepositories.partnerRepository.findOne.mockResolvedValue(
+        mockBooking.partner,
+      );
+      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(
+        inactiveService,
+      );
 
-      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(BadRequestException);
+      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw NotFoundException if vehicle not found', async () => {
-      mockRepositories.partnerRepository.findOne.mockResolvedValue(mockBooking.partner);
-      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(mockBooking.service);
+      mockRepositories.partnerRepository.findOne.mockResolvedValue(
+        mockBooking.partner,
+      );
+      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(
+        mockBooking.service,
+      );
       mockRepositories.vehicleRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.create(createDto, 1, 'user-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('should throw BadRequestException if scheduled date is in the past', async () => {
       const pastDto = { ...createDto, scheduledDate: '2020-01-01' };
-      mockRepositories.partnerRepository.findOne.mockResolvedValue(mockBooking.partner);
-      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(mockBooking.service);
-      mockRepositories.vehicleRepository.findOne.mockResolvedValue(mockBooking.vehicle);
+      mockRepositories.partnerRepository.findOne.mockResolvedValue(
+        mockBooking.partner,
+      );
+      mockRepositories.partnerServiceRepository.findOne.mockResolvedValue(
+        mockBooking.service,
+      );
+      mockRepositories.vehicleRepository.findOne.mockResolvedValue(
+        mockBooking.vehicle,
+      );
 
-      await expect(service.create(pastDto, 1, 'user-1')).rejects.toThrow(BadRequestException);
+      await expect(service.create(pastDto, 1, 'user-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -233,7 +283,10 @@ describe('BookingsService', () => {
     it('should return a booking by id', async () => {
       mockRepositories.bookingRepository.findOne.mockResolvedValue(mockBooking);
 
-      const result = await service.findOne('123e4567-e89b-12d3-a456-426614174000', 1);
+      const result = await service.findOne(
+        '123e4567-e89b-12d3-a456-426614174000',
+        1,
+      );
 
       expect(result).toEqual(mockBooking);
       expect(mockRepositories.bookingRepository.findOne).toHaveBeenCalledWith({
@@ -245,21 +298,29 @@ describe('BookingsService', () => {
     it('should throw NotFoundException if booking not found', async () => {
       mockRepositories.bookingRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent-id', 1)).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent-id', 1)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('confirm', () => {
     it('should confirm a booking successfully', async () => {
       const pendingBooking = { ...mockBooking, canBeConfirmed: () => true };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(pendingBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        pendingBooking,
+      );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...pendingBooking,
         status: BookingStatus.CONFIRMED,
         confirmedAt: new Date(),
       });
 
-      const result = await service.confirm('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'user-1');
+      const result = await service.confirm(
+        '123e4567-e89b-12d3-a456-426614174000',
+        'partner-1',
+        'user-1',
+      );
 
       expect(result.status).toBe(BookingStatus.CONFIRMED);
       expect(result.confirmedAt).toBeDefined();
@@ -270,7 +331,9 @@ describe('BookingsService', () => {
     it('should throw NotFoundException if booking not found', async () => {
       mockRepositories.bookingRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.confirm('nonexistent-id', 'partner-1', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.confirm('nonexistent-id', 'partner-1', 'user-1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if booking cannot be confirmed', async () => {
@@ -279,10 +342,16 @@ describe('BookingsService', () => {
         status: BookingStatus.COMPLETED,
         canBeConfirmed: () => false,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(completedBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        completedBooking,
+      );
 
       await expect(
-        service.confirm('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'user-1'),
+        service.confirm(
+          '123e4567-e89b-12d3-a456-426614174000',
+          'partner-1',
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -290,14 +359,21 @@ describe('BookingsService', () => {
   describe('reject', () => {
     it('should reject a booking successfully', async () => {
       const pendingBooking = { ...mockBooking, canBeRejected: () => true };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(pendingBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        pendingBooking,
+      );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...pendingBooking,
         status: BookingStatus.REJECTED,
         rejectionReason: 'Not available',
       });
 
-      const result = await service.reject('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'Not available', 'user-1');
+      const result = await service.reject(
+        '123e4567-e89b-12d3-a456-426614174000',
+        'partner-1',
+        'Not available',
+        'user-1',
+      );
 
       expect(result.status).toBe(BookingStatus.REJECTED);
       expect(result.rejectionReason).toBe('Not available');
@@ -311,10 +387,17 @@ describe('BookingsService', () => {
         status: BookingStatus.COMPLETED,
         canBeRejected: () => false,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(completedBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        completedBooking,
+      );
 
       await expect(
-        service.reject('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'Reason', 'user-1'),
+        service.reject(
+          '123e4567-e89b-12d3-a456-426614174000',
+          'partner-1',
+          'Reason',
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -327,8 +410,13 @@ describe('BookingsService', () => {
     };
 
     it('should reschedule a booking successfully', async () => {
-      const bookingToReschedule = { ...mockBooking, canBeRescheduled: () => true };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(bookingToReschedule);
+      const bookingToReschedule = {
+        ...mockBooking,
+        canBeRescheduled: () => true,
+      };
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        bookingToReschedule,
+      );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...bookingToReschedule,
         scheduledDate: new Date('2025-11-01'),
@@ -336,7 +424,12 @@ describe('BookingsService', () => {
         endTime: '12:00',
       });
 
-      const result = await service.reschedule('123e4567-e89b-12d3-a456-426614174000', rescheduleDto, 1, 'user-1');
+      const result = await service.reschedule(
+        '123e4567-e89b-12d3-a456-426614174000',
+        rescheduleDto,
+        1,
+        'user-1',
+      );
 
       expect(result.scheduledTime).toBe('10:00');
       expect(mockAuditService.create).toHaveBeenCalled();
@@ -348,20 +441,37 @@ describe('BookingsService', () => {
         status: BookingStatus.COMPLETED,
         canBeRescheduled: () => false,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(completedBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        completedBooking,
+      );
 
       await expect(
-        service.reschedule('123e4567-e89b-12d3-a456-426614174000', rescheduleDto, 1, 'user-1'),
+        service.reschedule(
+          '123e4567-e89b-12d3-a456-426614174000',
+          rescheduleDto,
+          1,
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw BadRequestException if new scheduled date is in the past', async () => {
-      const bookingToReschedule = { ...mockBooking, canBeRescheduled: () => true };
+      const bookingToReschedule = {
+        ...mockBooking,
+        canBeRescheduled: () => true,
+      };
       const pastDto = { ...rescheduleDto, scheduledDate: '2020-01-01' };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(bookingToReschedule);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        bookingToReschedule,
+      );
 
       await expect(
-        service.reschedule('123e4567-e89b-12d3-a456-426614174000', pastDto, 1, 'user-1'),
+        service.reschedule(
+          '123e4567-e89b-12d3-a456-426614174000',
+          pastDto,
+          1,
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -373,13 +483,19 @@ describe('BookingsService', () => {
         status: BookingStatus.CONFIRMED,
         canBeStarted: () => true,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(confirmedBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        confirmedBooking,
+      );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...confirmedBooking,
         status: BookingStatus.IN_PROGRESS,
       });
 
-      const result = await service.startWork('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'user-1');
+      const result = await service.startWork(
+        '123e4567-e89b-12d3-a456-426614174000',
+        'partner-1',
+        'user-1',
+      );
 
       expect(result.status).toBe(BookingStatus.IN_PROGRESS);
       expect(mockAuditService.create).toHaveBeenCalled();
@@ -391,10 +507,16 @@ describe('BookingsService', () => {
         status: BookingStatus.PENDING,
         canBeStarted: () => false,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(pendingBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        pendingBooking,
+      );
 
       await expect(
-        service.startWork('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'user-1'),
+        service.startWork(
+          '123e4567-e89b-12d3-a456-426614174000',
+          'partner-1',
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -410,7 +532,9 @@ describe('BookingsService', () => {
           commissionRate: 10,
         },
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(inProgressBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        inProgressBooking,
+      );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...inProgressBooking,
         status: BookingStatus.COMPLETED,
@@ -419,7 +543,12 @@ describe('BookingsService', () => {
         partnerNotes: 'Work completed',
       });
 
-      const result = await service.complete('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'Work completed', 'user-1');
+      const result = await service.complete(
+        '123e4567-e89b-12d3-a456-426614174000',
+        'partner-1',
+        'Work completed',
+        'user-1',
+      );
 
       expect(result.status).toBe(BookingStatus.COMPLETED);
       expect(result.completedAt).toBeDefined();
@@ -434,10 +563,17 @@ describe('BookingsService', () => {
         status: BookingStatus.PENDING,
         canBeCompleted: () => false,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(pendingBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        pendingBooking,
+      );
 
       await expect(
-        service.complete('123e4567-e89b-12d3-a456-426614174000', 'partner-1', 'Notes', 'user-1'),
+        service.complete(
+          '123e4567-e89b-12d3-a456-426614174000',
+          'partner-1',
+          'Notes',
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -445,19 +581,28 @@ describe('BookingsService', () => {
   describe('cancel', () => {
     it('should cancel a booking successfully', async () => {
       const bookingToCancel = { ...mockBooking, canBeCancelled: () => true };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(bookingToCancel);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        bookingToCancel,
+      );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...bookingToCancel,
         status: BookingStatus.CANCELLED,
         cancellationReason: 'Customer request',
       });
 
-      const result = await service.cancel('123e4567-e89b-12d3-a456-426614174000', 'Customer request', 1, 'user-1');
+      const result = await service.cancel(
+        '123e4567-e89b-12d3-a456-426614174000',
+        'Customer request',
+        1,
+        'user-1',
+      );
 
       expect(result.status).toBe(BookingStatus.CANCELLED);
       expect(result.cancellationReason).toBe('Customer request');
       expect(mockAuditService.create).toHaveBeenCalled();
-      expect(mockEmailQueueService.queuePartnerBookingCancelled).toHaveBeenCalled();
+      expect(
+        mockEmailQueueService.queuePartnerBookingCancelled,
+      ).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if booking cannot be cancelled', async () => {
@@ -466,10 +611,17 @@ describe('BookingsService', () => {
         status: BookingStatus.COMPLETED,
         canBeCancelled: () => false,
       };
-      mockRepositories.bookingRepository.findOne.mockResolvedValue(completedBooking);
+      mockRepositories.bookingRepository.findOne.mockResolvedValue(
+        completedBooking,
+      );
 
       await expect(
-        service.cancel('123e4567-e89b-12d3-a456-426614174000', 'Reason', 1, 'user-1'),
+        service.cancel(
+          '123e4567-e89b-12d3-a456-426614174000',
+          'Reason',
+          1,
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -477,7 +629,9 @@ describe('BookingsService', () => {
   describe('findUpcoming', () => {
     it('should return upcoming confirmed bookings', async () => {
       const upcomingBookings = [mockBooking];
-      mockRepositories.bookingRepository.find.mockResolvedValue(upcomingBookings);
+      mockRepositories.bookingRepository.find.mockResolvedValue(
+        upcomingBookings,
+      );
 
       const result = await service.findUpcoming(1, 7);
 
@@ -489,11 +643,15 @@ describe('BookingsService', () => {
   describe('remove', () => {
     it('should soft delete a booking', async () => {
       mockRepositories.bookingRepository.findOne.mockResolvedValue(mockBooking);
-      mockRepositories.bookingRepository.softRemove.mockResolvedValue(mockBooking);
+      mockRepositories.bookingRepository.softRemove.mockResolvedValue(
+        mockBooking,
+      );
 
       await service.remove('123e4567-e89b-12d3-a456-426614174000', 1);
 
-      expect(mockRepositories.bookingRepository.softRemove).toHaveBeenCalledWith(mockBooking);
+      expect(
+        mockRepositories.bookingRepository.softRemove,
+      ).toHaveBeenCalledWith(mockBooking);
     });
   });
 });

@@ -68,7 +68,7 @@ export class SimpleCacheService {
   getStats() {
     const now = Date.now();
     const entries = Array.from(this.cache.values());
-    const activeEntries = entries.filter(e => e.expiresAt > now);
+    const activeEntries = entries.filter((e) => e.expiresAt > now);
 
     return {
       totalKeys: this.cache.size,

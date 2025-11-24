@@ -8,7 +8,9 @@ import { Maintenance } from '../maintenance/entities/maintenance.entity';
 import { MileageHistory } from '../../entities/mileage-history.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Vehicle, Document, Maintenance, MileageHistory])],
+  imports: [
+    TypeOrmModule.forFeature([Vehicle, Document, Maintenance, MileageHistory]),
+  ],
   controllers: [VehiclesController],
   providers: [VehiclesService],
   exports: [VehiclesService],

@@ -1,4 +1,12 @@
-import { IsOptional, IsUUID, IsEnum, IsDateString, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsUUID,
+  IsEnum,
+  IsDateString,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { BookingStatus } from '../../../entities/booking.entity';
@@ -24,12 +32,18 @@ export class BookingFilterDto {
   @IsEnum(BookingStatus)
   status?: BookingStatus;
 
-  @ApiPropertyOptional({ example: '2025-10-01', description: 'Start date filter (YYYY-MM-DD)' })
+  @ApiPropertyOptional({
+    example: '2025-10-01',
+    description: 'Start date filter (YYYY-MM-DD)',
+  })
   @IsOptional()
   @IsDateString()
   startDate?: string;
 
-  @ApiPropertyOptional({ example: '2025-10-31', description: 'End date filter (YYYY-MM-DD)' })
+  @ApiPropertyOptional({
+    example: '2025-10-31',
+    description: 'End date filter (YYYY-MM-DD)',
+  })
   @IsOptional()
   @IsDateString()
   endDate?: string;

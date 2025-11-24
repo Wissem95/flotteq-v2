@@ -1,4 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, DeleteDateColumn, OneToMany, OneToOne, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+  OneToMany,
+  OneToOne,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Vehicle } from './vehicle.entity';
 import { Tenant } from './tenant.entity';
 import { User } from './user.entity';
@@ -7,7 +18,7 @@ export enum DriverStatus {
   ACTIVE = 'active',
   INACTIVE = 'inactive',
   SUSPENDED = 'suspended',
-  ON_LEAVE = 'on_leave'
+  ON_LEAVE = 'on_leave',
 }
 
 @Entity('drivers')
@@ -42,7 +53,7 @@ export class Driver {
   @Column({
     type: 'enum',
     enum: DriverStatus,
-    default: DriverStatus.ACTIVE
+    default: DriverStatus.ACTIVE,
   })
   status: DriverStatus;
 
@@ -64,10 +75,20 @@ export class Driver {
   @Column({ type: 'text', nullable: true })
   notes: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: true, name: 'profile_photo_url' })
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    name: 'profile_photo_url',
+  })
   profilePhotoUrl: string | null;
 
-  @Column({ type: 'varchar', length: 500, nullable: true, name: 'profile_photo_thumbnail' })
+  @Column({
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+    name: 'profile_photo_thumbnail',
+  })
   profilePhotoThumbnail: string | null;
 
   @Column({ name: 'tenant_id' })
@@ -86,7 +107,7 @@ export class Driver {
   user: User | null;
 
   // Un driver peut avoir plusieurs véhicules assignés
-  @OneToMany(() => Vehicle, vehicle => vehicle.assignedDriver)
+  @OneToMany(() => Vehicle, (vehicle) => vehicle.assignedDriver)
   vehicles: Vehicle[];
 
   @CreateDateColumn()

@@ -3,7 +3,8 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class UpdateStorageQuotaDto {
   @ApiProperty({
-    description: 'Quota de stockage personnalisé en MB (remplace le quota du plan)',
+    description:
+      'Quota de stockage personnalisé en MB (remplace le quota du plan)',
     example: 2048,
     minimum: 0,
     required: false,
@@ -24,7 +25,10 @@ export class StorageUsageResponseDto {
   @ApiProperty({ description: 'Quota par défaut du plan (MB)' })
   planQuotaMb: number;
 
-  @ApiProperty({ description: 'Quota personnalisé si défini (MB)', required: false })
+  @ApiProperty({
+    description: 'Quota personnalisé si défini (MB)',
+    required: false,
+  })
   customQuotaMb?: number;
 
   @ApiProperty({ description: 'Quota effectif utilisé (MB)' })
@@ -36,7 +40,7 @@ export class StorageUsageResponseDto {
   @ApiProperty({ description: 'Espace disponible (MB)' })
   availableMb: number;
 
-  @ApiProperty({ description: 'Pourcentage d\'utilisation' })
+  @ApiProperty({ description: "Pourcentage d'utilisation" })
   usagePercent: number;
 
   @ApiProperty({ description: 'Nombre de fichiers' })

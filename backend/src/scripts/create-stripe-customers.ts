@@ -40,7 +40,9 @@ async function createStripeCustomers() {
 
   for (const tenant of tenants) {
     try {
-      console.log(`Creating Stripe customer for tenant ${tenant.id} (${tenant.name})...`);
+      console.log(
+        `Creating Stripe customer for tenant ${tenant.id} (${tenant.name})...`,
+      );
 
       const customer = await stripe.customers.create({
         email: tenant.email,
@@ -53,9 +55,14 @@ async function createStripeCustomers() {
       tenant.stripeCustomerId = customer.id;
       await tenantRepo.save(tenant);
 
-      console.log(`✅ Created customer ${customer.id} for tenant ${tenant.name}`);
+      console.log(
+        `✅ Created customer ${customer.id} for tenant ${tenant.name}`,
+      );
     } catch (error) {
-      console.error(`❌ Failed to create customer for tenant ${tenant.id}:`, error);
+      console.error(
+        `❌ Failed to create customer for tenant ${tenant.id}:`,
+        error,
+      );
     }
   }
 

@@ -43,14 +43,30 @@ export class CreateBookingsTable1760570000000 implements MigrationInterface {
     `);
 
     // Create indexes for bookings table
-    await queryRunner.query(`CREATE INDEX "idx_bookings_partner_id" ON "bookings"("partner_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_tenant_id" ON "bookings"("tenant_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_vehicle_id" ON "bookings"("vehicle_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_status" ON "bookings"("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_scheduled_date" ON "bookings"("scheduled_date")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_partner_status" ON "bookings"("partner_id", "status")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_tenant_status" ON "bookings"("tenant_id", "status")`);
-    await queryRunner.query(`CREATE INDEX "idx_bookings_date_range" ON "bookings"("scheduled_date", "status")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_partner_id" ON "bookings"("partner_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_tenant_id" ON "bookings"("tenant_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_vehicle_id" ON "bookings"("vehicle_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_status" ON "bookings"("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_scheduled_date" ON "bookings"("scheduled_date")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_partner_status" ON "bookings"("partner_id", "status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_tenant_status" ON "bookings"("tenant_id", "status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_bookings_date_range" ON "bookings"("scheduled_date", "status")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

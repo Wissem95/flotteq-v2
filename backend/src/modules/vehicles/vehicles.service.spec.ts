@@ -1,11 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Document, DocumentEntityType } from '../../entities/document.entity';
-import { Maintenance, MaintenanceStatus } from '../maintenance/entities/maintenance.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+} from '../maintenance/entities/maintenance.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
@@ -90,8 +97,12 @@ describe('VehiclesService', () => {
 
     service = module.get<VehiclesService>(VehiclesService);
     repository = module.get<Repository<Vehicle>>(getRepositoryToken(Vehicle));
-    documentRepository = module.get<Repository<Document>>(getRepositoryToken(Document));
-    maintenanceRepository = module.get<Repository<Maintenance>>(getRepositoryToken(Maintenance));
+    documentRepository = module.get<Repository<Document>>(
+      getRepositoryToken(Document),
+    );
+    maintenanceRepository = module.get<Repository<Maintenance>>(
+      getRepositoryToken(Maintenance),
+    );
 
     // Reset all mocks before each test
     jest.clearAllMocks();
@@ -429,9 +440,9 @@ describe('VehiclesService', () => {
     it('should reject if no files provided', async () => {
       mockRepository.findOne.mockResolvedValue(mockVehicle);
 
-      await expect(
-        service.uploadPhotos(mockVehicle.id, [], 1),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.uploadPhotos(mockVehicle.id, [], 1)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should reject if limit exceeded', async () => {

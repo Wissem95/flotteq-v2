@@ -21,6 +21,8 @@ export class VehicleStatsDto {
   @ApiProperty({ description: 'Kilométrage moyen de la flotte' })
   averageMileage: number;
 
-  @ApiProperty({ description: 'Véhicules nécessitant une maintenance (> 10000km)' })
+  @ApiProperty({
+    description: 'Véhicules nécessitant une maintenance (> 10000km)',
+  })
   needingMaintenance: number;
 }

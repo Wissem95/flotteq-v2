@@ -40,7 +40,10 @@ describe('StripeController', () => {
 
       mockStripeService.handleWebhook.mockResolvedValue(undefined);
 
-      const result = await controller.handleWebhook('test_signature', mockRequest);
+      const result = await controller.handleWebhook(
+        'test_signature',
+        mockRequest,
+      );
 
       expect(result).toEqual({ received: true });
       expect(mockStripeService.handleWebhook).toHaveBeenCalledWith(
@@ -54,9 +57,9 @@ describe('StripeController', () => {
         rawBody: Buffer.from('test_payload'),
       };
 
-      await expect(
-        controller.handleWebhook('', mockRequest),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.handleWebhook('', mockRequest)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if webhook processing fails', async () => {
@@ -64,7 +67,9 @@ describe('StripeController', () => {
         rawBody: Buffer.from('test_payload'),
       };
 
-      mockStripeService.handleWebhook.mockRejectedValue(new Error('Processing error'));
+      mockStripeService.handleWebhook.mockRejectedValue(
+        new Error('Processing error'),
+      );
 
       await expect(
         controller.handleWebhook('test_signature', mockRequest),
@@ -78,7 +83,10 @@ describe('StripeController', () => {
 
       mockStripeService.handleWebhook.mockResolvedValue(undefined);
 
-      const result = await controller.handleWebhook('test_signature', mockRequest);
+      const result = await controller.handleWebhook(
+        'test_signature',
+        mockRequest,
+      );
 
       expect(result).toEqual({ received: true });
       expect(mockStripeService.handleWebhook).toHaveBeenCalledWith(
@@ -120,9 +128,9 @@ describe('StripeController', () => {
         },
       };
 
-      await expect(
-        controller.createPortalSession(mockRequest),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.createPortalSession(mockRequest)).rejects.toThrow(
+        BadRequestException,
+      );
     });
 
     it('should throw BadRequestException if tenant is missing', async () => {
@@ -132,9 +140,9 @@ describe('StripeController', () => {
         },
       };
 
-      await expect(
-        controller.createPortalSession(mockRequest),
-      ).rejects.toThrow(BadRequestException);
+      await expect(controller.createPortalSession(mockRequest)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

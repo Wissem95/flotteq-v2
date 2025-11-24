@@ -5,7 +5,7 @@ import { DocumentEntityType } from '../../entities/document.entity';
 export class QueryDocumentsDto {
   @ApiPropertyOptional({
     enum: DocumentEntityType,
-    description: 'Type d\'entité (vehicle, driver, maintenance)'
+    description: "Type d'entité (vehicle, driver, maintenance)",
   })
   @IsOptional()
   @IsString()

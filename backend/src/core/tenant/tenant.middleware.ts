@@ -1,4 +1,8 @@
-import { Injectable, NestMiddleware, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  BadRequestException,
+} from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
 
 declare global {
@@ -42,9 +46,12 @@ export class TenantMiddleware implements NestMiddleware {
 
     // Check if this is a public GET request to availabilities endpoints
     // Match patterns: GET /api/availabilities/{uuid} or GET /api/availabilities/{uuid}/slots
-    const isAvailabilitiesGetRequest = path.startsWith('/api/availabilities/') && req.method === 'GET';
+    const isAvailabilitiesGetRequest =
+      path.startsWith('/api/availabilities/') && req.method === 'GET';
 
-    const isSkippedRoute = skipRoutes.some(route => path.startsWith(route)) || isAvailabilitiesGetRequest;
+    const isSkippedRoute =
+      skipRoutes.some((route) => path.startsWith(route)) ||
+      isAvailabilitiesGetRequest;
 
     if (isSkippedRoute) {
       return next();
@@ -56,7 +63,9 @@ export class TenantMiddleware implements NestMiddleware {
       const token = authHeader.substring(7);
       try {
         // Decode JWT without verification to check the type field
-        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        const payload = JSON.parse(
+          Buffer.from(token.split('.')[1], 'base64').toString(),
+        );
         if (payload.type === 'partner' && payload.partnerId) {
           // This is a partner request, skip tenantId requirement
           return next();

@@ -16,7 +16,9 @@ describe('VehiclesController (e2e)', () => {
     }).compile();
 
     app = moduleFixture.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
@@ -134,7 +136,9 @@ describe('VehiclesController (e2e)', () => {
         .set('X-Tenant-ID', '1')
         .expect(200)
         .then((response) => {
-          expect(response.body.data.every((v: any) => v.status === 'available')).toBe(true);
+          expect(
+            response.body.data.every((v: any) => v.status === 'available'),
+          ).toBe(true);
         });
     });
 

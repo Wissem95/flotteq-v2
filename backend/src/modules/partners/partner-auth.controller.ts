@@ -1,5 +1,10 @@
 import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { PartnerAuthService } from './partner-auth.service';
 import { PartnersService } from './partners.service';
 import { HybridAuthGuard } from '../../core/auth/guards/hybrid-auth.guard';

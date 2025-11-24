@@ -1,4 +1,11 @@
-import { IsOptional, IsUUID, IsEnum, IsDateString, IsInt, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsUUID,
+  IsEnum,
+  IsDateString,
+  IsInt,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TripStatus } from '../../../entities/trip.entity';

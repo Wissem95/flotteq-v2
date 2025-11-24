@@ -6,7 +6,10 @@ import { MaintenanceTemplate } from './entities/maintenance-template.entity';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceDto } from './dto/update-maintenance.dto';
 import { CreateMaintenanceFromTemplateDto } from './dto/create-from-template.dto';
-import { MaintenanceAlertDto, MaintenanceCostSummaryDto } from './dto/maintenance-alert.dto';
+import {
+  MaintenanceAlertDto,
+  MaintenanceCostSummaryDto,
+} from './dto/maintenance-alert.dto';
 
 @Injectable()
 export class MaintenanceService {
@@ -19,7 +22,10 @@ export class MaintenanceService {
     private templateRepository: Repository<MaintenanceTemplate>,
   ) {}
 
-  async create(createMaintenanceDto: CreateMaintenanceDto, tenantId: number): Promise<Maintenance> {
+  async create(
+    createMaintenanceDto: CreateMaintenanceDto,
+    tenantId: number,
+  ): Promise<Maintenance> {
     const maintenance = this.maintenanceRepository.create({
       ...createMaintenanceDto,
       tenantId,
@@ -37,7 +43,11 @@ export class MaintenanceService {
     });
   }
 
-  async findOne(id: string, tenantId: number, skipTenantCheck = false): Promise<Maintenance> {
+  async findOne(
+    id: string,
+    tenantId: number,
+    skipTenantCheck = false,
+  ): Promise<Maintenance> {
     const where: any = { id };
 
     if (!skipTenantCheck) {
@@ -56,14 +66,21 @@ export class MaintenanceService {
     return maintenance;
   }
 
-  async findByVehicle(vehicleId: string, tenantId: number): Promise<Maintenance[]> {
+  async findByVehicle(
+    vehicleId: string,
+    tenantId: number,
+  ): Promise<Maintenance[]> {
     return this.maintenanceRepository.find({
       where: { vehicleId, tenantId },
       order: { scheduledDate: 'DESC' },
     });
   }
 
-  async update(id: string, updateMaintenanceDto: UpdateMaintenanceDto, tenantId: number): Promise<Maintenance> {
+  async update(
+    id: string,
+    updateMaintenanceDto: UpdateMaintenanceDto,
+    tenantId: number,
+  ): Promise<Maintenance> {
     const maintenance = await this.findOne(id, tenantId);
 
     const updateData: any = { ...updateMaintenanceDto };
@@ -81,12 +98,19 @@ export class MaintenanceService {
     return this.maintenanceRepository.save(maintenance);
   }
 
-  async remove(id: string, tenantId: number, skipTenantCheck = false): Promise<void> {
+  async remove(
+    id: string,
+    tenantId: number,
+    skipTenantCheck = false,
+  ): Promise<void> {
     const maintenance = await this.findOne(id, tenantId, skipTenantCheck);
     await this.maintenanceRepository.remove(maintenance);
   }
 
-  async getUpcomingMaintenances(tenantId: number, daysAhead: number = 7): Promise<MaintenanceAlertDto[]> {
+  async getUpcomingMaintenances(
+    tenantId: number,
+    daysAhead: number = 7,
+  ): Promise<MaintenanceAlertDto[]> {
     const today = new Date();
     const futureDate = new Date();
     futureDate.setDate(today.getDate() + daysAhead);
@@ -100,9 +124,10 @@ export class MaintenanceService {
       relations: ['vehicle'],
     });
 
-    return maintenances.map(m => {
+    return maintenances.map((m) => {
       const daysUntil = Math.ceil(
-        (new Date(m.scheduledDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+        (new Date(m.scheduledDate).getTime() - today.getTime()) /
+          (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -111,14 +136,17 @@ export class MaintenanceService {
         type: m.type,
         scheduledDate: m.scheduledDate,
         daysUntil,
-        alertReason: daysUntil <= 0
-          ? 'Maintenance overdue'
-          : `Maintenance in ${daysUntil} days`,
+        alertReason:
+          daysUntil <= 0
+            ? 'Maintenance overdue'
+            : `Maintenance in ${daysUntil} days`,
       };
     });
   }
 
-  async getMaintenancesByKmAlert(tenantId: number): Promise<MaintenanceAlertDto[]> {
+  async getMaintenancesByKmAlert(
+    tenantId: number,
+  ): Promise<MaintenanceAlertDto[]> {
     const maintenances = await this.maintenanceRepository
       .createQueryBuilder('m')
       .leftJoinAndSelect('m.vehicle', 'v')
@@ -128,7 +156,7 @@ export class MaintenanceService {
       .andWhere('v.currentKm >= m.nextMaintenanceKm - 1000') // Alert 1000km before
       .getMany();
 
-    return maintenances.map(m => ({
+    return maintenances.map((m) => ({
       maintenanceId: m.id,
       vehicleRegistration: m.vehicle.registration,
       type: m.type,
@@ -138,7 +166,10 @@ export class MaintenanceService {
     }));
   }
 
-  async getCostSummaryByVehicle(vehicleId: string, tenantId: number): Promise<MaintenanceCostSummaryDto> {
+  async getCostSummaryByVehicle(
+    vehicleId: string,
+    tenantId: number,
+  ): Promise<MaintenanceCostSummaryDto> {
     const result = await this.maintenanceRepository
       .createQueryBuilder('m')
       .select('SUM(m.cost)', 'totalCost')
@@ -171,7 +202,7 @@ export class MaintenanceService {
   async createFromTemplate(
     templateId: string,
     createDto: CreateMaintenanceFromTemplateDto,
-    tenantId: number
+    tenantId: number,
   ): Promise<Maintenance> {
     const template = await this.templateRepository.findOne({
       where: { id: templateId, tenantId },

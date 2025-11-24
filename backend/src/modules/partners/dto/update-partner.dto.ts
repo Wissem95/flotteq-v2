@@ -60,7 +60,9 @@ export class UpdatePartnerDto {
   @Max(100)
   commissionRate?: number;
 
-  @ApiPropertyOptional({ example: 'Spécialiste réparation véhicules utilitaires' })
+  @ApiPropertyOptional({
+    example: 'Spécialiste réparation véhicules utilitaires',
+  })
   @IsOptional()
   @IsString()
   description?: string;

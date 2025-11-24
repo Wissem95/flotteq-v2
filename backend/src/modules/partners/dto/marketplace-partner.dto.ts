@@ -5,7 +5,10 @@ import { PartnerType } from '../../../entities/partner.entity';
  * Simplified service DTO for marketplace display
  */
 export class MarketplaceServiceDto {
-  @ApiProperty({ format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiProperty({
+    format: 'uuid',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   id: string;
 
   @ApiProperty({ example: 'Vidange complète' })
@@ -23,7 +26,10 @@ export class MarketplaceServiceDto {
  * Contains only essential fields needed for partner discovery and booking
  */
 export class MarketplacePartnerDto {
-  @ApiProperty({ format: 'uuid', example: '550e8400-e29b-41d4-a716-446655440000' })
+  @ApiProperty({
+    format: 'uuid',
+    example: '550e8400-e29b-41d4-a716-446655440000',
+  })
   id: string;
 
   @ApiProperty({ example: 'Garage Martin' })
@@ -43,31 +49,34 @@ export class MarketplacePartnerDto {
 
   @ApiProperty({
     type: [MarketplaceServiceDto],
-    description: 'Available services from this partner'
+    description: 'Available services from this partner',
   })
   services: MarketplaceServiceDto[];
 
   @ApiPropertyOptional({
     example: 3.2,
-    description: 'Distance from search point in kilometers (only present in search results)'
+    description:
+      'Distance from search point in kilometers (only present in search results)',
   })
   distance?: number;
 
   @ApiPropertyOptional({
     example: '2025-10-25T09:00:00.000Z',
-    description: 'Next available booking slot (if available within next 7 days)'
+    description:
+      'Next available booking slot (if available within next 7 days)',
   })
   nextAvailableSlot?: Date | null;
 
   @ApiPropertyOptional({
     example: 87.5,
-    description: 'Relevance score based on distance, rating, and availability (search only)'
+    description:
+      'Relevance score based on distance, rating, and availability (search only)',
   })
   relevanceScore?: number;
 
   @ApiPropertyOptional({
     example: true,
-    description: 'Whether partner has any availability in requested date range'
+    description: 'Whether partner has any availability in requested date range',
   })
   hasAvailability?: boolean;
 }

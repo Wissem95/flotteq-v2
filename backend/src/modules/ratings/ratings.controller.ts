@@ -40,13 +40,24 @@ export class RatingsController {
   @UseGuards(HybridAuthGuard)
   @Roles(UserRole.TENANT_ADMIN, UserRole.MANAGER)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create rating for completed booking (Tenant only)' })
+  @ApiOperation({
+    summary: 'Create rating for completed booking (Tenant only)',
+  })
   @ApiResponse({ status: 201, description: 'Rating created successfully' })
-  @ApiResponse({ status: 400, description: 'Booking not completed or already rated' })
-  @ApiResponse({ status: 403, description: 'Not authorized - tenant users only' })
+  @ApiResponse({
+    status: 400,
+    description: 'Booking not completed or already rated',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Not authorized - tenant users only',
+  })
   @ApiResponse({ status: 404, description: 'Booking not found' })
   @ApiResponse({ status: 409, description: 'Booking already rated' })
-  async create(@Body() createRatingDto: CreateRatingDto, @Request() req: RequestWithUser): Promise<any> {
+  async create(
+    @Body() createRatingDto: CreateRatingDto,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     const tenantId = req.user.tenantId;
     const userId = req.user.userId;
 
@@ -58,7 +69,11 @@ export class RatingsController {
       };
     }
 
-    const rating = await this.ratingsService.create(createRatingDto, tenantId, userId);
+    const rating = await this.ratingsService.create(
+      createRatingDto,
+      tenantId,
+      userId,
+    );
 
     return {
       message: 'Rating created successfully',
@@ -73,7 +88,11 @@ export class RatingsController {
   @ApiOperation({ summary: 'Get tenant ratings history' })
   @ApiQuery({ name: 'page', required: false, example: 1 })
   @ApiQuery({ name: 'limit', required: false, example: 20 })
-  @ApiResponse({ status: 200, description: 'Ratings retrieved successfully', type: RatingListResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Ratings retrieved successfully',
+    type: RatingListResponseDto,
+  })
   async getMyRatings(
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
@@ -119,11 +138,20 @@ export class RatingsController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Check if booking can be rated' })
   @ApiParam({ name: 'bookingId', format: 'uuid' })
-  @ApiResponse({ status: 200, description: 'Returns whether booking can be rated' })
-  async canRate(@Param('bookingId') bookingId: string, @Request() req: RequestWithUser): Promise<any> {
+  @ApiResponse({
+    status: 200,
+    description: 'Returns whether booking can be rated',
+  })
+  async canRate(
+    @Param('bookingId') bookingId: string,
+    @Request() req: RequestWithUser,
+  ): Promise<any> {
     const tenantId = req.user.tenantId;
 
-    const canRate = await this.ratingsService.canRateBooking(bookingId, tenantId);
+    const canRate = await this.ratingsService.canRateBooking(
+      bookingId,
+      tenantId,
+    );
 
     return {
       canRate,

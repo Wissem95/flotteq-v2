@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class AddPartnerDocumentTypes1760547565000 implements MigrationInterface {
+export class AddPartnerDocumentTypes1760547565000
+  implements MigrationInterface
+{
   name = 'AddPartnerDocumentTypes1760547565000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -30,6 +32,8 @@ export class AddPartnerDocumentTypes1760547565000 implements MigrationInterface 
     // For safety, this migration does not implement rollback
     // If rollback is needed, you must recreate the enum with the old values
     console.log('Warning: Rollback not implemented for enum value additions');
-    console.log('To rollback, you need to manually recreate the enum types without the new values');
+    console.log(
+      'To rollback, you need to manually recreate the enum types without the new values',
+    );
   }
 }

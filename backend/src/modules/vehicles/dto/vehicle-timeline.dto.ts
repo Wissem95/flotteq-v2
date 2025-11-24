@@ -11,10 +11,10 @@ export class TimelineItemDto {
   @ApiProperty({ enum: TimelineItemType })
   type: TimelineItemType;
 
-  @ApiProperty({ description: 'Date de l\'événement' })
+  @ApiProperty({ description: "Date de l'événement" })
   date: Date;
 
-  @ApiProperty({ description: 'Description de l\'événement' })
+  @ApiProperty({ description: "Description de l'événement" })
   description: string;
 
   @ApiProperty({ description: 'Métadonnées additionnelles', required: false })
@@ -31,6 +31,6 @@ export class VehicleTimelineDto {
   })
   items: TimelineItemDto[];
 
-  @ApiProperty({ description: 'Nombre total d\'événements' })
+  @ApiProperty({ description: "Nombre total d'événements" })
   totalEvents: number;
 }

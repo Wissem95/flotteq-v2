@@ -3,18 +3,34 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, MoreThan } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
 import { Driver, DriverStatus } from '../../entities/driver.entity';
-import { Maintenance, MaintenanceStatus } from '../maintenance/entities/maintenance.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+} from '../maintenance/entities/maintenance.entity';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
-import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
+import {
+  Subscription,
+  SubscriptionStatus,
+} from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
 import { DashboardOverviewDto } from './dto/dashboard-overview.dto';
 import { DashboardStatsDto } from './dto/dashboard-stats.dto';
 import { FleetStatusDto } from './dto/fleet-status.dto';
-import { CostAnalysisDto, MonthlyMaintenanceCost, MaintenanceCostByType } from './dto/cost-analysis.dto';
+import {
+  CostAnalysisDto,
+  MonthlyMaintenanceCost,
+  MaintenanceCostByType,
+} from './dto/cost-analysis.dto';
 import { AlertDto, AlertType, AlertSeverity } from './dto/alert.dto';
 import { MaintenanceStatsDto } from './dto/maintenance-stats.dto';
 import { DriverStatsDto } from './dto/driver-stats.dto';
-import { InternalStatsDto, InternalRevenueDto, InternalSubscriptionsDto, ActivityLogDto, RecentTenantDto } from './dto/internal-stats.dto';
+import {
+  InternalStatsDto,
+  InternalRevenueDto,
+  InternalSubscriptionsDto,
+  ActivityLogDto,
+  RecentTenantDto,
+} from './dto/internal-stats.dto';
 import { SubscriptionUsageDto } from './dto/subscription-usage.dto';
 
 @Injectable()
@@ -36,11 +52,11 @@ export class DashboardService {
 
   private getMaintenanceTypeLabel(type: string): string {
     const labels: Record<string, string> = {
-      'preventive': 'Maintenance préventive',
-      'corrective': 'Maintenance corrective',
-      'inspection': 'Contrôle technique',
-      'tire_change': 'Changement de pneus',
-      'oil_change': 'Vidange',
+      preventive: 'Maintenance préventive',
+      corrective: 'Maintenance corrective',
+      inspection: 'Contrôle technique',
+      tire_change: 'Changement de pneus',
+      oil_change: 'Vidange',
     };
     return labels[type] || type;
   }
@@ -88,7 +104,11 @@ export class DashboardService {
       vehicles.length > 0
         ? vehicles.reduce(
             (sum, v) =>
-              sum + (currentYear - (v.purchaseDate ? new Date(v.purchaseDate).getFullYear() : currentYear)),
+              sum +
+              (currentYear -
+                (v.purchaseDate
+                  ? new Date(v.purchaseDate).getFullYear()
+                  : currentYear)),
             0,
           ) / vehicles.length
         : 0;
@@ -260,8 +280,7 @@ export class DashboardService {
 
     return {
       totalMaintenanceCost: Math.round(totalMaintenanceCost * 100) / 100,
-      totalFleetPurchaseValue:
-        Math.round(totalFleetPurchaseValue * 100) / 100,
+      totalFleetPurchaseValue: Math.round(totalFleetPurchaseValue * 100) / 100,
       avgMaintenanceCostPerVehicle:
         Math.round(avgMaintenanceCostPerVehicle * 100) / 100,
       monthlyMaintenanceCosts,
@@ -391,7 +410,8 @@ export class DashboardService {
     };
 
     return alerts.sort((a, b) => {
-      const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+      const severityDiff =
+        severityOrder[a.severity] - severityOrder[b.severity];
       if (severityDiff !== 0) return severityDiff;
       return (a.daysUntilDue || 999) - (b.daysUntilDue || 999);
     });
@@ -439,7 +459,10 @@ export class DashboardService {
 
     // Calculate average days to complete
     const completedWithDates = maintenances.filter(
-      (m) => m.status === MaintenanceStatus.COMPLETED && m.completedDate && m.scheduledDate,
+      (m) =>
+        m.status === MaintenanceStatus.COMPLETED &&
+        m.completedDate &&
+        m.scheduledDate,
     );
 
     const avgDaysToComplete =
@@ -522,7 +545,9 @@ export class DashboardService {
       this.tenantRepository.count(),
       this.tenantRepository.count({ where: { status: TenantStatus.ACTIVE } }),
       0, // Plus de période d'essai
-      this.tenantRepository.count({ where: { status: TenantStatus.CANCELLED } }),
+      this.tenantRepository.count({
+        where: { status: TenantStatus.CANCELLED },
+      }),
       this.vehicleRepository.count(),
       this.driverRepository.count(),
       this.userRepository.count(),
@@ -553,8 +578,7 @@ export class DashboardService {
 
     const churnRate =
       totalTenants > 0 ? (cancelledLastMonth / totalTenants) * 100 : 0;
-    const averageRevenuePerTenant =
-      activeTenants > 0 ? mrr / activeTenants : 0;
+    const averageRevenuePerTenant = activeTenants > 0 ? mrr / activeTenants : 0;
 
     return {
       totalTenants,
@@ -584,21 +608,24 @@ export class DashboardService {
     );
 
     // Revenue par plan
-    const revenueByPlan = activeSubscriptions.reduce((acc, sub) => {
-      const planName = sub.plan.name;
-      const existing = acc.find((r) => r.plan === planName);
-      if (existing) {
-        existing.count++;
-        existing.revenue += Number(sub.plan.price);
-      } else {
-        acc.push({
-          plan: planName,
-          count: 1,
-          revenue: Number(sub.plan.price),
-        });
-      }
-      return acc;
-    }, [] as Array<{ plan: string; count: number; revenue: number }>);
+    const revenueByPlan = activeSubscriptions.reduce(
+      (acc, sub) => {
+        const planName = sub.plan.name;
+        const existing = acc.find((r) => r.plan === planName);
+        if (existing) {
+          existing.count++;
+          existing.revenue += Number(sub.plan.price);
+        } else {
+          acc.push({
+            plan: planName,
+            count: 1,
+            revenue: Number(sub.plan.price),
+          });
+        }
+        return acc;
+      },
+      [] as Array<{ plan: string; count: number; revenue: number }>,
+    );
 
     // Évolution MRR 12 derniers mois
     const revenueEvolution = await this.calculateMRREvolution(12);
@@ -623,16 +650,8 @@ export class DashboardService {
     const now = new Date();
 
     for (let i = months - 1; i >= 0; i--) {
-      const targetDate = new Date(
-        now.getFullYear(),
-        now.getMonth() - i,
-        1,
-      );
-      const nextMonth = new Date(
-        now.getFullYear(),
-        now.getMonth() - i + 1,
-        1,
-      );
+      const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
 
       const subscriptions = await this.subscriptionRepository
         .createQueryBuilder('sub')
@@ -678,16 +697,19 @@ export class DashboardService {
       relations: ['plan'],
     });
 
-    const planDistribution = subscriptions.reduce((acc, sub) => {
-      const planName = sub.plan.name;
-      const existing = acc.find((p) => p.plan === planName);
-      if (existing) {
-        existing.count++;
-      } else {
-        acc.push({ plan: planName, count: 1, percentage: 0 });
-      }
-      return acc;
-    }, [] as Array<{ plan: string; count: number; percentage: number }>);
+    const planDistribution = subscriptions.reduce(
+      (acc, sub) => {
+        const planName = sub.plan.name;
+        const existing = acc.find((p) => p.plan === planName);
+        if (existing) {
+          existing.count++;
+        } else {
+          acc.push({ plan: planName, count: 1, percentage: 0 });
+        }
+        return acc;
+      },
+      [] as Array<{ plan: string; count: number; percentage: number }>,
+    );
 
     // Calculer pourcentages
     const total = subscriptions.length;
@@ -769,9 +791,7 @@ export class DashboardService {
     }
 
     // Trier par date décroissante
-    activities.sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
+    activities.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
     return activities.slice(0, 50);
   }
@@ -785,7 +805,7 @@ export class DashboardService {
       });
 
       // Fetch subscriptions for these tenants
-      const tenantIds = tenants.map(t => t.id);
+      const tenantIds = tenants.map((t) => t.id);
 
       if (tenantIds.length === 0) {
         return [];
@@ -797,7 +817,7 @@ export class DashboardService {
       });
 
       const subscriptionMap = new Map(
-        subscriptions.map(sub => [sub.tenantId, sub])
+        subscriptions.map((sub) => [sub.tenantId, sub]),
       );
 
       const result = tenants.map((tenant) => {
@@ -805,7 +825,9 @@ export class DashboardService {
         const vehiclesCount = tenant.vehicles?.length || 0;
 
         // Debug log
-        console.log(`[getRecentTenants] Tenant ${tenant.name} (ID: ${tenant.id}): users=${usersCount}, vehicles=${vehiclesCount}`);
+        console.log(
+          `[getRecentTenants] Tenant ${tenant.name} (ID: ${tenant.id}): users=${usersCount}, vehicles=${vehiclesCount}`,
+        );
 
         return {
           id: tenant.id,
@@ -841,8 +863,12 @@ export class DashboardService {
 
     // If no subscription, return default values
     if (!subscription || !subscription.plan) {
-      const vehiclesCount = await this.vehicleRepository.count({ where: { tenantId } });
-      const driversCount = await this.driverRepository.count({ where: { tenantId } });
+      const vehiclesCount = await this.vehicleRepository.count({
+        where: { tenantId },
+      });
+      const driversCount = await this.driverRepository.count({
+        where: { tenantId },
+      });
 
       return {
         planName: 'Aucun plan actif',
@@ -874,15 +900,18 @@ export class DashboardService {
     const maxVehicles = subscription.plan.maxVehicles || 0;
     const maxDrivers = subscription.plan.maxDrivers || 0;
 
-    const vehiclesPercentage = maxVehicles > 0
-      ? Math.round((vehiclesCount / maxVehicles) * 100 * 10) / 10
-      : 0;
-    const driversPercentage = maxDrivers > 0
-      ? Math.round((driversCount / maxDrivers) * 100 * 10) / 10
-      : 0;
-    const storagePercentage = storageQuotaMB > 0
-      ? Math.round((storageUsedMB / storageQuotaMB) * 100 * 10) / 10
-      : 0;
+    const vehiclesPercentage =
+      maxVehicles > 0
+        ? Math.round((vehiclesCount / maxVehicles) * 100 * 10) / 10
+        : 0;
+    const driversPercentage =
+      maxDrivers > 0
+        ? Math.round((driversCount / maxDrivers) * 100 * 10) / 10
+        : 0;
+    const storagePercentage =
+      storageQuotaMB > 0
+        ? Math.round((storageUsedMB / storageQuotaMB) * 100 * 10) / 10
+        : 0;
 
     return {
       planName: subscription.plan.name,

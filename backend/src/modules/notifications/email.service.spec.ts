@@ -120,7 +120,12 @@ describe('EmailService', () => {
         maintenanceId: '123',
       };
 
-      await service.sendMaintenanceReminder('user@example.com', 'John', maintenanceData, 1);
+      await service.sendMaintenanceReminder(
+        'user@example.com',
+        'John',
+        maintenanceData,
+        1,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'user@example.com',
@@ -144,7 +149,12 @@ describe('EmailService', () => {
         maintenanceId: '123',
       };
 
-      await service.sendMaintenanceReminder('user@example.com', 'John', maintenanceData, 7);
+      await service.sendMaintenanceReminder(
+        'user@example.com',
+        'John',
+        maintenanceData,
+        7,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -169,7 +179,12 @@ describe('EmailService', () => {
         documentId: '456',
       };
 
-      await service.sendDocumentExpiringAlert('user@example.com', 'John', documentData, 30);
+      await service.sendDocumentExpiringAlert(
+        'user@example.com',
+        'John',
+        documentData,
+        30,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'user@example.com',
@@ -190,7 +205,11 @@ describe('EmailService', () => {
     it('should prepare partner welcome email with correct context', async () => {
       const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
 
-      await service.sendPartnerWelcomeEmail('partner@example.com', 'Jean', 'Garage Dupont');
+      await service.sendPartnerWelcomeEmail(
+        'partner@example.com',
+        'Jean',
+        'Garage Dupont',
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'partner@example.com',
@@ -211,7 +230,11 @@ describe('EmailService', () => {
     it('should prepare partner approved email with correct context', async () => {
       const sendEmailSpy = jest.spyOn(service, 'sendEmail').mockResolvedValue();
 
-      await service.sendPartnerApprovedEmail('partner@example.com', 'Jean', 'Garage Dupont');
+      await service.sendPartnerApprovedEmail(
+        'partner@example.com',
+        'Jean',
+        'Garage Dupont',
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'partner@example.com',
@@ -267,7 +290,11 @@ describe('EmailService', () => {
         price: 89.99,
       };
 
-      await service.sendPartnerBookingNew('partner@example.com', 'Garage Dupont', bookingData);
+      await service.sendPartnerBookingNew(
+        'partner@example.com',
+        'Garage Dupont',
+        bookingData,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'partner@example.com',
@@ -295,7 +322,11 @@ describe('EmailService', () => {
         price: 150.0,
       };
 
-      await service.sendPartnerBookingCancelled('partner@example.com', 'Garage Dupont', bookingData);
+      await service.sendPartnerBookingCancelled(
+        'partner@example.com',
+        'Garage Dupont',
+        bookingData,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'partner@example.com',
@@ -322,7 +353,11 @@ describe('EmailService', () => {
         serviceName: 'Vidange',
       };
 
-      await service.sendBookingConfirmed('tenant@example.com', 'FleetCorp', bookingData);
+      await service.sendBookingConfirmed(
+        'tenant@example.com',
+        'FleetCorp',
+        bookingData,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'tenant@example.com',
@@ -349,7 +384,11 @@ describe('EmailService', () => {
         reason: 'Créneau non disponible',
       };
 
-      await service.sendBookingRejected('tenant@example.com', 'FleetCorp', bookingData);
+      await service.sendBookingRejected(
+        'tenant@example.com',
+        'FleetCorp',
+        bookingData,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'tenant@example.com',
@@ -377,7 +416,11 @@ describe('EmailService', () => {
         notes: 'Service effectué avec succès',
       };
 
-      await service.sendBookingCompleted('tenant@example.com', 'FleetCorp', bookingData);
+      await service.sendBookingCompleted(
+        'tenant@example.com',
+        'FleetCorp',
+        bookingData,
+      );
 
       expect(sendEmailSpy).toHaveBeenCalledWith({
         to: 'tenant@example.com',

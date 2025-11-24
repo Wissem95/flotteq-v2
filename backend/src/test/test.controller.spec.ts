@@ -46,7 +46,9 @@ describe('TestController', () => {
 
       expect(timestamp).toBeInstanceOf(Date);
       expect(timestamp.getTime()).not.toBeNaN();
-      expect(result.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(result.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
     });
   });
 
@@ -64,7 +66,7 @@ describe('TestController', () => {
       const mockTenant = {
         id: 789,
         name: 'Test Tenant',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
       };
       const context = { tenantId: '789', tenant: mockTenant };
       const result = controller.getTenantContext(context);
@@ -86,11 +88,11 @@ describe('TestController', () => {
       const mockTenant = {
         id: 101,
         name: 'Complex Tenant',
-        settings: { theme: 'dark' }
+        settings: { theme: 'dark' },
       };
       const context = {
         tenantId: '101',
-        tenant: mockTenant
+        tenant: mockTenant,
       };
       const result = controller.getTenantContext(context);
 
@@ -105,7 +107,7 @@ describe('TestController', () => {
       const mockTenant = {
         id: 202,
         name: 'Current Tenant',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
       };
       const tenantId = '202';
 
@@ -124,7 +126,9 @@ describe('TestController', () => {
 
       expect(result.tenantId).toBe('303');
       expect(result.tenant).toBeNull();
-      expect(result.message).toBe('Tenant object not loaded (normal for basic setup)');
+      expect(result.message).toBe(
+        'Tenant object not loaded (normal for basic setup)',
+      );
     });
 
     it('should return current tenant with undefined tenant object', () => {
@@ -134,13 +138,15 @@ describe('TestController', () => {
 
       expect(result.tenantId).toBe('404');
       expect(result.tenant).toBeUndefined();
-      expect(result.message).toBe('Tenant object not loaded (normal for basic setup)');
+      expect(result.message).toBe(
+        'Tenant object not loaded (normal for basic setup)',
+      );
     });
 
     it('should handle undefined tenant ID', () => {
       const mockTenant = {
         id: 505,
-        name: 'Undefined ID Tenant'
+        name: 'Undefined ID Tenant',
       };
 
       const result = controller.getCurrentTenant(mockTenant, undefined);
@@ -157,11 +163,18 @@ describe('TestController', () => {
 
       // Without tenant (null)
       const withoutTenantNull = controller.getCurrentTenant(null, '1');
-      expect(withoutTenantNull.message).toBe('Tenant object not loaded (normal for basic setup)');
+      expect(withoutTenantNull.message).toBe(
+        'Tenant object not loaded (normal for basic setup)',
+      );
 
       // Without tenant (undefined)
-      const withoutTenantUndefined = controller.getCurrentTenant(undefined, '1');
-      expect(withoutTenantUndefined.message).toBe('Tenant object not loaded (normal for basic setup)');
+      const withoutTenantUndefined = controller.getCurrentTenant(
+        undefined,
+        '1',
+      );
+      expect(withoutTenantUndefined.message).toBe(
+        'Tenant object not loaded (normal for basic setup)',
+      );
 
       // Empty object (should be treated as tenant exists)
       const withEmptyTenant = controller.getCurrentTenant({}, '1');
@@ -177,12 +190,12 @@ describe('TestController', () => {
         settings: {
           theme: 'dark',
           locale: 'en-US',
-          features: ['feature1', 'feature2']
+          features: ['feature1', 'feature2'],
         },
         metadata: {
           subscription: 'premium',
-          lastLogin: '2025-01-15T10:30:00.000Z'
-        }
+          lastLogin: '2025-01-15T10:30:00.000Z',
+        },
       };
 
       const result = controller.getCurrentTenant(complexTenant, '606');
@@ -201,9 +214,15 @@ describe('TestController', () => {
       const result3 = controller.getCurrentTenant(null, '1');
 
       // All should have ISO timestamp format
-      expect(result1.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-      expect(result2.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
-      expect(result3.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+      expect(result1.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
+      expect(result2.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
+      expect(result3.timestamp).toMatch(
+        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      );
 
       // All should be valid dates
       expect(new Date(result1.timestamp)).toBeInstanceOf(Date);
@@ -216,7 +235,10 @@ describe('TestController', () => {
       const mockTenant = { id: 999, name: 'Consistent Tenant' };
 
       const result1 = controller.getTenantInfo(tenantId);
-      const result2 = controller.getTenantContext({ tenantId, tenant: mockTenant });
+      const result2 = controller.getTenantContext({
+        tenantId,
+        tenant: mockTenant,
+      });
       const result3 = controller.getCurrentTenant(mockTenant, tenantId);
 
       expect(result1.tenantId).toBe('999');

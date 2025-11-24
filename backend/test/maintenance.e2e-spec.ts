@@ -3,7 +3,10 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
-import { MaintenanceType, MaintenanceStatus } from '../src/modules/maintenance/entities/maintenance.entity';
+import {
+  MaintenanceType,
+  MaintenanceStatus,
+} from '../src/modules/maintenance/entities/maintenance.entity';
 
 describe('Maintenance (e2e)', () => {
   let app: INestApplication;
@@ -59,10 +62,19 @@ describe('Maintenance (e2e)', () => {
   afterAll(async () => {
     // Cleanup
     if (dataSource) {
-      await dataSource.query('DELETE FROM maintenances WHERE tenant_id = $1', [tenantId]);
-      await dataSource.query('DELETE FROM maintenance_templates WHERE tenant_id = $1', [tenantId]);
-      await dataSource.query('DELETE FROM vehicles WHERE tenant_id = $1', [tenantId]);
-      await dataSource.query('DELETE FROM users WHERE tenant_id = $1', [tenantId]);
+      await dataSource.query('DELETE FROM maintenances WHERE tenant_id = $1', [
+        tenantId,
+      ]);
+      await dataSource.query(
+        'DELETE FROM maintenance_templates WHERE tenant_id = $1',
+        [tenantId],
+      );
+      await dataSource.query('DELETE FROM vehicles WHERE tenant_id = $1', [
+        tenantId,
+      ]);
+      await dataSource.query('DELETE FROM users WHERE tenant_id = $1', [
+        tenantId,
+      ]);
       await dataSource.query('DELETE FROM tenants WHERE id = $1', [tenantId]);
     }
     await app.close();

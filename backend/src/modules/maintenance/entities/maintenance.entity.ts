@@ -61,7 +61,13 @@ export class Maintenance {
   @Column({ name: 'estimated_cost', type: 'decimal', precision: 10, scale: 2 })
   estimatedCost: number;
 
-  @Column({ name: 'actual_cost', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'actual_cost',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   actualCost: number | null;
 
   @Column({ type: String, nullable: true })

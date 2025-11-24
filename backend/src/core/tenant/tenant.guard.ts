@@ -25,16 +25,20 @@ export class TenantGuard implements CanActivate {
 
     const request = context.switchToHttp().getRequest<Request>();
     const path = request.url;
-    const user = (request as any).user;  // Maintenant disponible grâce à JwtAuthGuard
+    const user = (request as any).user; // Maintenant disponible grâce à JwtAuthGuard
 
     // Routes publiques (pas d'auth requise)
     const publicRoutes = ['/health', '/api/docs'];
-    if (publicRoutes.some(r => path.startsWith(r))) {
+    if (publicRoutes.some((r) => path.startsWith(r))) {
       return true;
     }
 
     // Super admins → skip tenant restrictions (accès global à tous les tenants)
-    if (user && user.tenantId === 1 && ['super_admin', 'support'].includes(user.role)) {
+    if (
+      user &&
+      user.tenantId === 1 &&
+      ['super_admin', 'support'].includes(user.role)
+    ) {
       // Supprimer tenantId complètement pour accès global
       delete (request as any).tenantId;
       (request as any).isSuperAdmin = true;
@@ -54,7 +58,8 @@ export class TenantGuard implements CanActivate {
     }
 
     // Store tenantId in request for use by other components (convertir en number)
-    (request as any).tenantId = parseInt((request as any).tenantId) || user.tenantId;
+    (request as any).tenantId =
+      parseInt((request as any).tenantId) || user.tenantId;
 
     return true;
   }

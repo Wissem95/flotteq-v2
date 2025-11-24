@@ -63,7 +63,12 @@ export class Commission {
   paidAt: Date | null;
 
   @ApiPropertyOptional({ example: 'BANK_TRANSFER_20251018_001' })
-  @Column({ type: 'varchar', length: 255, nullable: true, name: 'payment_reference' })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    name: 'payment_reference',
+  })
   paymentReference: string | null;
 
   @ApiProperty()

@@ -1,7 +1,9 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 
-export class MigrateExistingDriversUsers1760940000001 implements MigrationInterface {
+export class MigrateExistingDriversUsers1760940000001
+  implements MigrationInterface
+{
   name = 'MigrateExistingDriversUsers1760940000001';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
@@ -36,9 +38,12 @@ export class MigrateExistingDriversUsers1760940000001 implements MigrationInterf
 
         // Date d'expiration du permis par défaut : 10 ans dans le futur
         const defaultLicenseExpiry = new Date();
-        defaultLicenseExpiry.setFullYear(defaultLicenseExpiry.getFullYear() + 10);
+        defaultLicenseExpiry.setFullYear(
+          defaultLicenseExpiry.getFullYear() + 10,
+        );
 
-        await queryRunner.query(`
+        await queryRunner.query(
+          `
           INSERT INTO drivers (
             "firstName", "lastName", email, phone,
             "licenseNumber", "licenseExpiryDate",
@@ -50,23 +55,32 @@ export class MigrateExistingDriversUsers1760940000001 implements MigrationInterf
             'active', $7, $8,
             NOW(), NOW()
           )
-        `, [
-          user.first_name,
-          user.last_name,
-          user.email,
-          user.phone || '',
-          tempLicenseNumber,
-          defaultLicenseExpiry.toISOString().split('T')[0],
-          user.tenant_id,
-          user.id
-        ]);
+        `,
+          [
+            user.first_name,
+            user.last_name,
+            user.email,
+            user.phone || '',
+            tempLicenseNumber,
+            defaultLicenseExpiry.toISOString().split('T')[0],
+            user.tenant_id,
+            user.id,
+          ],
+        );
 
-        console.log(`✅ Created driver for user ${user.email} with temp license ${tempLicenseNumber}`);
+        console.log(
+          `✅ Created driver for user ${user.email} with temp license ${tempLicenseNumber}`,
+        );
       } catch (error) {
-        console.error(`❌ Failed to create driver for user ${user.email}:`, error.message);
+        console.error(
+          `❌ Failed to create driver for user ${user.email}:`,
+          error.message,
+        );
       }
     }
-    console.log(`✅ Created ${usersWithoutDrivers.length} drivers for existing users`);
+    console.log(
+      `✅ Created ${usersWithoutDrivers.length} drivers for existing users`,
+    );
 
     // ÉTAPE 3: Créer des users pour les drivers qui n'en ont pas
     const driversWithoutUsers = await queryRunner.query(`
@@ -78,25 +92,32 @@ export class MigrateExistingDriversUsers1760940000001 implements MigrationInterf
     for (const driver of driversWithoutUsers) {
       try {
         // Vérifier si un user avec cet email existe déjà pour ce tenant
-        const existingUser = await queryRunner.query(`
+        const existingUser = await queryRunner.query(
+          `
           SELECT id FROM users
           WHERE email = $1 AND tenant_id = $2
-        `, [driver.email, driver.tenant_id]);
+        `,
+          [driver.email, driver.tenant_id],
+        );
 
         if (existingUser.length > 0) {
           // Si l'utilisateur existe, on lie simplement
-          await queryRunner.query(`
+          await queryRunner.query(
+            `
             UPDATE drivers
             SET user_id = $1
             WHERE id = $2
-          `, [existingUser[0].id, driver.id]);
+          `,
+            [existingUser[0].id, driver.id],
+          );
           console.log(`✅ Linked driver ${driver.email} to existing user`);
         } else {
           // Sinon, créer un nouveau user
           const tempPassword = Math.random().toString(36).slice(-12);
           const hashedPassword = await bcrypt.hash(tempPassword, 10);
 
-          const result = await queryRunner.query(`
+          const result = await queryRunner.query(
+            `
             INSERT INTO users (
               email, password, first_name, last_name,
               phone, role, tenant_id, is_active,
@@ -107,30 +128,39 @@ export class MigrateExistingDriversUsers1760940000001 implements MigrationInterf
               NOW(), NOW()
             )
             RETURNING id
-          `, [
-            driver.email,
-            hashedPassword,
-            driver.first_name,
-            driver.last_name,
-            driver.phone || ''
-,
-            driver.tenant_id
-          ]);
+          `,
+            [
+              driver.email,
+              hashedPassword,
+              driver.first_name,
+              driver.last_name,
+              driver.phone || '',
+              driver.tenant_id,
+            ],
+          );
 
           // Lier le driver au nouveau user
-          await queryRunner.query(`
+          await queryRunner.query(
+            `
             UPDATE drivers
             SET user_id = $1
             WHERE id = $2
-          `, [result[0].id, driver.id]);
+          `,
+            [result[0].id, driver.id],
+          );
 
           console.log(`✅ Created user and linked driver ${driver.email}`);
         }
       } catch (error) {
-        console.error(`❌ Failed to create/link user for driver ${driver.email}:`, error.message);
+        console.error(
+          `❌ Failed to create/link user for driver ${driver.email}:`,
+          error.message,
+        );
       }
     }
-    console.log(`✅ Processed ${driversWithoutUsers.length} drivers without users`);
+    console.log(
+      `✅ Processed ${driversWithoutUsers.length} drivers without users`,
+    );
 
     console.log('✅ Migration of existing data completed successfully');
   }

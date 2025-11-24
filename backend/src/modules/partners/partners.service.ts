@@ -8,7 +8,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Partner, PartnerStatus } from '../../entities/partner.entity';
-import { PartnerUser, PartnerUserRole } from '../../entities/partner-user.entity';
+import {
+  PartnerUser,
+  PartnerUserRole,
+} from '../../entities/partner-user.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
@@ -49,7 +52,9 @@ export class PartnersService {
     });
 
     if (existingPartnerUser) {
-      throw new ConflictException('A partner user with this email already exists');
+      throw new ConflictException(
+        'A partner user with this email already exists',
+      );
     }
 
     // Check SIRET uniqueness
@@ -58,7 +63,9 @@ export class PartnersService {
     });
 
     if (existingSiret) {
-      throw new ConflictException('Partner with this SIRET number already exists');
+      throw new ConflictException(
+        'Partner with this SIRET number already exists',
+      );
     }
 
     // Transaction: Create Partner + PartnerUser owner
@@ -144,12 +151,16 @@ export class PartnersService {
 
     // Status filter
     if (query?.status) {
-      queryBuilder.andWhere('partner.status = :status', { status: query.status });
+      queryBuilder.andWhere('partner.status = :status', {
+        status: query.status,
+      });
     }
 
     // City filter
     if (query?.city) {
-      queryBuilder.andWhere('partner.city ILIKE :city', { city: `%${query.city}%` });
+      queryBuilder.andWhere('partner.city ILIKE :city', {
+        city: `%${query.city}%`,
+      });
     }
 
     // Order and pagination
@@ -178,7 +189,10 @@ export class PartnersService {
     return partner;
   }
 
-  async update(id: string, updatePartnerDto: UpdatePartnerDto): Promise<Partner> {
+  async update(
+    id: string,
+    updatePartnerDto: UpdatePartnerDto,
+  ): Promise<Partner> {
     const partner = await this.findOne(id);
 
     Object.assign(partner, updatePartnerDto);
@@ -259,9 +273,14 @@ export class PartnersService {
     return partner;
   }
 
-  async updateCommissionRate(id: string, commissionRate: number): Promise<Partner> {
+  async updateCommissionRate(
+    id: string,
+    commissionRate: number,
+  ): Promise<Partner> {
     if (commissionRate < 0 || commissionRate > 100) {
-      throw new BadRequestException('Commission rate must be between 0 and 100');
+      throw new BadRequestException(
+        'Commission rate must be between 0 and 100',
+      );
     }
 
     const partner = await this.findOne(id);
@@ -271,7 +290,10 @@ export class PartnersService {
   }
 
   // Service CRUD operations
-  async addService(partnerId: string, createServiceDto: CreateServiceDto): Promise<PartnerService> {
+  async addService(
+    partnerId: string,
+    createServiceDto: CreateServiceDto,
+  ): Promise<PartnerService> {
     const partner = await this.findOne(partnerId);
 
     if (!partner.isApproved()) {
@@ -286,7 +308,10 @@ export class PartnersService {
     return this.partnerServiceRepository.save(service);
   }
 
-  async updateService(serviceId: string, updateServiceDto: UpdateServiceDto): Promise<PartnerService> {
+  async updateService(
+    serviceId: string,
+    updateServiceDto: UpdateServiceDto,
+  ): Promise<PartnerService> {
     const service = await this.partnerServiceRepository.findOne({
       where: { id: serviceId },
     });
@@ -322,7 +347,9 @@ export class PartnersService {
   /**
    * Créer un compte Stripe Connect pour le partner
    */
-  async createStripeConnectAccount(partnerId: string): Promise<{ url: string }> {
+  async createStripeConnectAccount(
+    partnerId: string,
+  ): Promise<{ url: string }> {
     const partner = await this.partnerRepository.findOne({
       where: { id: partnerId },
     });
@@ -362,7 +389,8 @@ export class PartnersService {
     );
 
     // Créer lien d'onboarding
-    const frontendUrl = process.env.PARTNER_FRONTEND_URL || 'http://localhost:5175';
+    const frontendUrl =
+      process.env.PARTNER_FRONTEND_URL || 'http://localhost:5175';
 
     const accountLink = await this.stripeService.stripe.accountLinks.create({
       account: account.id,
@@ -419,7 +447,9 @@ export class PartnersService {
   /**
    * Créer un nouveau lien d'onboarding (si expiré)
    */
-  async refreshStripeOnboardingLink(partnerId: string): Promise<{ url: string }> {
+  async refreshStripeOnboardingLink(
+    partnerId: string,
+  ): Promise<{ url: string }> {
     const partner = await this.partnerRepository.findOne({
       where: { id: partnerId },
     });
@@ -428,7 +458,8 @@ export class PartnersService {
       throw new BadRequestException('No Stripe account found');
     }
 
-    const frontendUrl = process.env.PARTNER_FRONTEND_URL || 'http://localhost:5175';
+    const frontendUrl =
+      process.env.PARTNER_FRONTEND_URL || 'http://localhost:5175';
 
     const accountLink = await this.stripeService.stripe.accountLinks.create({
       account: partner.stripeAccountId,

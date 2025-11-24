@@ -233,7 +233,10 @@ describe('OnboardingService', () => {
         },
       };
 
-      const existingDriver = { id: 'driver-123', email: 'existing@example.com' };
+      const existingDriver = {
+        id: 'driver-123',
+        email: 'existing@example.com',
+      };
 
       mockUsersRepository.findOne
         .mockResolvedValueOnce(mockUser) // For user lookup
@@ -272,7 +275,10 @@ describe('OnboardingService', () => {
         new Error('SMTP Error'),
       );
 
-      const result = await service.completeOnboarding('user-123', dtoWithDriver);
+      const result = await service.completeOnboarding(
+        'user-123',
+        dtoWithDriver,
+      );
 
       expect(result.message).toBe('Onboarding complété avec succès');
     });

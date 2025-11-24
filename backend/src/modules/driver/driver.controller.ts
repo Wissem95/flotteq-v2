@@ -15,7 +15,13 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { FilesInterceptor, FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+  ApiConsumes,
+} from '@nestjs/swagger';
 import { Request } from 'express';
 import { DriverGuard } from '../../common/guards/driver.guard';
 import { DriversService } from '../drivers.service';
@@ -25,7 +31,11 @@ import { ReportsService } from '../reports/reports.service';
 import { TripsService } from '../trips/trips.service';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Maintenance, MaintenanceStatus, MaintenanceType } from '../maintenance/entities/maintenance.entity';
+import {
+  Maintenance,
+  MaintenanceStatus,
+  MaintenanceType,
+} from '../maintenance/entities/maintenance.entity';
 import { Driver } from '../../entities/driver.entity';
 import { Document, DocumentEntityType } from '../../entities/document.entity';
 import { DriverResponseDto, DriverVehicleDto } from './dto/driver-response.dto';
@@ -36,7 +46,10 @@ import { multerConfig } from '../vehicles/config/multer.config';
 import { StartTripDto } from '../trips/dto/start-trip.dto';
 import { EndTripDto } from '../trips/dto/end-trip.dto';
 import { TripFilterDto } from '../trips/dto/trip-filter.dto';
-import { MileageHistory, MileageSource } from '../../entities/mileage-history.entity';
+import {
+  MileageHistory,
+  MileageSource,
+} from '../../entities/mileage-history.entity';
 import { Vehicle } from '../../entities/vehicle.entity';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -68,7 +81,11 @@ export class DriverController {
    */
   @Get('profile')
   @ApiOperation({ summary: 'Get driver profile' })
-  @ApiResponse({ status: 200, description: 'Driver profile retrieved', type: DriverResponseDto })
+  @ApiResponse({
+    status: 200,
+    description: 'Driver profile retrieved',
+    type: DriverResponseDto,
+  })
   async getProfile(@Req() req: Request): Promise<DriverResponseDto> {
     const user = (req as any).user;
 
@@ -188,10 +205,7 @@ export class DriverController {
   @Post('reports')
   @ApiOperation({ summary: 'Report vehicle issue' })
   @ApiResponse({ status: 201, description: 'Report created successfully' })
-  async reportIssue(
-    @Req() req: Request,
-    @Body() reportDto: VehicleReportDto,
-  ) {
+  async reportIssue(@Req() req: Request, @Body() reportDto: VehicleReportDto) {
     const user = (req as any).user;
 
     // Trouver le driver par email
@@ -474,14 +488,23 @@ export class DriverController {
       }
     }
     if (driver.profilePhotoThumbnail) {
-      const oldThumbnailPath = path.join(process.cwd(), driver.profilePhotoThumbnail);
+      const oldThumbnailPath = path.join(
+        process.cwd(),
+        driver.profilePhotoThumbnail,
+      );
       if (fs.existsSync(oldThumbnailPath)) {
         fs.unlinkSync(oldThumbnailPath);
       }
     }
 
     // Générer les chemins pour la photo et la miniature
-    const uploadDir = path.join(process.cwd(), 'uploads', 'drivers', 'profiles', driver.id);
+    const uploadDir = path.join(
+      process.cwd(),
+      'uploads',
+      'drivers',
+      'profiles',
+      driver.id,
+    );
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -609,7 +632,9 @@ export class DriverController {
       previousMileage,
       difference,
       source: MileageSource.MANUAL,
-      notes: updateDto.notes || `Updated by driver ${driver.firstName} ${driver.lastName}`,
+      notes:
+        updateDto.notes ||
+        `Updated by driver ${driver.firstName} ${driver.lastName}`,
       tenantId: user.tenantId,
     });
 

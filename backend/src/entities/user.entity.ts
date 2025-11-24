@@ -67,7 +67,12 @@ export class User {
   @Column({ nullable: true, name: 'last_login_at' })
   lastLoginAt: Date;
 
-  @Column({ nullable: true, name: 'refresh_token', select: false, type: 'text' })
+  @Column({
+    nullable: true,
+    name: 'refresh_token',
+    select: false,
+    type: 'text',
+  })
   refreshToken: string | null;
 
   @Column({ nullable: true, name: 'reset_password_token' })

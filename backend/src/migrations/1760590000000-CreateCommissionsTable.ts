@@ -29,11 +29,21 @@ export class CreateCommissionsTable1760590000000 implements MigrationInterface {
     `);
 
     // Create indexes for commissions table
-    await queryRunner.query(`CREATE INDEX "idx_commissions_partner_id" ON "commissions"("partner_id")`);
-    await queryRunner.query(`CREATE INDEX "idx_commissions_status" ON "commissions"("status")`);
-    await queryRunner.query(`CREATE INDEX "idx_commissions_paid_at" ON "commissions"("paid_at")`);
-    await queryRunner.query(`CREATE INDEX "idx_commissions_partner_status" ON "commissions"("partner_id", "status")`);
-    await queryRunner.query(`CREATE INDEX "idx_commissions_created_at" ON "commissions"("created_at")`);
+    await queryRunner.query(
+      `CREATE INDEX "idx_commissions_partner_id" ON "commissions"("partner_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_commissions_status" ON "commissions"("status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_commissions_paid_at" ON "commissions"("paid_at")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_commissions_partner_status" ON "commissions"("partner_id", "status")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "idx_commissions_created_at" ON "commissions"("created_at")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {

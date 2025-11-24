@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { AvailabilitiesService } from './availabilities.service';
 import { Availability } from '../../entities/availability.entity';
 import { Unavailability } from '../../entities/unavailability.entity';
@@ -98,10 +102,18 @@ describe('AvailabilitiesService', () => {
     }).compile();
 
     service = module.get<AvailabilitiesService>(AvailabilitiesService);
-    availabilityRepository = module.get<Repository<Availability>>(getRepositoryToken(Availability));
-    unavailabilityRepository = module.get<Repository<Unavailability>>(getRepositoryToken(Unavailability));
-    partnerRepository = module.get<Repository<Partner>>(getRepositoryToken(Partner));
-    bookingRepository = module.get<Repository<Booking>>(getRepositoryToken(Booking));
+    availabilityRepository = module.get<Repository<Availability>>(
+      getRepositoryToken(Availability),
+    );
+    unavailabilityRepository = module.get<Repository<Unavailability>>(
+      getRepositoryToken(Unavailability),
+    );
+    partnerRepository = module.get<Repository<Partner>>(
+      getRepositoryToken(Partner),
+    );
+    bookingRepository = module.get<Repository<Booking>>(
+      getRepositoryToken(Booking),
+    );
     auditService = module.get<AuditService>(AuditService);
 
     jest.clearAllMocks();
@@ -124,10 +136,18 @@ describe('AvailabilitiesService', () => {
     it('should create availability successfully', async () => {
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
       mockRepositories.availabilityRepository.findOne.mockResolvedValue(null);
-      mockRepositories.availabilityRepository.create.mockReturnValue(mockAvailability);
-      mockRepositories.availabilityRepository.save.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.create.mockReturnValue(
+        mockAvailability,
+      );
+      mockRepositories.availabilityRepository.save.mockResolvedValue(
+        mockAvailability,
+      );
 
-      const result = await service.setAvailability('partner-123', dto, 'user-1');
+      const result = await service.setAvailability(
+        'partner-123',
+        dto,
+        'user-1',
+      );
 
       expect(result).toEqual(mockAvailability);
       expect(mockRepositories.availabilityRepository.create).toHaveBeenCalled();
@@ -138,23 +158,29 @@ describe('AvailabilitiesService', () => {
     it('should throw NotFoundException if partner not found', async () => {
       mockRepositories.partnerRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.setAvailability('partner-123', dto, 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(
+        service.setAvailability('partner-123', dto, 'user-1'),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('should throw BadRequestException if endTime <= startTime', async () => {
       const invalidDto = { ...dto, startTime: '18:00', endTime: '09:00' };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
 
-      await expect(service.setAvailability('partner-123', invalidDto, 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.setAvailability('partner-123', invalidDto, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should throw ConflictException if availability already exists', async () => {
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
 
-      await expect(service.setAvailability('partner-123', dto, 'user-1')).rejects.toThrow(ConflictException);
+      await expect(
+        service.setAvailability('partner-123', dto, 'user-1'),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -165,11 +191,24 @@ describe('AvailabilitiesService', () => {
     };
 
     it('should update availability successfully', async () => {
-      const updatedAvailability = { ...mockAvailability, endTime: '19:00', slotDuration: 60 };
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
-      mockRepositories.availabilityRepository.save.mockResolvedValue(updatedAvailability);
+      const updatedAvailability = {
+        ...mockAvailability,
+        endTime: '19:00',
+        slotDuration: 60,
+      };
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
+      mockRepositories.availabilityRepository.save.mockResolvedValue(
+        updatedAvailability,
+      );
 
-      const result = await service.updateAvailability('avail-123', 'partner-123', updateDto, 'user-1');
+      const result = await service.updateAvailability(
+        'avail-123',
+        'partner-123',
+        updateDto,
+        'user-1',
+      );
 
       expect(result.endTime).toBe('19:00');
       expect(result.slotDuration).toBe(60);
@@ -179,9 +218,14 @@ describe('AvailabilitiesService', () => {
     it('should throw NotFoundException if availability not found', async () => {
       mockRepositories.availabilityRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.updateAvailability('avail-123', 'partner-123', updateDto, 'user-1')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.updateAvailability(
+          'avail-123',
+          'partner-123',
+          updateDto,
+          'user-1',
+        ),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -195,10 +239,16 @@ describe('AvailabilitiesService', () => {
     it('should create multiple availabilities successfully', async () => {
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
       mockRepositories.availabilityRepository.find.mockResolvedValue([]);
-      mockRepositories.availabilityRepository.create.mockImplementation((dto) => dto);
+      mockRepositories.availabilityRepository.create.mockImplementation(
+        (dto) => dto,
+      );
       mockRepositories.availabilityRepository.save.mockResolvedValue(bulkDtos);
 
-      const result = await service.setMultipleAvailabilities('partner-123', bulkDtos, 'user-1');
+      const result = await service.setMultipleAvailabilities(
+        'partner-123',
+        bulkDtos,
+        'user-1',
+      );
 
       expect(result).toHaveLength(3);
       expect(mockAuditService.create).toHaveBeenCalled();
@@ -207,23 +257,39 @@ describe('AvailabilitiesService', () => {
     it('should throw ConflictException if some days already have availabilities', async () => {
       const existingAvail = { ...mockAvailability, dayOfWeek: 1 };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.find.mockResolvedValue([existingAvail]);
+      mockRepositories.availabilityRepository.find.mockResolvedValue([
+        existingAvail,
+      ]);
 
-      await expect(service.setMultipleAvailabilities('partner-123', bulkDtos, 'user-1')).rejects.toThrow(
-        ConflictException,
-      );
+      await expect(
+        service.setMultipleAvailabilities('partner-123', bulkDtos, 'user-1'),
+      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw BadRequestException if duplicate days in request', async () => {
       const duplicateDtos = [
-        { dayOfWeek: 1, startTime: '09:00', endTime: '18:00', slotDuration: 30 },
-        { dayOfWeek: 1, startTime: '10:00', endTime: '17:00', slotDuration: 30 },
+        {
+          dayOfWeek: 1,
+          startTime: '09:00',
+          endTime: '18:00',
+          slotDuration: 30,
+        },
+        {
+          dayOfWeek: 1,
+          startTime: '10:00',
+          endTime: '17:00',
+          slotDuration: 30,
+        },
       ];
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
 
-      await expect(service.setMultipleAvailabilities('partner-123', duplicateDtos, 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.setMultipleAvailabilities(
+          'partner-123',
+          duplicateDtos,
+          'user-1',
+        ),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -238,7 +304,9 @@ describe('AvailabilitiesService', () => {
 
     it('should generate slots with 30min duration', async () => {
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -254,7 +322,9 @@ describe('AvailabilitiesService', () => {
     it('should generate slots with 60min duration', async () => {
       const query60 = { ...query, duration: 60 };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -269,7 +339,9 @@ describe('AvailabilitiesService', () => {
       const avail15 = { ...mockAvailability, slotDuration: 15 };
       const query15 = { ...query, duration: 15 };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(avail15);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        avail15,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -299,7 +371,9 @@ describe('AvailabilitiesService', () => {
       } as Booking;
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([booking]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -327,7 +401,9 @@ describe('AvailabilitiesService', () => {
       } as Booking;
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([booking]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -361,9 +437,13 @@ describe('AvailabilitiesService', () => {
       } as any as Unavailability;
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
-      mockRepositories.unavailabilityRepository.find.mockResolvedValue([unavail]);
+      mockRepositories.unavailabilityRepository.find.mockResolvedValue([
+        unavail,
+      ]);
 
       const result = await service.getAvailableSlots('partner-123', query);
 
@@ -384,13 +464,18 @@ describe('AvailabilitiesService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         blocksTimeSlot: (time: string) => time >= '12:00' && time < '13:00',
-        overlapsTimeRange: (start: string, end: string) => start < '13:00' && '12:00' < end,
+        overlapsTimeRange: (start: string, end: string) =>
+          start < '13:00' && '12:00' < end,
       } as any as Unavailability;
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
-      mockRepositories.unavailabilityRepository.find.mockResolvedValue([unavail]);
+      mockRepositories.unavailabilityRepository.find.mockResolvedValue([
+        unavail,
+      ]);
 
       const result = await service.getAvailableSlots('partner-123', query);
 
@@ -421,7 +506,8 @@ describe('AvailabilitiesService', () => {
           endTime: '11:00',
           createdAt: new Date(),
           updatedAt: new Date(),
-          overlapsTimeRange: (start: string, end: string) => start < '11:00' && '10:00' < end,
+          overlapsTimeRange: (start: string, end: string) =>
+            start < '11:00' && '10:00' < end,
         } as any as Unavailability,
         {
           id: 'unavail-4',
@@ -433,14 +519,19 @@ describe('AvailabilitiesService', () => {
           endTime: '16:00',
           createdAt: new Date(),
           updatedAt: new Date(),
-          overlapsTimeRange: (start: string, end: string) => start < '16:00' && '15:00' < end,
+          overlapsTimeRange: (start: string, end: string) =>
+            start < '16:00' && '15:00' < end,
         } as any as Unavailability,
       ];
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
-      mockRepositories.unavailabilityRepository.find.mockResolvedValue(unavails);
+      mockRepositories.unavailabilityRepository.find.mockResolvedValue(
+        unavails,
+      );
 
       const result = await service.getAvailableSlots('partner-123', query);
 
@@ -471,7 +562,11 @@ describe('AvailabilitiesService', () => {
     });
 
     it('should handle boundary times (00:00 start)', async () => {
-      const avail24h = { ...mockAvailability, startTime: '00:00', endTime: '23:59' };
+      const avail24h = {
+        ...mockAvailability,
+        startTime: '00:00',
+        endTime: '23:59',
+      };
       const query: AvailableSlotsQueryDto = {
         date: '2025-12-01',
         duration: 60,
@@ -479,7 +574,9 @@ describe('AvailabilitiesService', () => {
       };
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(avail24h);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        avail24h,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -497,7 +594,9 @@ describe('AvailabilitiesService', () => {
       };
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.availabilityRepository.findOne.mockResolvedValue(mockAvailability);
+      mockRepositories.availabilityRepository.findOne.mockResolvedValue(
+        mockAvailability,
+      );
       mockRepositories.bookingRepository.find.mockResolvedValue([]);
       mockRepositories.unavailabilityRepository.find.mockResolvedValue([]);
 
@@ -535,10 +634,18 @@ describe('AvailabilitiesService', () => {
       } as any as Unavailability;
 
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.unavailabilityRepository.create.mockReturnValue(mockUnavail);
-      mockRepositories.unavailabilityRepository.save.mockResolvedValue(mockUnavail);
+      mockRepositories.unavailabilityRepository.create.mockReturnValue(
+        mockUnavail,
+      );
+      mockRepositories.unavailabilityRepository.save.mockResolvedValue(
+        mockUnavail,
+      );
 
-      const result = await service.addUnavailability('partner-123', dto, 'user-1');
+      const result = await service.addUnavailability(
+        'partner-123',
+        dto,
+        'user-1',
+      );
 
       expect(result).toEqual(mockUnavail);
       expect(mockAuditService.create).toHaveBeenCalled();
@@ -548,18 +655,18 @@ describe('AvailabilitiesService', () => {
       const pastDto = { ...dto, date: '2020-01-01' };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
 
-      await expect(service.addUnavailability('partner-123', pastDto, 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.addUnavailability('partner-123', pastDto, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('should validate partial unavailability requires times', async () => {
       const partialDto = { ...dto, isFullDay: false };
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
 
-      await expect(service.addUnavailability('partner-123', partialDto, 'user-1')).rejects.toThrow(
-        BadRequestException,
-      );
+      await expect(
+        service.addUnavailability('partner-123', partialDto, 'user-1'),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 
@@ -572,12 +679,22 @@ describe('AvailabilitiesService', () => {
         updatedAt: new Date(),
       } as any as Unavailability;
 
-      mockRepositories.unavailabilityRepository.findOne.mockResolvedValue(mockUnavail);
-      mockRepositories.unavailabilityRepository.softRemove.mockResolvedValue(mockUnavail);
+      mockRepositories.unavailabilityRepository.findOne.mockResolvedValue(
+        mockUnavail,
+      );
+      mockRepositories.unavailabilityRepository.softRemove.mockResolvedValue(
+        mockUnavail,
+      );
 
-      await service.removeUnavailability('unavail-123', 'partner-123', 'user-1');
+      await service.removeUnavailability(
+        'unavail-123',
+        'partner-123',
+        'user-1',
+      );
 
-      expect(mockRepositories.unavailabilityRepository.softRemove).toHaveBeenCalledWith(mockUnavail);
+      expect(
+        mockRepositories.unavailabilityRepository.softRemove,
+      ).toHaveBeenCalledWith(mockUnavail);
       expect(mockAuditService.create).toHaveBeenCalled();
     });
   });

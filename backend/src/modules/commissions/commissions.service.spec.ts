@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import { CommissionsService } from './commissions.service';
 import { Commission, CommissionStatus } from '../../entities/commission.entity';
 import { Booking, BookingStatus } from '../../entities/booking.entity';
@@ -128,9 +132,15 @@ describe('CommissionsService', () => {
     }).compile();
 
     service = module.get<CommissionsService>(CommissionsService);
-    commissionRepository = module.get<Repository<Commission>>(getRepositoryToken(Commission));
-    bookingRepository = module.get<Repository<Booking>>(getRepositoryToken(Booking));
-    partnerRepository = module.get<Repository<Partner>>(getRepositoryToken(Partner));
+    commissionRepository = module.get<Repository<Commission>>(
+      getRepositoryToken(Commission),
+    );
+    bookingRepository = module.get<Repository<Booking>>(
+      getRepositoryToken(Booking),
+    );
+    partnerRepository = module.get<Repository<Partner>>(
+      getRepositoryToken(Partner),
+    );
     auditService = module.get<AuditService>(AuditService);
 
     // Reset mocks
@@ -145,8 +155,12 @@ describe('CommissionsService', () => {
     it('should create commission with correct amount (100€ × 10% = 10€)', async () => {
       mockRepositories.commissionRepository.findOne.mockResolvedValue(null);
       mockRepositories.partnerRepository.findOne.mockResolvedValue(mockPartner);
-      mockRepositories.commissionRepository.create.mockReturnValue(mockCommission);
-      mockRepositories.commissionRepository.save.mockResolvedValue(mockCommission);
+      mockRepositories.commissionRepository.create.mockReturnValue(
+        mockCommission,
+      );
+      mockRepositories.commissionRepository.save.mockResolvedValue(
+        mockCommission,
+      );
 
       const result = await service.createFromBooking(mockBooking);
 
@@ -161,9 +175,13 @@ describe('CommissionsService', () => {
     });
 
     it('should throw ConflictException if commission already exists for booking', async () => {
-      mockRepositories.commissionRepository.findOne.mockResolvedValue(mockCommission);
+      mockRepositories.commissionRepository.findOne.mockResolvedValue(
+        mockCommission,
+      );
 
-      await expect(service.createFromBooking(mockBooking)).rejects.toThrow(ConflictException);
+      await expect(service.createFromBooking(mockBooking)).rejects.toThrow(
+        ConflictException,
+      );
       await expect(service.createFromBooking(mockBooking)).rejects.toThrow(
         'Commission already exists for booking booking-1',
       );
@@ -173,8 +191,12 @@ describe('CommissionsService', () => {
       mockRepositories.commissionRepository.findOne.mockResolvedValue(null);
       mockRepositories.partnerRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.createFromBooking(mockBooking)).rejects.toThrow(NotFoundException);
-      await expect(service.createFromBooking(mockBooking)).rejects.toThrow('Partner not found');
+      await expect(service.createFromBooking(mockBooking)).rejects.toThrow(
+        NotFoundException,
+      );
+      await expect(service.createFromBooking(mockBooking)).rejects.toThrow(
+        'Partner not found',
+      );
     });
   });
 
@@ -190,7 +212,9 @@ describe('CommissionsService', () => {
         getMany: jest.fn().mockResolvedValue([mockCommission]),
       };
 
-      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       const result = await service.findAll({ page: 1, limit: 20 });
 
@@ -212,7 +236,9 @@ describe('CommissionsService', () => {
         getMany: jest.fn().mockResolvedValue([mockCommission]),
       };
 
-      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       await service.findAll({ partnerId: 'partner-1', page: 1, limit: 20 });
 
@@ -233,19 +259,30 @@ describe('CommissionsService', () => {
         getMany: jest.fn().mockResolvedValue([mockCommission]),
       };
 
-      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
-      await service.findAll({ status: CommissionStatus.PENDING, page: 1, limit: 20 });
-
-      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith('commission.status = :status', {
+      await service.findAll({
         status: CommissionStatus.PENDING,
+        page: 1,
+        limit: 20,
       });
+
+      expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
+        'commission.status = :status',
+        {
+          status: CommissionStatus.PENDING,
+        },
+      );
     });
   });
 
   describe('findOne', () => {
     it('should return commission by id', async () => {
-      mockRepositories.commissionRepository.findOne.mockResolvedValue(mockCommission);
+      mockRepositories.commissionRepository.findOne.mockResolvedValue(
+        mockCommission,
+      );
 
       const result = await service.findOne('commission-1');
 
@@ -259,14 +296,18 @@ describe('CommissionsService', () => {
     it('should throw NotFoundException if commission not found', async () => {
       mockRepositories.commissionRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
       await expect(service.findOne('non-existent')).rejects.toThrow(
         'Commission with ID non-existent not found',
       );
     });
 
     it('should filter by partnerId when provided', async () => {
-      mockRepositories.commissionRepository.findOne.mockResolvedValue(mockCommission);
+      mockRepositories.commissionRepository.findOne.mockResolvedValue(
+        mockCommission,
+      );
 
       await service.findOne('commission-1', 'partner-1');
 
@@ -280,7 +321,9 @@ describe('CommissionsService', () => {
   describe('markAsPaid', () => {
     it('should mark commission as paid with payment reference', async () => {
       const pendingCommission = { ...mockCommission };
-      mockRepositories.commissionRepository.findOne.mockResolvedValue(pendingCommission);
+      mockRepositories.commissionRepository.findOne.mockResolvedValue(
+        pendingCommission,
+      );
       mockRepositories.commissionRepository.save.mockResolvedValue({
         ...pendingCommission,
         status: CommissionStatus.PAID,
@@ -306,10 +349,16 @@ describe('CommissionsService', () => {
         status: CommissionStatus.PAID,
         canBePaid: () => false,
       };
-      mockRepositories.commissionRepository.findOne.mockResolvedValue(paidCommission);
+      mockRepositories.commissionRepository.findOne.mockResolvedValue(
+        paidCommission,
+      );
 
       await expect(
-        service.markAsPaid('commission-1', { paymentReference: 'REF' }, 'user-1'),
+        service.markAsPaid(
+          'commission-1',
+          { paymentReference: 'REF' },
+          'user-1',
+        ),
       ).rejects.toThrow(BadRequestException);
     });
   });
@@ -328,19 +377,31 @@ describe('CommissionsService', () => {
         ]),
       };
 
-      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       const result = await service.getTotalByPartner('partner-1');
 
       expect(result).toHaveLength(2);
-      expect(result[0]).toEqual({ status: 'pending', totalAmount: 100.5, count: 5 });
-      expect(result[1]).toEqual({ status: 'paid', totalAmount: 250, count: 10 });
+      expect(result[0]).toEqual({
+        status: 'pending',
+        totalAmount: 100.5,
+        count: 5,
+      });
+      expect(result[1]).toEqual({
+        status: 'paid',
+        totalAmount: 250,
+        count: 10,
+      });
     });
   });
 
   describe('getPendingCommissions', () => {
     it('should return all pending commissions', async () => {
-      mockRepositories.commissionRepository.find.mockResolvedValue([mockCommission]);
+      mockRepositories.commissionRepository.find.mockResolvedValue([
+        mockCommission,
+      ]);
 
       const result = await service.getPendingCommissions();
 
@@ -362,7 +423,9 @@ describe('CommissionsService', () => {
         getMany: jest.fn().mockResolvedValue([mockCommission]),
       };
 
-      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+      mockRepositories.commissionRepository.createQueryBuilder.mockReturnValue(
+        mockQueryBuilder,
+      );
 
       const result = await service.exportToExcel({ page: 1, limit: 20 });
 

@@ -5,8 +5,10 @@ export class TenantFactory {
     const tenant = new Tenant();
     tenant.name = data.name || `Company ${Math.floor(Math.random() * 1000)}`;
     tenant.email = data.email || `contact${Math.random()}@company.com`;
-    tenant.phone = data.phone || `+33 6 ${Math.floor(Math.random() * 100000000)}`;
-    tenant.address = data.address || `${Math.floor(Math.random() * 200)} Rue Test`;
+    tenant.phone =
+      data.phone || `+33 6 ${Math.floor(Math.random() * 100000000)}`;
+    tenant.address =
+      data.address || `${Math.floor(Math.random() * 200)} Rue Test`;
     tenant.city = data.city || 'Paris';
     tenant.postalCode = data.postalCode || '75001';
     tenant.country = data.country || 'France';

@@ -40,9 +40,7 @@ export class DriverGuard implements CanActivate {
       this.logger.warn(
         `Access denied to driver endpoint for user ${user.id} (role ${user.role})`,
       );
-      throw new ForbiddenException(
-        'This endpoint is restricted to drivers',
-      );
+      throw new ForbiddenException('This endpoint is restricted to drivers');
     }
 
     return true;

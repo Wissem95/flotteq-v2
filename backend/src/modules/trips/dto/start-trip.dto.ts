@@ -1,4 +1,13 @@
-import { IsNotEmpty, IsInt, Min, Max, IsArray, IsOptional, IsString, IsUUID } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsInt,
+  Min,
+  Max,
+  IsArray,
+  IsOptional,
+  IsString,
+  IsUUID,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { VehicleDefect, Location } from '../../../entities/trip.entity';
 

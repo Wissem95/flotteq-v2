@@ -82,7 +82,9 @@ describe('StripeService', () => {
     }).compile();
 
     service = module.get<StripeService>(StripeService);
-    tenantRepository = module.get<Repository<Tenant>>(getRepositoryToken(Tenant));
+    tenantRepository = module.get<Repository<Tenant>>(
+      getRepositoryToken(Tenant),
+    );
 
     // Mock Stripe instance
     (service as any).stripe = stripeMock;
@@ -97,7 +99,10 @@ describe('StripeService', () => {
       const mockCustomer = { id: 'cus_new_123' };
       stripeMock.customers.create.mockResolvedValue(mockCustomer);
 
-      const result = await service.createCustomer(mockTenant, 'test@example.com');
+      const result = await service.createCustomer(
+        mockTenant,
+        'test@example.com',
+      );
 
       expect(result).toBe('cus_new_123');
       expect(stripeMock.customers.create).toHaveBeenCalledWith({
@@ -126,7 +131,10 @@ describe('StripeService', () => {
       };
       stripeMock.subscriptions.create.mockResolvedValue(mockSubscription);
 
-      const result = await service.createSubscription('cus_test_123', 'price_test_123');
+      const result = await service.createSubscription(
+        'cus_test_123',
+        'price_test_123',
+      );
 
       expect(result).toEqual(mockSubscription);
       expect(stripeMock.subscriptions.create).toHaveBeenCalledWith({
@@ -149,7 +157,9 @@ describe('StripeService', () => {
       const result = await service.getSubscriptionStatus('sub_test_123');
 
       expect(result).toBe('active');
-      expect(stripeMock.subscriptions.retrieve).toHaveBeenCalledWith('sub_test_123');
+      expect(stripeMock.subscriptions.retrieve).toHaveBeenCalledWith(
+        'sub_test_123',
+      );
     });
   });
 
@@ -159,7 +169,9 @@ describe('StripeService', () => {
 
       await service.cancelSubscription('sub_test_123');
 
-      expect(stripeMock.subscriptions.cancel).toHaveBeenCalledWith('sub_test_123');
+      expect(stripeMock.subscriptions.cancel).toHaveBeenCalledWith(
+        'sub_test_123',
+      );
     });
   });
 
@@ -168,7 +180,10 @@ describe('StripeService', () => {
       const mockSession = { url: 'https://billing.stripe.com/session_123' };
       stripeMock.billingPortal.sessions.create.mockResolvedValue(mockSession);
 
-      const result = await service.createPortalSession('cus_test_123', 'https://example.com/return');
+      const result = await service.createPortalSession(
+        'cus_test_123',
+        'https://example.com/return',
+      );
 
       expect(result).toBe('https://billing.stripe.com/session_123');
       expect(stripeMock.billingPortal.sessions.create).toHaveBeenCalledWith({
@@ -199,7 +214,11 @@ describe('StripeService', () => {
     });
 
     it('should return false if trialEndsAt is null', () => {
-      const tenant = { ...mockTenant, subscriptionStatus: 'trial', trialEndsAt: null as any };
+      const tenant = {
+        ...mockTenant,
+        subscriptionStatus: 'trial',
+        trialEndsAt: null as any,
+      };
       expect(service.isTrial(tenant)).toBe(false);
     });
   });
@@ -246,7 +265,10 @@ describe('StripeService', () => {
       jest.spyOn(tenantRepository, 'findOne').mockResolvedValue(mockTenant);
       jest.spyOn(tenantRepository, 'save').mockResolvedValue(mockTenant);
 
-      await service.handleWebhook('test_signature', Buffer.from('test_payload'));
+      await service.handleWebhook(
+        'test_signature',
+        Buffer.from('test_payload'),
+      );
 
       expect(stripeMock.webhooks.constructEvent).toHaveBeenCalledWith(
         Buffer.from('test_payload'),
@@ -294,7 +316,10 @@ describe('StripeService', () => {
 
       stripeMock.webhooks.constructEvent.mockReturnValue(mockEvent);
 
-      await service.handleWebhook('test_signature', Buffer.from('test_payload'));
+      await service.handleWebhook(
+        'test_signature',
+        Buffer.from('test_payload'),
+      );
 
       expect(tenantRepository.save).toHaveBeenCalled();
     });
@@ -319,7 +344,10 @@ describe('StripeService', () => {
 
       stripeMock.webhooks.constructEvent.mockReturnValue(mockEvent);
 
-      await service.handleWebhook('test_signature', Buffer.from('test_payload'));
+      await service.handleWebhook(
+        'test_signature',
+        Buffer.from('test_payload'),
+      );
 
       expect(tenantRepository.save).toHaveBeenCalled();
     });

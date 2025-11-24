@@ -16,7 +16,14 @@ import { StripeModule } from '../../stripe/stripe.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Booking, Partner, PartnerService, Vehicle, Commission, Rating]),
+    TypeOrmModule.forFeature([
+      Booking,
+      Partner,
+      PartnerService,
+      Vehicle,
+      Commission,
+      Rating,
+    ]),
     NotificationsModule,
     AuditModule,
     StripeModule,

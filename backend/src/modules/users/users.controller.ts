@@ -20,7 +20,10 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User, UserRole } from '../../entities/user.entity';
-import { SubscriptionLimitGuard, CheckLimit } from '../../common/guards/subscription-limit.guard';
+import {
+  SubscriptionLimitGuard,
+  CheckLimit,
+} from '../../common/guards/subscription-limit.guard';
 import { Auditable } from '../../common/decorators/auditable.decorator';
 
 @Controller('users')
@@ -34,7 +37,10 @@ export class UsersController {
   @UseGuards(SubscriptionLimitGuard)
   @CheckLimit('users')
   @Auditable('User')
-  create(@Body() createUserDto: CreateUserDto, @CurrentUser() currentUser: User) {
+  create(
+    @Body() createUserDto: CreateUserDto,
+    @CurrentUser() currentUser: User,
+  ) {
     return this.usersService.create(createUserDto, currentUser);
   }
 
@@ -83,7 +89,10 @@ export class UsersController {
   }
 
   @Patch('me')
-  updateProfile(@Body() updateUserDto: UpdateUserDto, @CurrentUser() currentUser: User) {
+  updateProfile(
+    @Body() updateUserDto: UpdateUserDto,
+    @CurrentUser() currentUser: User,
+  ) {
     return this.usersService.update(currentUser.id, updateUserDto, currentUser);
   }
 
@@ -93,13 +102,18 @@ export class UsersController {
     @CurrentUser() currentUser: User,
   ) {
     // Vérifier l'ancien mot de passe
-    const user = await this.usersService.findByEmail(currentUser.email, currentUser.tenantId);
+    const user = await this.usersService.findByEmail(
+      currentUser.email,
+      currentUser.tenantId,
+    );
 
     if (!user) {
       throw new BadRequestException('Utilisateur non trouvé');
     }
 
-    const isValid = await user.validatePassword(changePasswordDto.currentPassword);
+    const isValid = await user.validatePassword(
+      changePasswordDto.currentPassword,
+    );
 
     if (!isValid) {
       throw new BadRequestException('Mot de passe actuel incorrect');
@@ -136,14 +150,20 @@ export class UsersController {
   @Patch(':id/deactivate')
   @UseGuards(RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
-  async deactivate(@Param('id') id: string, @CurrentUser() currentUser: User): Promise<User> {
+  async deactivate(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: User,
+  ): Promise<User> {
     return this.usersService.deactivate(id, currentUser);
   }
 
   @Patch(':id/activate')
   @UseGuards(RolesGuard)
   @Roles(UserRole.SUPER_ADMIN, UserRole.TENANT_ADMIN)
-  async activate(@Param('id') id: string, @CurrentUser() currentUser: User): Promise<User> {
+  async activate(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: User,
+  ): Promise<User> {
     return this.usersService.activate(id, currentUser);
   }
 }

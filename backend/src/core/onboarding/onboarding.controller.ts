@@ -1,5 +1,10 @@
 import { Controller, Post, Body, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { OnboardingService } from './onboarding.service';
 import { CompleteOnboardingDto } from './dto/complete-onboarding.dto';
@@ -12,7 +17,7 @@ export class OnboardingController {
   constructor(private readonly onboardingService: OnboardingService) {}
 
   @Post('complete')
-  @ApiOperation({ summary: 'Compléter l\'onboarding du tenant' })
+  @ApiOperation({ summary: "Compléter l'onboarding du tenant" })
   @ApiResponse({ status: 201, description: 'Onboarding complété avec succès' })
   @ApiResponse({ status: 404, description: 'Tenant non trouvé' })
   async completeOnboarding(

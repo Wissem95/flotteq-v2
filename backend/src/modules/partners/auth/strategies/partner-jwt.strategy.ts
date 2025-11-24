@@ -5,14 +5,19 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PartnerAuthService } from '../../partner-auth.service';
 
 @Injectable()
-export class PartnerJwtStrategy extends PassportStrategy(Strategy, 'partner-jwt') {
+export class PartnerJwtStrategy extends PassportStrategy(
+  Strategy,
+  'partner-jwt',
+) {
   constructor(
     private configService: ConfigService,
     private partnerAuthService: PartnerAuthService,
   ) {
     const secret = configService.get<string>('JWT_PARTNER_SECRET');
     if (!secret) {
-      throw new Error('JWT_PARTNER_SECRET is not defined in environment variables');
+      throw new Error(
+        'JWT_PARTNER_SECRET is not defined in environment variables',
+      );
     }
 
     super({
@@ -28,7 +33,9 @@ export class PartnerJwtStrategy extends PassportStrategy(Strategy, 'partner-jwt'
       throw new UnauthorizedException('Invalid token type');
     }
 
-    const partnerUser = await this.partnerAuthService.validatePartner(payload.sub);
+    const partnerUser = await this.partnerAuthService.validatePartner(
+      payload.sub,
+    );
 
     if (!partnerUser) {
       throw new UnauthorizedException('Partner user not found or inactive');

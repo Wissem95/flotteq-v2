@@ -43,7 +43,9 @@ describe('StorageQuotaGuard', () => {
     }).compile();
 
     guard = module.get<StorageQuotaGuard>(StorageQuotaGuard);
-    documentsService = module.get(DocumentsService) as jest.Mocked<DocumentsService>;
+    documentsService = module.get(
+      DocumentsService,
+    ) as jest.Mocked<DocumentsService>;
     tenantsService = module.get(TenantsService) as jest.Mocked<TenantsService>;
   });
 
@@ -62,10 +64,12 @@ describe('StorageQuotaGuard', () => {
     it('should allow upload when under quota', async () => {
       const mockContext = createMockContext(
         { size: 1024 * 1024 }, // 1MB file
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
-      documentsService.getTenantStorageUsage.mockResolvedValue(50 * 1024 * 1024); // 50MB used
+      documentsService.getTenantStorageUsage.mockResolvedValue(
+        50 * 1024 * 1024,
+      ); // 50MB used
       tenantsService.findOne.mockResolvedValue(mockTenant as Tenant);
 
       const result = await guard.canActivate(mockContext);
@@ -78,22 +82,26 @@ describe('StorageQuotaGuard', () => {
     it('should block upload when quota exceeded', async () => {
       const mockContext = createMockContext(
         { size: 60 * 1024 * 1024 }, // 60MB file
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
-      documentsService.getTenantStorageUsage.mockResolvedValue(50 * 1024 * 1024); // 50MB used
+      documentsService.getTenantStorageUsage.mockResolvedValue(
+        50 * 1024 * 1024,
+      ); // 50MB used
       tenantsService.findOne.mockResolvedValue(mockTenant as Tenant);
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(PayloadTooLargeException);
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        /Quota de stockage dépassé/
+        PayloadTooLargeException,
+      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        /Quota de stockage dépassé/,
       );
     });
 
     it('should return true if no file in request', async () => {
       const mockContext = createMockContext(
         null, // No file
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
       const result = await guard.canActivate(mockContext);
@@ -106,52 +114,56 @@ describe('StorageQuotaGuard', () => {
     it('should throw when tenant ID is missing', async () => {
       const mockContext = createMockContext(
         { size: 1024 }, // 1KB file
-        {} // No tenantId
+        {}, // No tenantId
       );
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(PayloadTooLargeException);
-      await expect(guard.canActivate(mockContext)).rejects.toThrow('Tenant ID manquant');
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        PayloadTooLargeException,
+      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        'Tenant ID manquant',
+      );
     });
 
     it('should throw when tenant is not found', async () => {
-      const mockContext = createMockContext(
-        { size: 1024 },
-        { tenantId: 999 }
-      );
+      const mockContext = createMockContext({ size: 1024 }, { tenantId: 999 });
 
       documentsService.getTenantStorageUsage.mockResolvedValue(0);
       tenantsService.findOne.mockResolvedValue(undefined as any);
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(PayloadTooLargeException);
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        /Plan d'abonnement introuvable/
+        PayloadTooLargeException,
+      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        /Plan d'abonnement introuvable/,
       );
     });
 
     it('should throw when tenant has no plan', async () => {
-      const mockContext = createMockContext(
-        { size: 1024 },
-        { tenantId: 1 }
-      );
+      const mockContext = createMockContext({ size: 1024 }, { tenantId: 1 });
 
       const tenantWithoutPlan = { ...mockTenant, plan: undefined };
 
       documentsService.getTenantStorageUsage.mockResolvedValue(0);
       tenantsService.findOne.mockResolvedValue(tenantWithoutPlan as any);
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(PayloadTooLargeException);
       await expect(guard.canActivate(mockContext)).rejects.toThrow(
-        /Plan d'abonnement introuvable/
+        PayloadTooLargeException,
+      );
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        /Plan d'abonnement introuvable/,
       );
     });
 
     it('should allow upload when exactly at quota limit', async () => {
       const mockContext = createMockContext(
         { size: 50 * 1024 * 1024 }, // 50MB file
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
-      documentsService.getTenantStorageUsage.mockResolvedValue(50 * 1024 * 1024); // 50MB used
+      documentsService.getTenantStorageUsage.mockResolvedValue(
+        50 * 1024 * 1024,
+      ); // 50MB used
       tenantsService.findOne.mockResolvedValue(mockTenant as Tenant);
 
       const result = await guard.canActivate(mockContext);
@@ -162,22 +174,28 @@ describe('StorageQuotaGuard', () => {
     it('should block upload when exceeding quota by 1 byte', async () => {
       const mockContext = createMockContext(
         { size: 50 * 1024 * 1024 + 1 }, // 50MB + 1 byte
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
-      documentsService.getTenantStorageUsage.mockResolvedValue(50 * 1024 * 1024); // 50MB used
+      documentsService.getTenantStorageUsage.mockResolvedValue(
+        50 * 1024 * 1024,
+      ); // 50MB used
       tenantsService.findOne.mockResolvedValue(mockTenant as Tenant);
 
-      await expect(guard.canActivate(mockContext)).rejects.toThrow(PayloadTooLargeException);
+      await expect(guard.canActivate(mockContext)).rejects.toThrow(
+        PayloadTooLargeException,
+      );
     });
 
     it('should include usage details in error message', async () => {
       const mockContext = createMockContext(
         { size: 60 * 1024 * 1024 }, // 60MB file
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
-      documentsService.getTenantStorageUsage.mockResolvedValue(50 * 1024 * 1024); // 50MB used
+      documentsService.getTenantStorageUsage.mockResolvedValue(
+        50 * 1024 * 1024,
+      ); // 50MB used
       tenantsService.findOne.mockResolvedValue(mockTenant as Tenant);
 
       try {
@@ -194,7 +212,7 @@ describe('StorageQuotaGuard', () => {
     it('should handle zero storage usage', async () => {
       const mockContext = createMockContext(
         { size: 1024 * 1024 }, // 1MB file
-        { tenantId: 1 }
+        { tenantId: 1 },
       );
 
       documentsService.getTenantStorageUsage.mockResolvedValue(0); // No usage

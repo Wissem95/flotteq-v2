@@ -1,9 +1,23 @@
-import { IsOptional, IsEnum, IsString, IsNumber, IsDateString, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsString,
+  IsNumber,
+  IsDateString,
+  Min,
+} from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { MaintenanceType, MaintenanceStatus } from '../entities/maintenance.entity';
+import {
+  MaintenanceType,
+  MaintenanceStatus,
+} from '../entities/maintenance.entity';
 
 export class UpdateMaintenanceDto {
-  @ApiProperty({ description: 'Type of maintenance', enum: MaintenanceType, required: false })
+  @ApiProperty({
+    description: 'Type of maintenance',
+    enum: MaintenanceType,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(MaintenanceType)
   type?: MaintenanceType;
@@ -23,7 +37,11 @@ export class UpdateMaintenanceDto {
   @IsDateString()
   completedDate?: string;
 
-  @ApiProperty({ description: 'Status', enum: MaintenanceStatus, required: false })
+  @ApiProperty({
+    description: 'Status',
+    enum: MaintenanceStatus,
+    required: false,
+  })
   @IsOptional()
   @IsEnum(MaintenanceStatus)
   status?: MaintenanceStatus;

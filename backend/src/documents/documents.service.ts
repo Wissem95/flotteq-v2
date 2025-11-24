@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
-import { Document, DocumentEntityType, DocumentType } from '../entities/document.entity';
+import {
+  Document,
+  DocumentEntityType,
+  DocumentType,
+} from '../entities/document.entity';
 import { ExpiringDocumentDto } from './dto/expiring-document.dto';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 
@@ -57,7 +61,11 @@ export class DocumentsService {
     return query.getMany();
   }
 
-  async findOne(id: string, tenantId: number, skipTenantCheck = false): Promise<Document> {
+  async findOne(
+    id: string,
+    tenantId: number,
+    skipTenantCheck = false,
+  ): Promise<Document> {
     const where: any = { id };
 
     if (!skipTenantCheck) {
@@ -75,7 +83,11 @@ export class DocumentsService {
     return document;
   }
 
-  async remove(id: string, tenantId: number, skipTenantCheck = false): Promise<void> {
+  async remove(
+    id: string,
+    tenantId: number,
+    skipTenantCheck = false,
+  ): Promise<void> {
     const document = await this.findOne(id, tenantId, skipTenantCheck);
     await this.documentsRepository.softDelete(id);
   }

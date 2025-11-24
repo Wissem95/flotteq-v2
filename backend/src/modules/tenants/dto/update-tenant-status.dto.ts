@@ -5,7 +5,7 @@ export class UpdateTenantStatusDto {
   @IsBoolean()
   @ApiProperty({
     example: true,
-    description: 'True pour activer, false pour désactiver le tenant'
+    description: 'True pour activer, false pour désactiver le tenant',
   })
   isActive: boolean;
 }

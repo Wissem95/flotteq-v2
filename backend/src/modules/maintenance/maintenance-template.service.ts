@@ -12,7 +12,10 @@ export class MaintenanceTemplateService {
     private templateRepository: Repository<MaintenanceTemplate>,
   ) {}
 
-  async create(createDto: CreateMaintenanceTemplateDto, tenantId: number): Promise<MaintenanceTemplate> {
+  async create(
+    createDto: CreateMaintenanceTemplateDto,
+    tenantId: number,
+  ): Promise<MaintenanceTemplate> {
     const template = this.templateRepository.create({
       ...createDto,
       tenantId,
@@ -39,7 +42,11 @@ export class MaintenanceTemplateService {
     return template;
   }
 
-  async update(id: string, updateDto: UpdateMaintenanceTemplateDto, tenantId: number): Promise<MaintenanceTemplate> {
+  async update(
+    id: string,
+    updateDto: UpdateMaintenanceTemplateDto,
+    tenantId: number,
+  ): Promise<MaintenanceTemplate> {
     const template = await this.findOne(id, tenantId);
     Object.assign(template, updateDto);
     return this.templateRepository.save(template);

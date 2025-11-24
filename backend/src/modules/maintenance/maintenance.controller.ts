@@ -10,7 +10,12 @@ import {
   Query,
   Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { MaintenanceService } from './maintenance.service';
 import { MaintenanceTemplateService } from './maintenance-template.service';
 import { CreateMaintenanceDto } from './dto/create-maintenance.dto';
@@ -36,7 +41,12 @@ export class MaintenanceController {
   ) {}
 
   @Post()
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @Auditable('Maintenance')
   @ApiOperation({ summary: 'Create a new maintenance' })
   @ApiResponse({ status: 201, description: 'Maintenance created successfully' })
@@ -62,12 +72,18 @@ export class MaintenanceController {
     @TenantId() tenantId: number,
     @Query('daysAhead') daysAhead?: number,
   ) {
-    return this.maintenanceService.getUpcomingMaintenances(tenantId, daysAhead || 7);
+    return this.maintenanceService.getUpcomingMaintenances(
+      tenantId,
+      daysAhead || 7,
+    );
   }
 
   @Get('alerts/km')
   @ApiOperation({ summary: 'Get maintenance alerts by kilometer' })
-  @ApiResponse({ status: 200, description: 'List of maintenances approaching km threshold' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of maintenances approaching km threshold',
+  })
   getKmAlerts(@TenantId() tenantId: number) {
     return this.maintenanceService.getMaintenancesByKmAlert(tenantId);
   }
@@ -81,7 +97,10 @@ export class MaintenanceController {
 
   @Get('vehicle/:vehicleId')
   @ApiOperation({ summary: 'Get all maintenances for a specific vehicle' })
-  @ApiResponse({ status: 200, description: 'List of maintenances for the vehicle' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of maintenances for the vehicle',
+  })
   findByVehicle(
     @Param('vehicleId') vehicleId: string,
     @TenantId() tenantId: number,
@@ -108,7 +127,12 @@ export class MaintenanceController {
   }
 
   @Patch(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @Auditable('Maintenance')
   @ApiOperation({ summary: 'Update a maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance updated successfully' })
@@ -123,7 +147,12 @@ export class MaintenanceController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @Auditable('Maintenance')
   @ApiOperation({ summary: 'Delete a maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance deleted successfully' })
@@ -134,7 +163,9 @@ export class MaintenanceController {
     @TenantId() tenantId: number,
     @Req() req: any,
   ) {
-    const isSuperAdmin = req.user?.role === UserRole.SUPER_ADMIN || req.user?.role === UserRole.SUPPORT;
+    const isSuperAdmin =
+      req.user?.role === UserRole.SUPER_ADMIN ||
+      req.user?.role === UserRole.SUPPORT;
     await this.maintenanceService.remove(id, tenantId, isSuperAdmin);
     return { message: 'Maintenance deleted successfully' };
   }
@@ -142,7 +173,12 @@ export class MaintenanceController {
   // ========== TEMPLATES ENDPOINTS ==========
 
   @Post('templates')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @ApiOperation({ summary: 'Create a maintenance template' })
   @ApiResponse({ status: 201, description: 'Template created successfully' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
@@ -169,7 +205,12 @@ export class MaintenanceController {
   }
 
   @Patch('templates/:id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @ApiOperation({ summary: 'Update a template' })
   @ApiResponse({ status: 200, description: 'Template updated successfully' })
   @ApiResponse({ status: 404, description: 'Template not found' })
@@ -183,7 +224,12 @@ export class MaintenanceController {
   }
 
   @Delete('templates/:id')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @ApiOperation({ summary: 'Delete a template' })
   @ApiResponse({ status: 200, description: 'Template deleted successfully' })
   @ApiResponse({ status: 404, description: 'Template not found' })
@@ -193,9 +239,17 @@ export class MaintenanceController {
   }
 
   @Post('from-template/:templateId')
-  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT, UserRole.TENANT_ADMIN, UserRole.MANAGER)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.SUPPORT,
+    UserRole.TENANT_ADMIN,
+    UserRole.MANAGER,
+  )
   @ApiOperation({ summary: 'Create maintenance from template' })
-  @ApiResponse({ status: 201, description: 'Maintenance created from template' })
+  @ApiResponse({
+    status: 201,
+    description: 'Maintenance created from template',
+  })
   @ApiResponse({ status: 404, description: 'Template not found' })
   @ApiResponse({ status: 403, description: 'Rôle insuffisant' })
   createFromTemplate(
@@ -203,6 +257,10 @@ export class MaintenanceController {
     @Body() createDto: CreateMaintenanceFromTemplateDto,
     @TenantId() tenantId: number,
   ) {
-    return this.maintenanceService.createFromTemplate(templateId, createDto, tenantId);
+    return this.maintenanceService.createFromTemplate(
+      templateId,
+      createDto,
+      tenantId,
+    );
   }
 }

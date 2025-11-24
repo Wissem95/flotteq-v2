@@ -37,35 +37,45 @@ export class DashboardController {
 
   @Get('internal/stats')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  @ApiOperation({ summary: 'Get global stats for all tenants (FlotteQ admin only)' })
+  @ApiOperation({
+    summary: 'Get global stats for all tenants (FlotteQ admin only)',
+  })
   async getInternalStats(): Promise<InternalStatsDto> {
     return this.dashboardService.getInternalStats();
   }
 
   @Get('internal/revenue')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  @ApiOperation({ summary: 'Get MRR, ARR and revenue evolution (FlotteQ admin only)' })
+  @ApiOperation({
+    summary: 'Get MRR, ARR and revenue evolution (FlotteQ admin only)',
+  })
   async getInternalRevenue(): Promise<InternalRevenueDto> {
     return this.dashboardService.getInternalRevenue();
   }
 
   @Get('internal/subscriptions')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  @ApiOperation({ summary: 'Get subscription plans distribution (FlotteQ admin only)' })
+  @ApiOperation({
+    summary: 'Get subscription plans distribution (FlotteQ admin only)',
+  })
   async getInternalSubscriptions(): Promise<InternalSubscriptionsDto> {
     return this.dashboardService.getInternalSubscriptions();
   }
 
   @Get('internal/activity')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  @ApiOperation({ summary: 'Get recent platform activity (FlotteQ admin only)' })
+  @ApiOperation({
+    summary: 'Get recent platform activity (FlotteQ admin only)',
+  })
   async getInternalActivity(): Promise<ActivityLogDto[]> {
     return this.dashboardService.getInternalActivity();
   }
 
   @Get('internal/tenants/recent')
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  @ApiOperation({ summary: 'Get recently registered tenants (FlotteQ admin only)' })
+  @ApiOperation({
+    summary: 'Get recently registered tenants (FlotteQ admin only)',
+  })
   async getInternalRecentTenants(
     @Query('limit', new DefaultValuePipe(5), ParseIntPipe) limit: number,
   ): Promise<RecentTenantDto[]> {
@@ -90,7 +100,9 @@ export class DashboardController {
 
   @Get('subscription-usage')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Get subscription usage statistics for current tenant' })
+  @ApiOperation({
+    summary: 'Get subscription usage statistics for current tenant',
+  })
   async getSubscriptionUsage(@Req() req: any): Promise<SubscriptionUsageDto> {
     return this.dashboardService.getSubscriptionUsage(req.user.tenantId);
   }

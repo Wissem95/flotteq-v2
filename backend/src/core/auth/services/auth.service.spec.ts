@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ConflictException, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  UnauthorizedException,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -37,7 +42,9 @@ describe('AuthService', () => {
     tenant: null,
     hashPassword: jest.fn(),
     validatePassword: jest.fn().mockResolvedValue(true),
-    get fullName() { return 'John Doe'; },
+    get fullName() {
+      return 'John Doe';
+    },
     isFlotteQUser: jest.fn().mockReturnValue(false),
     canManageUsers: jest.fn().mockReturnValue(false),
     canViewAllData: jest.fn().mockReturnValue(false),
@@ -117,7 +124,12 @@ describe('AuthService', () => {
       userRepository.findOne.mockResolvedValue(null);
 
       // Mock: save user
-      const savedUser = { ...mockUser, ...registerDto, id: 'new-uuid', tenantId: parseInt(registerDto.tenantId || '1') };
+      const savedUser = {
+        ...mockUser,
+        ...registerDto,
+        id: 'new-uuid',
+        tenantId: parseInt(registerDto.tenantId || '1'),
+      };
       userRepository.save.mockResolvedValue(savedUser as any);
 
       // Mock: JWT tokens
@@ -321,7 +333,15 @@ describe('AuthService', () => {
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { id: 'uuid-123' },
-        select: ['id', 'email', 'tenantId', 'role', 'isActive', 'firstName', 'lastName'],
+        select: [
+          'id',
+          'email',
+          'tenantId',
+          'role',
+          'isActive',
+          'firstName',
+          'lastName',
+        ],
       });
       expect(result).toEqual(userWithoutPassword);
       expect(result).not.toHaveProperty('password');
@@ -390,14 +410,19 @@ describe('AuthService', () => {
 
   describe('forgotPassword', () => {
     it('should return success message when user exists', async () => {
-      const userWithTenant = { ...mockUser, tenant: { id: 1, name: 'Test Tenant' } };
+      const userWithTenant = {
+        ...mockUser,
+        tenant: { id: 1, name: 'Test Tenant' },
+      };
       userRepository.findOne.mockResolvedValue(userWithTenant as any);
       jest.spyOn(jwtService, 'sign').mockReturnValue('reset-token' as never);
       emailQueueService.queuePasswordResetEmail.mockResolvedValue(undefined);
 
       const result = await service.forgotPassword('test@example.com');
 
-      expect(result.message).toBe('Si cet email existe, un lien de réinitialisation a été envoyé.');
+      expect(result.message).toBe(
+        'Si cet email existe, un lien de réinitialisation a été envoyé.',
+      );
       expect(userRepository.findOne).toHaveBeenCalledWith({
         where: { email: 'test@example.com' },
         relations: ['tenant'],
@@ -418,7 +443,9 @@ describe('AuthService', () => {
 
       const result = await service.forgotPassword('nonexistent@test.com');
 
-      expect(result.message).toBe('Si cet email existe, un lien de réinitialisation a été envoyé.');
+      expect(result.message).toBe(
+        'Si cet email existe, un lien de réinitialisation a été envoyé.',
+      );
       expect(jwtService.sign).not.toHaveBeenCalled();
       expect(emailQueueService.queuePasswordResetEmail).not.toHaveBeenCalled();
     });
@@ -435,7 +462,10 @@ describe('AuthService', () => {
       } as any);
       userRepository.findOne.mockResolvedValue(mockUser);
       jest.spyOn(bcrypt, 'hash').mockResolvedValue(hashedPassword as never);
-      userRepository.save.mockResolvedValue({ ...mockUser, password: hashedPassword } as any);
+      userRepository.save.mockResolvedValue({
+        ...mockUser,
+        password: hashedPassword,
+      } as any);
 
       const result = await service.resetPassword('valid-token', newPassword);
 
@@ -443,7 +473,9 @@ describe('AuthService', () => {
       expect(jwtService.verify).toHaveBeenCalledWith('valid-token', {
         secret: 'test_access_secret',
       });
-      expect(userRepository.findOne).toHaveBeenCalledWith({ where: { id: 'uuid-123' } });
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        where: { id: 'uuid-123' },
+      });
       expect(bcrypt.hash).toHaveBeenCalledWith(newPassword, 12);
       expect(userRepository.save).toHaveBeenCalledWith({
         ...mockUser,
@@ -457,10 +489,12 @@ describe('AuthService', () => {
         type: 'access', // Wrong type
       } as any);
 
-      await expect(service.resetPassword('invalid-type-token', 'NewPassword123'))
-        .rejects.toThrow(BadRequestException);
-      await expect(service.resetPassword('invalid-type-token', 'NewPassword123'))
-        .rejects.toThrow('Token invalide');
+      await expect(
+        service.resetPassword('invalid-type-token', 'NewPassword123'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.resetPassword('invalid-type-token', 'NewPassword123'),
+      ).rejects.toThrow('Token invalide');
     });
 
     it('should throw NotFoundException when user not found', async () => {
@@ -470,10 +504,12 @@ describe('AuthService', () => {
       } as any);
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.resetPassword('valid-token', 'NewPassword123'))
-        .rejects.toThrow(NotFoundException);
-      await expect(service.resetPassword('valid-token', 'NewPassword123'))
-        .rejects.toThrow('Utilisateur non trouvé');
+      await expect(
+        service.resetPassword('valid-token', 'NewPassword123'),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        service.resetPassword('valid-token', 'NewPassword123'),
+      ).rejects.toThrow('Utilisateur non trouvé');
     });
 
     it('should throw BadRequestException for expired token', async () => {
@@ -483,10 +519,12 @@ describe('AuthService', () => {
         throw error;
       });
 
-      await expect(service.resetPassword('expired-token', 'NewPassword123'))
-        .rejects.toThrow(BadRequestException);
-      await expect(service.resetPassword('expired-token', 'NewPassword123'))
-        .rejects.toThrow('Le lien a expiré. Veuillez demander un nouveau lien.');
+      await expect(
+        service.resetPassword('expired-token', 'NewPassword123'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.resetPassword('expired-token', 'NewPassword123'),
+      ).rejects.toThrow('Le lien a expiré. Veuillez demander un nouveau lien.');
     });
 
     it('should throw BadRequestException for malformed token', async () => {
@@ -496,10 +534,12 @@ describe('AuthService', () => {
         throw error;
       });
 
-      await expect(service.resetPassword('malformed-token', 'NewPassword123'))
-        .rejects.toThrow(BadRequestException);
-      await expect(service.resetPassword('malformed-token', 'NewPassword123'))
-        .rejects.toThrow('Token invalide');
+      await expect(
+        service.resetPassword('malformed-token', 'NewPassword123'),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        service.resetPassword('malformed-token', 'NewPassword123'),
+      ).rejects.toThrow('Token invalide');
     });
   });
 });

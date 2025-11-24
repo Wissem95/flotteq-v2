@@ -14,21 +14,31 @@ import { Type } from 'class-transformer';
 import { PartnerType } from '../../../entities/partner.entity';
 
 export class SearchPartnersDto {
-  @ApiProperty({ example: 48.8566, description: 'Latitude du point de recherche' })
+  @ApiProperty({
+    example: 48.8566,
+    description: 'Latitude du point de recherche',
+  })
   @Type(() => Number)
   @IsNumber()
   @Min(-90)
   @Max(90)
   lat: number;
 
-  @ApiProperty({ example: 2.3522, description: 'Longitude du point de recherche' })
+  @ApiProperty({
+    example: 2.3522,
+    description: 'Longitude du point de recherche',
+  })
   @Type(() => Number)
   @IsNumber()
   @Min(-180)
   @Max(180)
   lng: number;
 
-  @ApiProperty({ example: 10, description: 'Rayon de recherche en kilomètres', default: 10 })
+  @ApiProperty({
+    example: 10,
+    description: 'Rayon de recherche en kilomètres',
+    default: 10,
+  })
   @Type(() => Number)
   @IsNumber()
   @Min(0.1)
@@ -40,12 +50,18 @@ export class SearchPartnersDto {
   @IsEnum(PartnerType)
   type?: PartnerType;
 
-  @ApiPropertyOptional({ example: 'vidange', description: 'Type de service recherché' })
+  @ApiPropertyOptional({
+    example: 'vidange',
+    description: 'Type de service recherché',
+  })
   @IsOptional()
   @IsString()
   serviceType?: string;
 
-  @ApiPropertyOptional({ example: '2025-10-15', description: 'Date souhaitée (YYYY-MM-DD)' })
+  @ApiPropertyOptional({
+    example: '2025-10-15',
+    description: 'Date souhaitée (YYYY-MM-DD)',
+  })
   @IsOptional()
   @IsDateString()
   date?: string;

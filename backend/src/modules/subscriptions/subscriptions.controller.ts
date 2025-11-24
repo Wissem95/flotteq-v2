@@ -108,10 +108,7 @@ export class SubscriptionsController {
 
   @Patch('change-plan/:planId')
   @ApiOperation({ summary: 'Change subscription plan' })
-  changePlan(
-    @TenantId() tenantId: string,
-    @Param('planId') planId: string,
-  ) {
+  changePlan(@TenantId() tenantId: string, @Param('planId') planId: string) {
     return this.subscriptionsService.changePlan(+tenantId, +planId);
   }
 
@@ -127,7 +124,10 @@ export class SubscriptionsController {
     @TenantId() tenantId: string,
     @Param('resource') resource: 'vehicles' | 'users' | 'drivers',
   ) {
-    const canAdd = await this.subscriptionsService.checkLimit(+tenantId, resource);
+    const canAdd = await this.subscriptionsService.checkLimit(
+      +tenantId,
+      resource,
+    );
     return { canAdd, resource };
   }
 
@@ -164,7 +164,9 @@ export class SubscriptionsController {
     const plan = await this.subscriptionsService.getPlan(dto.planId);
 
     if (!plan.stripePriceId) {
-      throw new NotFoundException('This plan does not have a Stripe price configured');
+      throw new NotFoundException(
+        'This plan does not have a Stripe price configured',
+      );
     }
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';

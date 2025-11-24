@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner, TableColumn } from 'typeorm';
 
-export class AddSoftDeleteToVehiclesDrivers1759900000002 implements MigrationInterface {
+export class AddSoftDeleteToVehiclesDrivers1759900000002
+  implements MigrationInterface
+{
   public async up(queryRunner: QueryRunner): Promise<void> {
     // Ajouter colonne deleted_at à la table vehicles
     await queryRunner.addColumn(

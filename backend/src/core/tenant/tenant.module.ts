@@ -5,15 +5,7 @@ import { TenantInterceptor } from './tenant.interceptor';
 
 @Global()
 @Module({
-  providers: [
-    TenantGuard,
-    TenantInterceptor,
-    TenantMiddleware,
-  ],
-  exports: [
-    TenantGuard,
-    TenantInterceptor,
-    TenantMiddleware,
-  ],
+  providers: [TenantGuard, TenantInterceptor, TenantMiddleware],
+  exports: [TenantGuard, TenantInterceptor, TenantMiddleware],
 })
 export class TenantModule {}

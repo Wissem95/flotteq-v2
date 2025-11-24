@@ -196,7 +196,9 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     expect(response.body.currentValue).toBe(18000);
 
     // Vérifier dans la base de données
-    const vehicle = await vehiclesRepository.findOne({ where: { id: vehicleId } });
+    const vehicle = await vehiclesRepository.findOne({
+      where: { id: vehicleId },
+    });
     expect(vehicle.status).toBe('sold');
     expect(vehicle.currentValue).toBe(18000);
     expect(vehicle.soldDate).toBeDefined();

@@ -220,7 +220,9 @@ describe('Bookings (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.booking.status).toBe(BookingStatus.REJECTED);
-          expect(res.body.booking.rejectionReason).toBe('Not available at this time');
+          expect(res.body.booking.rejectionReason).toBe(
+            'Not available at this time',
+          );
         });
     });
   });
@@ -313,7 +315,9 @@ describe('Bookings (e2e)', () => {
         .expect(200)
         .expect((res) => {
           expect(res.body.booking.status).toBe(BookingStatus.CANCELLED);
-          expect(res.body.booking.cancellationReason).toBe('Customer changed plans');
+          expect(res.body.booking.cancellationReason).toBe(
+            'Customer changed plans',
+          );
         });
     });
   });

@@ -5,7 +5,7 @@ export class MarkPaidDto {
   @ApiProperty({
     example: 'BANK_TRANSFER_20251018_001',
     description: 'Payment reference number or transaction ID',
-    maxLength: 255
+    maxLength: 255,
   })
   @IsNotEmpty()
   @IsString()

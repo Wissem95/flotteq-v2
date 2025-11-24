@@ -38,7 +38,9 @@ describe('Onboarding (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.setGlobalPrefix('api');
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
 
     usersRepository = moduleFixture.get(getRepositoryToken(User));
@@ -98,7 +100,10 @@ describe('Onboarding (e2e)', () => {
   });
 
   // Helper function to create test user with tenant and token
-  async function createTestUserWithTenant(tenantName: string, userEmail?: string) {
+  async function createTestUserWithTenant(
+    tenantName: string,
+    userEmail?: string,
+  ) {
     tenantCounter++;
     const uniqueTenantName = `${tenantName}-${tenantCounter}`;
 
@@ -126,7 +131,12 @@ describe('Onboarding (e2e)', () => {
     createdUsers.push(user);
 
     const token = jwtService.sign(
-      { sub: user.id, email: user.email, tenantId: user.tenantId, role: user.role },
+      {
+        sub: user.id,
+        email: user.email,
+        tenantId: user.tenantId,
+        role: user.role,
+      },
       { secret: process.env.JWT_ACCESS_SECRET, expiresIn: '15m' },
     );
 
@@ -141,7 +151,8 @@ describe('Onboarding (e2e)', () => {
 
   describe('POST /onboarding/complete', () => {
     it('[DEBUG] should show error message', async () => {
-      const { tenant, token } = await createTestUserWithTenant('Debug Test Company');
+      const { tenant, token } =
+        await createTestUserWithTenant('Debug Test Company');
       const companyName = uniqueCompanyName('Debug Updated');
 
       const response = await request(app.getHttpServer())
@@ -185,7 +196,8 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should complete onboarding with profile only', async () => {
-      const { tenant, token } = await createTestUserWithTenant('Profile Only Test');
+      const { tenant, token } =
+        await createTestUserWithTenant('Profile Only Test');
       const companyName = uniqueCompanyName('Updated Company');
 
       const response = await request(app.getHttpServer())
@@ -207,7 +219,9 @@ describe('Onboarding (e2e)', () => {
       expect(response.body.message).toBe('Onboarding complété avec succès');
 
       // Verify tenant was updated in DB
-      const updatedTenant = await tenantsRepository.findOne({ where: { id: tenant.id } });
+      const updatedTenant = await tenantsRepository.findOne({
+        where: { id: tenant.id },
+      });
       expect(updatedTenant!.name).toBe(companyName);
       expect(updatedTenant!.address).toBe('456 New St');
       expect(updatedTenant!.city).toBe('Lyon');
@@ -217,7 +231,9 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should complete onboarding with profile and vehicle', async () => {
-      const { tenant, user, token } = await createTestUserWithTenant('Vehicle Test Company');
+      const { tenant, user, token } = await createTestUserWithTenant(
+        'Vehicle Test Company',
+      );
       const companyName = uniqueCompanyName('Company With Vehicle');
 
       await request(app.getHttpServer())
@@ -244,7 +260,9 @@ describe('Onboarding (e2e)', () => {
         .expect(201);
 
       // Verify vehicle was created in DB
-      const vehicles = await vehiclesRepository.find({ where: { tenantId: user.tenantId } });
+      const vehicles = await vehiclesRepository.find({
+        where: { tenantId: user.tenantId },
+      });
       expect(vehicles.length).toBeGreaterThan(0);
 
       const createdVehicle = vehicles[0];
@@ -255,7 +273,9 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should complete onboarding with profile and driver', async () => {
-      const { tenant, user, token } = await createTestUserWithTenant('Driver Test Company');
+      const { tenant, user, token } = await createTestUserWithTenant(
+        'Driver Test Company',
+      );
       const driverEmail = `driver-${Date.now()}@test.com`;
       const companyName = uniqueCompanyName('Company With Driver');
 
@@ -296,7 +316,9 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should complete onboarding with all data (profile + vehicle + driver)', async () => {
-      const { tenant, user, token } = await createTestUserWithTenant('Full Onboarding Company');
+      const { tenant, user, token } = await createTestUserWithTenant(
+        'Full Onboarding Company',
+      );
       const fullDriverEmail = `full-driver-${Date.now()}@test.com`;
       const companyName = uniqueCompanyName('Complete Company');
 
@@ -330,11 +352,15 @@ describe('Onboarding (e2e)', () => {
         .expect(201);
 
       // Verify all data
-      const updatedTenant = await tenantsRepository.findOne({ where: { id: tenant.id } });
+      const updatedTenant = await tenantsRepository.findOne({
+        where: { id: tenant.id },
+      });
       expect(updatedTenant!.name).toBe(companyName);
       expect(updatedTenant!.onboardingCompleted).toBe(true);
 
-      const vehicles = await vehiclesRepository.find({ where: { tenantId: user.tenantId } });
+      const vehicles = await vehiclesRepository.find({
+        where: { tenantId: user.tenantId },
+      });
       expect(vehicles.length).toBeGreaterThan(0);
       expect(vehicles[0].brand).toBe('Peugeot');
 
@@ -346,7 +372,9 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should return 400 for invalid profile data', async () => {
-      const { tenant, token } = await createTestUserWithTenant('Invalid Profile Test');
+      const { tenant, token } = await createTestUserWithTenant(
+        'Invalid Profile Test',
+      );
 
       return request(app.getHttpServer())
         .post('/api/onboarding/complete')
@@ -362,7 +390,9 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should return 400 for invalid vehicle data', async () => {
-      const { tenant, token } = await createTestUserWithTenant('Invalid Vehicle Test');
+      const { tenant, token } = await createTestUserWithTenant(
+        'Invalid Vehicle Test',
+      );
 
       return request(app.getHttpServer())
         .post('/api/onboarding/complete')
@@ -388,7 +418,9 @@ describe('Onboarding (e2e)', () => {
     });
 
     it('should not create duplicate driver with same email', async () => {
-      const { tenant, user, token } = await createTestUserWithTenant('Duplicate Driver Test');
+      const { tenant, user, token } = await createTestUserWithTenant(
+        'Duplicate Driver Test',
+      );
       const duplicateEmail = `duplicate-${Date.now()}@test.com`;
       const firstCompanyName = uniqueCompanyName('First');
       const secondCompanyName = uniqueCompanyName('Second');

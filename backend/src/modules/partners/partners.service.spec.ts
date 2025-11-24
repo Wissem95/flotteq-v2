@@ -1,10 +1,21 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, DataSource, QueryRunner } from 'typeorm';
-import { ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  ConflictException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PartnersService } from './partners.service';
-import { Partner, PartnerStatus, PartnerType } from '../../entities/partner.entity';
-import { PartnerUser, PartnerUserRole } from '../../entities/partner-user.entity';
+import {
+  Partner,
+  PartnerStatus,
+  PartnerType,
+} from '../../entities/partner.entity';
+import {
+  PartnerUser,
+  PartnerUserRole,
+} from '../../entities/partner-user.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
@@ -138,14 +149,20 @@ describe('PartnersService', () => {
     it('should throw ConflictException if partner email exists', async () => {
       partnerRepository.findOne.mockResolvedValue(mockPartner as Partner);
 
-      await expect(service.create(mockCreatePartnerDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(mockCreatePartnerDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException if partner user email exists', async () => {
-      partnerRepository.findOne.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      partnerRepository.findOne
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(null);
       partnerUserRepository.findOne.mockResolvedValue({} as PartnerUser);
 
-      await expect(service.create(mockCreatePartnerDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(mockCreatePartnerDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should throw ConflictException if SIRET exists', async () => {
@@ -154,13 +171,17 @@ describe('PartnersService', () => {
         .mockResolvedValueOnce({ siretNumber: '12345678901234' } as Partner);
       partnerUserRepository.findOne.mockResolvedValue(null);
 
-      await expect(service.create(mockCreatePartnerDto)).rejects.toThrow(ConflictException);
+      await expect(service.create(mockCreatePartnerDto)).rejects.toThrow(
+        ConflictException,
+      );
     });
 
     it('should rollback transaction on error', async () => {
       partnerRepository.findOne.mockResolvedValue(null);
       partnerUserRepository.findOne.mockResolvedValue(null);
-      (queryRunner.manager.save as jest.Mock).mockRejectedValue(new Error('DB Error'));
+      (queryRunner.manager.save as jest.Mock).mockRejectedValue(
+        new Error('DB Error'),
+      );
 
       await expect(service.create(mockCreatePartnerDto)).rejects.toThrow();
       expect(queryRunner.rollbackTransaction).toHaveBeenCalled();
@@ -201,7 +222,10 @@ describe('PartnersService', () => {
     it('should update partner successfully', async () => {
       const updateDto = { phone: '+33698765432' };
       partnerRepository.findOne.mockResolvedValue(mockPartner as Partner);
-      partnerRepository.save.mockResolvedValue({ ...mockPartner, ...updateDto } as Partner);
+      partnerRepository.save.mockResolvedValue({
+        ...mockPartner,
+        ...updateDto,
+      } as Partner);
 
       const result = await service.update('123', updateDto);
 
@@ -237,7 +261,9 @@ describe('PartnersService', () => {
       const partner = { ...mockPartner, status: PartnerStatus.APPROVED };
       partnerRepository.findOne.mockResolvedValue(partner as Partner);
 
-      await expect(service.approvePartner('123')).rejects.toThrow(BadRequestException);
+      await expect(service.approvePartner('123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -264,7 +290,9 @@ describe('PartnersService', () => {
       const partner = { ...mockPartner, status: PartnerStatus.REJECTED };
       partnerRepository.findOne.mockResolvedValue(partner as Partner);
 
-      await expect(service.rejectPartner('123')).rejects.toThrow(BadRequestException);
+      await expect(service.rejectPartner('123')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -296,8 +324,12 @@ describe('PartnersService', () => {
     });
 
     it('should throw BadRequestException for invalid rate', async () => {
-      await expect(service.updateCommissionRate('123', -5)).rejects.toThrow(BadRequestException);
-      await expect(service.updateCommissionRate('123', 101)).rejects.toThrow(BadRequestException);
+      await expect(service.updateCommissionRate('123', -5)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.updateCommissionRate('123', 101)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -311,10 +343,16 @@ describe('PartnersService', () => {
     };
 
     it('should add service to approved partner', async () => {
-      const partner = { ...mockPartner, status: PartnerStatus.APPROVED, isApproved: () => true };
+      const partner = {
+        ...mockPartner,
+        status: PartnerStatus.APPROVED,
+        isApproved: () => true,
+      };
       partnerRepository.findOne.mockResolvedValue(partner as Partner);
       partnerServiceRepository.create.mockReturnValue(mockService as any);
-      partnerServiceRepository.save.mockResolvedValue(mockService as PartnerService);
+      partnerServiceRepository.save.mockResolvedValue(
+        mockService as PartnerService,
+      );
 
       const result = await service.addService('123', {
         name: 'Vidange',
@@ -326,16 +364,26 @@ describe('PartnersService', () => {
     });
 
     it('should not allow adding service to unapproved partner', async () => {
-      const partner = { ...mockPartner, status: PartnerStatus.PENDING, isApproved: () => false };
+      const partner = {
+        ...mockPartner,
+        status: PartnerStatus.PENDING,
+        isApproved: () => false,
+      };
       partnerRepository.findOne.mockResolvedValue(partner as Partner);
 
       await expect(
-        service.addService('123', { name: 'Vidange', price: 50, durationMinutes: 60 }),
+        service.addService('123', {
+          name: 'Vidange',
+          price: 50,
+          durationMinutes: 60,
+        }),
       ).rejects.toThrow(BadRequestException);
     });
 
     it('should update service', async () => {
-      partnerServiceRepository.findOne.mockResolvedValue(mockService as PartnerService);
+      partnerServiceRepository.findOne.mockResolvedValue(
+        mockService as PartnerService,
+      );
       partnerServiceRepository.save.mockResolvedValue({
         ...mockService,
         price: 60,
@@ -347,16 +395,22 @@ describe('PartnersService', () => {
     });
 
     it('should remove service (soft delete)', async () => {
-      partnerServiceRepository.findOne.mockResolvedValue(mockService as PartnerService);
+      partnerServiceRepository.findOne.mockResolvedValue(
+        mockService as PartnerService,
+      );
 
       await service.removeService('service-id');
 
-      expect(partnerServiceRepository.softDelete).toHaveBeenCalledWith('service-id');
+      expect(partnerServiceRepository.softDelete).toHaveBeenCalledWith(
+        'service-id',
+      );
     });
 
     it('should get partner services', async () => {
       const services = [mockService];
-      partnerServiceRepository.find.mockResolvedValue(services as PartnerService[]);
+      partnerServiceRepository.find.mockResolvedValue(
+        services as PartnerService[],
+      );
 
       const result = await service.getPartnerServices('123');
 
