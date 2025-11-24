@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from '../src/entities/user.entity';
+import { User, UserRole } from '../src/entities/user.entity';
 import { Tenant } from '../src/entities/tenant.entity';
 import { Subscription } from '../src/entities/subscription.entity';
 import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
@@ -51,7 +51,7 @@ describe('Auth Password Reset (e2e)', () => {
           password: await bcrypt.hash('OldPassword123', 12),
           firstName: 'Reset',
           lastName: 'Test',
-          role: 'tenant_admin',
+          role: UserRole.TENANT_ADMIN,
         },
       },
     );

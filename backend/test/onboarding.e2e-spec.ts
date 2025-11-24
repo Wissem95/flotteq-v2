@@ -49,8 +49,9 @@ describe('Onboarding (e2e)', () => {
     jwtService = moduleFixture.get(JwtService);
 
     // Clean up ALL test data from previous runs
-    // First delete bookings (FK constraint to vehicles)
+    // Delete in correct order: commissions → bookings → vehicles
     const dataSource = moduleFixture.get(DataSource);
+    await dataSource.query('DELETE FROM commissions WHERE 1=1');
     await dataSource.query('DELETE FROM bookings WHERE 1=1');
 
     // Then delete vehicles

@@ -4,7 +4,7 @@ import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { DataSource, Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from '../src/entities/user.entity';
+import { User, UserRole } from '../src/entities/user.entity';
 import { Tenant } from '../src/entities/tenant.entity';
 import { Subscription } from '../src/entities/subscription.entity';
 import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
@@ -58,7 +58,7 @@ describe('Maintenance (e2e)', () => {
       {
         userData: {
           email: `maintenance-test-${Date.now()}@test.com`,
-          role: 'tenant_admin',
+          role: UserRole.TENANT_ADMIN,
         },
       },
     );

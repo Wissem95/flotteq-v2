@@ -61,7 +61,7 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
         firstName: 'Test',
         lastName: 'Analytics',
         companyName: uniqueCompany,
-        planId: 16,
+        planId: '16',
       });
 
     accessToken = registerResponse.body.accessToken;

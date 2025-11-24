@@ -81,30 +81,36 @@ export async function cleanupTestTenant(
   vehiclesRepo?: Repository<any>,
   driversRepo?: Repository<any>,
   bookingsRepo?: Repository<any>,
+  commissionsRepo?: Repository<any>,
 ): Promise<void> {
   // Delete in correct order to avoid FK violations
-  // 1. Delete bookings first (FK to vehicles)
+  // 1. Delete commissions first (FK to bookings)
+  if (commissionsRepo) {
+    await commissionsRepo.delete({ tenantId: tenant.id });
+  }
+
+  // 2. Delete bookings (FK to vehicles)
   if (bookingsRepo) {
     await bookingsRepo.delete({ tenantId: tenant.id });
   }
 
-  // 2. Delete vehicles
+  // 3. Delete vehicles
   if (vehiclesRepo) {
     await vehiclesRepo.delete({ tenantId: tenant.id });
   }
 
-  // 3. Delete drivers
+  // 4. Delete drivers
   if (driversRepo) {
     await driversRepo.delete({ tenantId: tenant.id });
   }
 
-  // 4. Delete users
+  // 5. Delete users
   await usersRepo.delete({ tenantId: tenant.id });
 
-  // 5. Delete subscription
+  // 6. Delete subscription
   await subscriptionsRepo.delete({ tenantId: tenant.id });
 
-  // 6. Finally delete tenant
+  // 7. Finally delete tenant
   await tenantsRepo.delete(tenant.id);
 }
 

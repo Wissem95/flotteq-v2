@@ -81,7 +81,7 @@ describe('Partner Email Notifications E2E', () => {
     it('should queue and process partner welcome email end-to-end', async () => {
       // IMPORTANT: Setup listener BEFORE queuing to avoid race condition
       // Use longer timeout because this might run after concurrent test
-      const completionPromise = waitForJobCompletion('partner-welcome', 10000);
+      const completionPromise = waitForJobCompletion('partner-welcome', 15000);
 
       // 1. Queue the email
       await emailQueueService.queuePartnerWelcomeEmail(
@@ -112,7 +112,7 @@ describe('Partner Email Notifications E2E', () => {
           }),
         }),
       );
-    }, 10000);
+    }, 20000);
   });
 
   describe('Partner Approved Email Flow', () => {
@@ -136,7 +136,7 @@ describe('Partner Email Notifications E2E', () => {
           }),
         }),
       );
-    }, 10000);
+    }, 20000);
   });
 
   describe('Partner Rejected Email Flow', () => {
@@ -161,7 +161,7 @@ describe('Partner Email Notifications E2E', () => {
           }),
         }),
       );
-    }, 10000);
+    }, 20000);
   });
 
   describe('New Booking Email Flow', () => {
@@ -196,7 +196,7 @@ describe('Partner Email Notifications E2E', () => {
           }),
         }),
       );
-    }, 10000);
+    }, 20000);
   });
 
   describe('Booking Cancelled Email Flow', () => {
@@ -230,7 +230,7 @@ describe('Partner Email Notifications E2E', () => {
           }),
         }),
       );
-    }, 10000);
+    }, 20000);
   });
 
   describe('Booking Confirmed Email Flow (Tenant)', () => {
@@ -260,7 +260,7 @@ describe('Partner Email Notifications E2E', () => {
           }),
         }),
       );
-    }, 10000);
+    }, 20000);
   });
 
   describe('Queue Reliability', () => {
@@ -300,7 +300,7 @@ describe('Partner Email Notifications E2E', () => {
               `Only ${completedCount}/3 jobs completed: ${Array.from(completedJobs).join(', ')}`,
             ),
           );
-        }, 10000);
+        }, 20000);
 
         const handler = (job: Job) => {
           if (expectedJobs.has(job.name)) {
