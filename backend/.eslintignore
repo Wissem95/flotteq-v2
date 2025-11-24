@@ -1,0 +1,4 @@
+# Ignorer les tests (trop de faux positifs sur variables non utilisées)
+**/*.spec.ts
+**/*.e2e-spec.ts
+test/**

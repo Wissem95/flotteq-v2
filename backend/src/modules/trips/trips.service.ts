@@ -5,11 +5,14 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Trip, TripStatus } from '../../entities/trip.entity';
 import { Vehicle } from '../../entities/vehicle.entity';
 import { Driver } from '../../entities/driver.entity';
-import { MileageHistory, MileageSource } from '../../entities/mileage-history.entity';
+import {
+  MileageHistory,
+  MileageSource,
+} from '../../entities/mileage-history.entity';
 import { ReportsService } from '../reports/reports.service';
 import { ReportType } from '../../entities/report.entity';
 import { StartTripDto } from './dto/start-trip.dto';
@@ -37,7 +40,11 @@ export class TripsService {
   /**
    * Démarrer un nouveau trip
    */
-  async startTrip(dto: StartTripDto, driverId: string, tenantId: number): Promise<Trip> {
+  async startTrip(
+    dto: StartTripDto,
+    driverId: string,
+    tenantId: number,
+  ): Promise<Trip> {
     // 1. Vérifier qu'il n'y a pas de trip IN_PROGRESS
     const existingTrip = await this.tripRepository.findOne({
       where: { driverId, status: TripStatus.IN_PROGRESS },
@@ -84,7 +91,11 @@ export class TripsService {
   /**
    * Terminer un trip
    */
-  async endTrip(tripId: string, dto: EndTripDto, driverId: string): Promise<Trip> {
+  async endTrip(
+    tripId: string,
+    dto: EndTripDto,
+    driverId: string,
+  ): Promise<Trip> {
     // 1. Vérifier que le trip existe et est IN_PROGRESS
     const trip = await this.tripRepository.findOne({
       where: { id: tripId, driverId, status: TripStatus.IN_PROGRESS },
@@ -128,7 +139,7 @@ export class TripsService {
       dto.endDefects?.filter(
         (ed) =>
           ed.severity === 'severe' &&
-          !trip.startDefects?.some((sd) => sd.id === ed.id),
+          !trip.startDefects?.some((sd: any) => sd.id === ed.id),
       ) || [];
 
     if (newDefects.length > 0) {
@@ -196,11 +207,15 @@ export class TripsService {
     const effectiveEndDate = filterDto?.endDate || filterDto?.dateTo;
 
     if (effectiveStartDate) {
-      queryBuilder.andWhere('trip.startedAt >= :startDate', { startDate: effectiveStartDate });
+      queryBuilder.andWhere('trip.startedAt >= :startDate', {
+        startDate: effectiveStartDate,
+      });
     }
 
     if (effectiveEndDate) {
-      queryBuilder.andWhere('trip.startedAt <= :endDate', { endDate: effectiveEndDate });
+      queryBuilder.andWhere('trip.startedAt <= :endDate', {
+        endDate: effectiveEndDate,
+      });
     }
 
     const [data, total] = await queryBuilder
@@ -269,11 +284,15 @@ export class TripsService {
     const effectiveEndDate = filterDto?.endDate || filterDto?.dateTo;
 
     if (effectiveStartDate) {
-      queryBuilder.andWhere('trip.startedAt >= :startDate', { startDate: effectiveStartDate });
+      queryBuilder.andWhere('trip.startedAt >= :startDate', {
+        startDate: effectiveStartDate,
+      });
     }
 
     if (effectiveEndDate) {
-      queryBuilder.andWhere('trip.startedAt <= :endDate', { endDate: effectiveEndDate });
+      queryBuilder.andWhere('trip.startedAt <= :endDate', {
+        endDate: effectiveEndDate,
+      });
     }
 
     const [data, total] = await queryBuilder
