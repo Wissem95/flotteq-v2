@@ -96,6 +96,7 @@ export class VehiclesController {
     // Si super_admin (défini par TenantGuard), voir tous les véhicules
     const isSuperAdmin = req.isSuperAdmin === true;
     const tenantId = isSuperAdmin ? null : req.user?.tenantId;
+    console.log('🚗 VehiclesController.findAll - isSuperAdmin:', isSuperAdmin, 'tenantId passé au service:', tenantId);
     return this.vehiclesService.findAll(query, tenantId);
   }
 
