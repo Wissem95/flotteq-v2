@@ -6,6 +6,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -39,9 +40,11 @@ export class AuditController {
   })
   @ApiResponse({ status: 403, description: 'Accès refusé - Admin seulement.' })
   async findAll(
-    @TenantId() tenantId: number,
+    @Req() req: any,
     @Query() filters: AuditLogFilterDto,
   ) {
+    const isSuperAdmin = req.isSuperAdmin === true;
+    const tenantId = isSuperAdmin ? null : req.user?.tenantId;
     return this.auditService.findAll(tenantId, filters);
   }
 

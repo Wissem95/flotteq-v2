@@ -91,13 +91,12 @@ export class VehiclesController {
   })
   findAll(
     @Query() query: QueryVehicleDto,
-    @TenantId() tenantId: number,
     @Req() req: any,
   ) {
-    // Si super_admin, ignorer le filtre tenant (voir tous les véhicules)
-    const userRole = req.user?.role;
-    const isSuperAdmin = ['super_admin', 'support'].includes(userRole);
-    return this.vehiclesService.findAll(query, isSuperAdmin ? null : tenantId);
+    // Si super_admin (défini par TenantGuard), voir tous les véhicules
+    const isSuperAdmin = req.isSuperAdmin === true;
+    const tenantId = isSuperAdmin ? null : req.user?.tenantId;
+    return this.vehiclesService.findAll(query, tenantId);
   }
 
   @Get('stats')

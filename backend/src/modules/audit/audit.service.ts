@@ -28,7 +28,7 @@ export class AuditService {
   }
 
   async findAll(
-    tenantId: number,
+    tenantId: number | null,
     filters: AuditLogFilterDto,
   ): Promise<{
     data: AuditLog[];
@@ -49,8 +49,12 @@ export class AuditService {
 
     const query = this.auditLogRepository
       .createQueryBuilder('audit')
-      .leftJoinAndSelect('audit.user', 'user')
-      .where('audit.tenant_id = :tenantId', { tenantId });
+      .leftJoinAndSelect('audit.user', 'user');
+
+    // Filtrer par tenantId uniquement si fourni (super_admin voit tous les tenants)
+    if (tenantId !== null) {
+      query.where('audit.tenant_id = :tenantId', { tenantId });
+    }
 
     if (userId) {
       query.andWhere('audit.user_id = :userId', { userId });

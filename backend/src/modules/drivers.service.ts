@@ -154,14 +154,16 @@ export class DriversService {
     page = 1,
     limit = 10,
     status?: DriverStatus,
+    tenantId?: number | null,
   ): Promise<{ data: Driver[]; total: number; page: number; limit: number }> {
-    const tenantId = this.getTenantId();
+    // Utiliser le tenantId passé en paramètre si fourni, sinon getTenantId()
+    const effectiveTenantId = tenantId !== undefined ? tenantId : this.getTenantId();
     const skip = (page - 1) * limit;
 
     const where: any = {};
     // Filtrer par tenantId seulement si présent (super_admin voit tous les tenants)
-    if (tenantId) {
-      where.tenantId = tenantId;
+    if (effectiveTenantId) {
+      where.tenantId = effectiveTenantId;
     }
     if (status) {
       where.status = status;

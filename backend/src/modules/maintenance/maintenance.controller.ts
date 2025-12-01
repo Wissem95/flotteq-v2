@@ -61,7 +61,9 @@ export class MaintenanceController {
   @Get()
   @ApiOperation({ summary: 'Get all maintenances' })
   @ApiResponse({ status: 200, description: 'List of all maintenances' })
-  findAll(@TenantId() tenantId: number) {
+  findAll(@Req() req: any) {
+    const isSuperAdmin = req.isSuperAdmin === true;
+    const tenantId = isSuperAdmin ? null : req.user?.tenantId;
     return this.maintenanceService.findAll(tenantId);
   }
 

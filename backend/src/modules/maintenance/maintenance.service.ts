@@ -35,9 +35,10 @@ export class MaintenanceService {
     return this.maintenanceRepository.save(maintenance);
   }
 
-  async findAll(tenantId: number): Promise<Maintenance[]> {
+  async findAll(tenantId: number | null): Promise<Maintenance[]> {
+    const where: any = tenantId !== null ? { tenantId } : {};
     return this.maintenanceRepository.find({
-      where: { tenantId },
+      where,
       relations: ['vehicle'],
       order: { scheduledDate: 'DESC' },
     });

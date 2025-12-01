@@ -10,6 +10,7 @@ import {
   UseGuards,
   ParseIntPipe,
   ParseUUIDPipe,
+  Req,
 } from '@nestjs/common';
 import { DriversService } from './drivers.service';
 import { CreateDriverDto } from './dto/create-driver.dto';
@@ -52,10 +53,13 @@ export class DriversController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('status') status?: DriverStatus,
+    @Req() req?: any,
   ) {
     const parsedPage = page ? parseInt(page, 10) : 1;
     const parsedLimit = limit ? parseInt(limit, 10) : 10;
-    return this.driversService.findAll(parsedPage, parsedLimit, status);
+    const isSuperAdmin = req?.isSuperAdmin === true;
+    const tenantId = isSuperAdmin ? null : req?.user?.tenantId;
+    return this.driversService.findAll(parsedPage, parsedLimit, status, tenantId);
   }
 
   @Get('available')
