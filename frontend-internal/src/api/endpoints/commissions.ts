@@ -36,14 +36,14 @@ export const commissionsApi = {
 
   getOne: async (id: string): Promise<Commission> => {
     const response = await apiClient.get<{ message: string; commission: Commission }>(
-      `/commissions/${id}`
+      `/api/commissions/${id}`
     );
     return response.data.commission;
   },
 
   markAsPaid: async (id: string, data: MarkPaidDto): Promise<Commission> => {
     const response = await apiClient.patch<{ message: string; commission: Commission }>(
-      `/commissions/${id}/paid`,
+      `/api/commissions/${id}/paid`,
       data
     );
     return response.data.commission;

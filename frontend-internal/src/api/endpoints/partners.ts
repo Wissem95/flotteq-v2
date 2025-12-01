@@ -27,27 +27,27 @@ export const partnersApi = {
   },
 
   getOne: async (id: string): Promise<Partner> => {
-    const response = await apiClient.get<Partner>(`/partners/${id}`);
+    const response = await apiClient.get<Partner>(`/api/partners/${id}`);
     return response.data;
   },
 
   getServices: async (id: string): Promise<PartnerService[]> => {
-    const response = await apiClient.get<PartnerService[]>(`/partners/${id}/services`);
+    const response = await apiClient.get<PartnerService[]>(`/api/partners/${id}/services`);
     return response.data;
   },
 
   approve: async (id: string): Promise<Partner> => {
-    const response = await apiClient.patch<Partner>(`/partners/${id}/approve`);
+    const response = await apiClient.patch<Partner>(`/api/partners/${id}/approve`);
     return response.data;
   },
 
   reject: async (id: string, data?: RejectPartnerDto): Promise<Partner> => {
-    const response = await apiClient.patch<Partner>(`/partners/${id}/reject`, data);
+    const response = await apiClient.patch<Partner>(`/api/partners/${id}/reject`, data);
     return response.data;
   },
 
   suspend: async (id: string, data?: SuspendPartnerDto): Promise<Partner> => {
-    const response = await apiClient.patch<Partner>(`/partners/${id}/suspend`, data);
+    const response = await apiClient.patch<Partner>(`/api/partners/${id}/suspend`, data);
     return response.data;
   },
 
@@ -56,7 +56,7 @@ export const partnersApi = {
     data: UpdateCommissionRateDto,
   ): Promise<Partner> => {
     const response = await apiClient.patch<Partner>(
-      `/partners/${id}/commission-rate`,
+      `/api/partners/${id}/commission-rate`,
       data,
     );
     return response.data;
@@ -68,11 +68,11 @@ export const partnersApi = {
   },
 
   update: async (id: string, data: UpdatePartnerDto): Promise<Partner> => {
-    const response = await apiClient.patch<Partner>(`/partners/${id}`, data);
+    const response = await apiClient.patch<Partner>(`/api/partners/${id}`, data);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/partners/${id}`);
+    await apiClient.delete(`/api/partners/${id}`);
   },
 };

@@ -30,7 +30,7 @@ export const tenantsApi = {
   },
 
   getOne: async (id: number): Promise<Tenant> => {
-    const response = await apiClient.get<Tenant>(`/tenants/${id}`);
+    const response = await apiClient.get<Tenant>(`/api/tenants/${id}`);
     return response.data;
   },
 
@@ -40,26 +40,26 @@ export const tenantsApi = {
   },
 
   update: async (id: number, data: UpdateTenantDto): Promise<Tenant> => {
-    const response = await apiClient.patch<Tenant>(`/tenants/${id}`, data);
+    const response = await apiClient.patch<Tenant>(`/api/tenants/${id}`, data);
     return response.data;
   },
 
   delete: async (id: number): Promise<void> => {
-    await apiClient.delete(`/tenants/${id}`);
+    await apiClient.delete(`/api/tenants/${id}`);
   },
 
   getStats: async (id: number): Promise<TenantStats> => {
-    const response = await apiClient.get<TenantStats>(`/tenants/${id}/stats`);
+    const response = await apiClient.get<TenantStats>(`/api/tenants/${id}/stats`);
     return response.data;
   },
 
   changePlan: async (id: number, planId: number): Promise<Tenant> => {
-    const response = await apiClient.patch<Tenant>(`/tenants/${id}/change-plan/${planId}`);
+    const response = await apiClient.patch<Tenant>(`/api/tenants/${id}/change-plan/${planId}`);
     return response.data;
   },
 
   getStorageUsage: async (id: number): Promise<any> => {
-    const response = await apiClient.get(`/tenants/${id}/storage-usage`);
+    const response = await apiClient.get(`/api/tenants/${id}/storage-usage`);
     return response.data;
   },
 };

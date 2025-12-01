@@ -15,7 +15,7 @@ export const driversApi = {
   },
 
   getById: async (id: string): Promise<Driver> => {
-    const response = await apiClient.get<Driver>(`/drivers/${id}`);
+    const response = await apiClient.get<Driver>(`/api/drivers/${id}`);
     return response.data;
   },
 
@@ -25,16 +25,16 @@ export const driversApi = {
   },
 
   update: async (id: string, data: UpdateDriverDto): Promise<Driver> => {
-    const response = await apiClient.patch<Driver>(`/drivers/${id}`, data);
+    const response = await apiClient.patch<Driver>(`/api/drivers/${id}`, data);
     return response.data;
   },
 
   delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/drivers/${id}`);
+    await apiClient.delete(`/api/drivers/${id}`);
   },
 
   getVehicles: async (id: string): Promise<any> => {
-    const response = await apiClient.get(`/drivers/${id}/vehicles`);
+    const response = await apiClient.get(`/api/drivers/${id}/vehicles`);
     return response.data;
   },
 

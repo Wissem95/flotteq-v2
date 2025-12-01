@@ -15,7 +15,7 @@ export const subscriptionsApi = {
   },
 
   getPlan: async (id: number): Promise<SubscriptionPlan> => {
-    const response = await apiClient.get<SubscriptionPlan>(`/subscriptions/plans/${id}`);
+    const response = await apiClient.get<SubscriptionPlan>(`/api/subscriptions/plans/${id}`);
     return response.data;
   },
 
@@ -25,12 +25,12 @@ export const subscriptionsApi = {
   },
 
   updatePlan: async (id: number, data: UpdatePlanDto): Promise<SubscriptionPlan> => {
-    const response = await apiClient.patch<SubscriptionPlan>(`/subscriptions/plans/${id}`, data);
+    const response = await apiClient.patch<SubscriptionPlan>(`/api/subscriptions/plans/${id}`, data);
     return response.data;
   },
 
   deletePlan: async (id: number): Promise<void> => {
-    await apiClient.delete(`/subscriptions/plans/${id}`);
+    await apiClient.delete(`/api/subscriptions/plans/${id}`);
   },
 
   // Subscriptions
