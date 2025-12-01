@@ -34,6 +34,13 @@ export class TenantGuard implements CanActivate {
     }
 
     // Super admins → skip tenant restrictions (accès global à tous les tenants)
+    console.log('🔍 TenantGuard - User:', {
+      email: user?.email,
+      tenantId: user?.tenantId,
+      role: user?.role,
+      check: user?.tenantId === 1 && ['super_admin', 'support'].includes(user?.role)
+    });
+
     if (
       user &&
       user.tenantId === 1 &&
@@ -42,6 +49,7 @@ export class TenantGuard implements CanActivate {
       // Supprimer tenantId complètement pour accès global
       delete (request as any).tenantId;
       (request as any).isSuperAdmin = true;
+      console.log('✅ Super admin détecté - isSuperAdmin = true');
       return true;
     }
 
