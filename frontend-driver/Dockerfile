@@ -4,7 +4,7 @@ FROM node:20.11.0-alpine AS builder
 WORKDIR /app
 
 # Arguments de build pour variables VITE (injectées au build-time)
-ARG VITE_API_URL
+ARG VITE_API_BASE
 ARG VITE_STRIPE_PUBLISHABLE_KEY
 
 # Copier package.json
@@ -17,7 +17,7 @@ RUN npm ci
 COPY . .
 
 # Build production avec variables VITE
-ENV VITE_API_URL=$VITE_API_URL \
+ENV VITE_API_BASE=$VITE_API_BASE \
     VITE_STRIPE_PUBLISHABLE_KEY=$VITE_STRIPE_PUBLISHABLE_KEY
 
 RUN npm run build
