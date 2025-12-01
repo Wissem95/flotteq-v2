@@ -3,7 +3,7 @@ import axios from 'axios';
 const API_BASE_URL = import.meta.env.VITE_API_BASE || 'http://localhost:3000';
 
 export const apiClient = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -79,7 +79,7 @@ apiClient.interceptors.response.use(
       try {
         // Appeler l'endpoint refresh
         const response = await axios.post<{ access_token: string }>(
-          `${API_BASE_URL}/auth/refresh`,
+          `${API_BASE_URL}/api/auth/refresh`,
           { refresh_token: refreshToken }
         );
         const { access_token } = response.data;
