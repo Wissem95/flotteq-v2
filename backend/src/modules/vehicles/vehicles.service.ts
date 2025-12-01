@@ -135,11 +135,16 @@ export class VehiclesService {
     const { page = 1, limit = 10, ...filters } = queryDto;
     const skip = (page - 1) * limit;
 
+    console.log('🔧 VehiclesService.findAll - tenantId reçu:', tenantId, 'Type:', typeof tenantId);
+
     const queryBuilder = this.vehicleRepository.createQueryBuilder('vehicle');
 
     // Filtrer par tenant uniquement si tenantId est fourni (non super_admin)
     if (tenantId !== null) {
+      console.log('⚠️ Filtre tenant appliqué - WHERE tenantId =', tenantId);
       queryBuilder.where('vehicle.tenantId = :tenantId', { tenantId });
+    } else {
+      console.log('✅ Pas de filtre tenant - SELECT ALL vehicles');
     }
 
     // Appliquer les filtres
@@ -183,6 +188,9 @@ export class VehiclesService {
     queryBuilder.orderBy('vehicle.createdAt', 'DESC');
 
     const [data, total] = await queryBuilder.getManyAndCount();
+
+    console.log('📊 VehiclesService.findAll - Résultats: total =', total, 'data.length =', data.length);
+    console.log('📋 Véhicules trouvés:', data.map(v => ({ registration: v.registration, tenantId: v.tenantId })));
 
     return {
       data,
