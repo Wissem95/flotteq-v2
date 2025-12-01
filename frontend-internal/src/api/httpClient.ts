@@ -27,7 +27,7 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
-// Request interceptor pour ajouter le token
+// Request interceptor pour ajouter le token et X-Tenant-ID
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
@@ -35,8 +35,9 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    // X-Tenant-ID retiré - le backend utilise user.tenantId du JWT
-    // Les super_admin ont accès global sans filtrage par tenant
+    // X-Tenant-ID requis par TenantMiddleware
+    // Pour super_admin : le backend ignore ce tenantId via isSuperAdmin flag
+    config.headers['X-Tenant-ID'] = '1';
 
     return config;
   },
