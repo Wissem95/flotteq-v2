@@ -121,22 +121,22 @@ export const UsersPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="px-4 sm:px-6 py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Utilisateurs</h1>
-          <p className="text-sm text-gray-500 mt-1">Gérez les membres de votre équipe</p>
+          <h1 className="text-2xl sm:text-2xl font-bold text-gray-900">Utilisateurs</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Gérez les membres de votre équipe</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <ProtectedButton
             permission="users.invite"
             onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
             disabledMessage="Seuls les admins peuvent inviter des utilisateurs"
           >
             <Mail className="w-4 h-4" />
-            Inviter
+            <span className="hidden xs:inline">Inviter</span>
           </ProtectedButton>
           <ProtectedButton
             permission="users.create"
@@ -144,7 +144,7 @@ export const UsersPage: React.FC = () => {
               setSelectedUser(null);
               setIsAddModalOpen(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
             disabledMessage="Seuls les admins peuvent créer des utilisateurs"
           >
             <Plus className="w-4 h-4" />

@@ -89,35 +89,35 @@ export default function MaintenancesListPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Maintenances</h1>
-          <p className="text-gray-500 mt-1">Gérez les maintenances de votre flotte</p>
+          <h1 className="text-2xl sm:text-2xl font-bold text-gray-900">Maintenances</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Gérez les maintenances de votre flotte</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <ProtectedButton
             permission="maintenances.export"
             disabledMessage="Vous n'avez pas la permission d'exporter les maintenances"
             onClick={() => exportMaintenancesToPDF(filteredMaintenances)}
-            className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm"
           >
-            <FileDown className="h-5 w-5" />
-            Exporter PDF
+            <FileDown className="h-4 sm:h-5 w-4 sm:w-5" />
+            <span className="hidden xs:inline">Exporter PDF</span>
           </ProtectedButton>
           <ProtectedButton
             permission="maintenances.create"
             disabledMessage="Vous n'avez pas la permission de créer des maintenances"
             onClick={() => navigate('/maintenances/new')}
-            className="flex items-center gap-2 px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-flotteq-blue text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
           >
-            <Plus className="h-5 w-5" />
-            Nouvelle maintenance
+            <Plus className="h-4 sm:h-5 w-4 sm:w-5" />
+            <span className="hidden xs:inline">Nouvelle</span>
           </ProtectedButton>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="bg-white p-4 rounded-lg border border-gray-200 flex gap-4">
+      <div className="bg-white p-4 rounded-lg border border-gray-200 flex flex-col sm:flex-row gap-3 sm:gap-4">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
           <select
