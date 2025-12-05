@@ -248,108 +248,110 @@ export const UsersPage: React.FC = () => {
         </select>
       </div>
 
-      {/* Table */}
+      {/* Table avec scroll horizontal sur mobile */}
       <div className="bg-white rounded-lg shadow overflow-hidden">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Utilisateur
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Rôle
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Statut
-              </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 bg-white">
-            {filteredUsers.map((user) => (
-              <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-medium">
-                        {user.firstName.charAt(0)}
-                        {user.lastName.charAt(0)}
-                      </span>
-                    </div>
-                    <div className="ml-4">
-                      <div className="font-medium text-gray-900">
-                        {user.firstName} {user.lastName}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="sticky left-0 z-10 bg-gray-50 px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                  Utilisateur
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[200px]">
+                  Email
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[120px]">
+                  Rôle
+                </th>
+                <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[100px]">
+                  Statut
+                </th>
+                <th className="sticky right-0 z-10 bg-gray-50 px-4 sm:px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider min-w-[140px]">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {filteredUsers.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="sticky left-0 z-10 bg-white px-4 sm:px-6 py-4 whitespace-nowrap hover:bg-gray-50">
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-blue-600 font-medium text-sm">
+                          {user.firstName.charAt(0)}
+                          {user.lastName.charAt(0)}
+                        </span>
+                      </div>
+                      <div className="ml-3 sm:ml-4">
+                        <div className="font-medium text-gray-900 text-sm">
+                          {user.firstName} {user.lastName}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                    {getRoleLabel(user.role)}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${
-                      user.isActive
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {user.isActive ? 'Actif' : 'Inactif'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2">
-                    <ProtectedButton
-                      permission="users.update"
-                      onClick={() => handleEdit(user)}
-                      className="text-blue-600 hover:text-blue-900 transition-colors"
-                      title="Modifier"
-                      disabledMessage="Vous ne pouvez pas modifier les utilisateurs"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </ProtectedButton>
-                    <ProtectedButton
-                      permission="users.update"
-                      onClick={() => handleToggleActive(user)}
-                      className={
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.email}</td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                    <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                      {getRoleLabel(user.role)}
+                    </span>
+                  </td>
+                  <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
                         user.isActive
-                          ? 'text-orange-600 hover:text-orange-900 transition-colors'
-                          : 'text-green-600 hover:text-green-900 transition-colors'
-                      }
-                      title={user.isActive ? 'Désactiver' : 'Activer'}
-                      disabled={toggleActiveMutation.isPending}
-                      disabledMessage="Vous ne pouvez pas modifier le statut des utilisateurs"
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
                     >
-                      {user.isActive ? (
-                        <UserX className="w-4 h-4" />
-                      ) : (
-                        <UserCheck className="w-4 h-4" />
-                      )}
-                    </ProtectedButton>
-                    <ProtectedButton
-                      permission="users.delete"
-                      onClick={() => handleDelete(user)}
-                      className="text-red-600 hover:text-red-900 transition-colors"
-                      title="Supprimer"
-                      disabled={deleteMutation.isPending}
-                      disabledMessage="Vous ne pouvez pas supprimer les utilisateurs"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </ProtectedButton>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      {user.isActive ? 'Actif' : 'Inactif'}
+                    </span>
+                  </td>
+                  <td className="sticky right-0 z-10 bg-white px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium hover:bg-gray-50">
+                    <div className="flex items-center justify-end gap-2">
+                      <ProtectedButton
+                        permission="users.update"
+                        onClick={() => handleEdit(user)}
+                        className="text-blue-600 hover:text-blue-900 transition-colors p-1"
+                        title="Modifier"
+                        disabledMessage="Vous ne pouvez pas modifier les utilisateurs"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </ProtectedButton>
+                      <ProtectedButton
+                        permission="users.update"
+                        onClick={() => handleToggleActive(user)}
+                        className={`transition-colors p-1 ${
+                          user.isActive
+                            ? 'text-orange-600 hover:text-orange-900'
+                            : 'text-green-600 hover:text-green-900'
+                        }`}
+                        title={user.isActive ? 'Désactiver' : 'Activer'}
+                        disabled={toggleActiveMutation.isPending}
+                        disabledMessage="Vous ne pouvez pas modifier le statut des utilisateurs"
+                      >
+                        {user.isActive ? (
+                          <UserX className="w-4 h-4" />
+                        ) : (
+                          <UserCheck className="w-4 h-4" />
+                        )}
+                      </ProtectedButton>
+                      <ProtectedButton
+                        permission="users.delete"
+                        onClick={() => handleDelete(user)}
+                        className="text-red-600 hover:text-red-900 transition-colors p-1"
+                        title="Supprimer"
+                        disabled={deleteMutation.isPending}
+                        disabledMessage="Vous ne pouvez pas supprimer les utilisateurs"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </ProtectedButton>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
         {filteredUsers.length === 0 && (
           <div className="text-center py-12 text-gray-500">

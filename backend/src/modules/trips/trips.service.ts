@@ -332,7 +332,7 @@ export class TripsService {
     const query = `
       SELECT
         TO_CHAR(DATE_TRUNC('month', "startedAt"), 'YYYY-MM') as month,
-        TO_CHAR(DATE_TRUNC('month', "startedAt"), 'Mon YYYY') as "monthLabel",
+        TO_CHAR(DATE_TRUNC('month', "startedAt"), 'YYYY-MM') as "monthLabel",
         COUNT(*)::int as "tripCount",
         COALESCE(SUM("distanceKm"), 0)::int as "totalKm",
         COALESCE(AVG("startFuelLevel" - COALESCE("endFuelLevel", "startFuelLevel")), 0)::int as "avgFuelConsumption"

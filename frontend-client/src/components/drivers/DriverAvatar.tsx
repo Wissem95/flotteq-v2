@@ -30,7 +30,7 @@ export default function DriverAvatar({
     : photoUrl || photoThumbnail;
 
   const fullImageUrl = imageUrl
-    ? `${import.meta.env.VITE_API_URL}${imageUrl}`
+    ? `${import.meta.env.VITE_API_BASE}${imageUrl}`
     : null;
 
   if (fullImageUrl) {
