@@ -67,17 +67,17 @@ export default function BillingPage() {
   const planId = currentPlan ? null : null; // We'd need to get this from stats if available
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6 sm:mb-8">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3 sm:mb-4 transition-colors text-sm sm:text-base"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-4 sm:h-5 w-4 sm:w-5" />
           Retour
         </button>
-        <h1 className="text-3xl font-bold text-gray-900">Facturation et abonnement</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Facturation et abonnement</h1>
         <p className="text-gray-600 mt-2">
           Gérez votre abonnement, consultez vos factures et mettez à jour vos informations de paiement
         </p>

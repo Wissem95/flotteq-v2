@@ -56,21 +56,21 @@ export default function MyBookingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Calendar className="h-7 w-7 text-flotteq-blue" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Calendar className="h-6 sm:h-7 w-6 sm:w-7 text-flotteq-blue" />
             Mes réservations
           </h1>
-          <p className="text-gray-600 mt-1">Gérez vos réservations avec les partenaires</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Gérez vos réservations avec les partenaires</p>
         </div>
 
         {/* Bouton Calendrier */}
         <button
           onClick={() => navigate('/bookings/calendar')}
-          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-flotteq-blue text-flotteq-blue rounded-lg hover:bg-blue-50 transition-colors font-medium"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-flotteq-blue text-flotteq-blue rounded-lg hover:bg-blue-50 transition-colors font-medium text-sm"
         >
-          <Calendar className="h-5 w-5" />
+          <Calendar className="h-4 sm:h-5 w-4 sm:w-5" />
           Vue Calendrier
         </button>
       </div>

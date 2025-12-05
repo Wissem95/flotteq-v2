@@ -78,10 +78,10 @@ export default function SettingsPage() {
   ];
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Paramètres</h1>
-        <p className="mt-2 text-gray-600">Gérez votre compte et votre abonnement</p>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Paramètres</h1>
+        <p className="mt-2 text-sm sm:text-base text-gray-600">Gérez votre compte et votre abonnement</p>
       </div>
 
       {/* Tabs */}
