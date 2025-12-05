@@ -181,17 +181,17 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
           <input
             type="range"
             min="1"
-            max="200"
+            max="100"
             value={radius}
             onChange={(e) => setRadius(e.target.value)}
             className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-flotteq-blue"
             style={{
-              background: `linear-gradient(to right, #0066CC 0%, #0066CC ${(parseInt(radius) / 200) * 100}%, #E5E7EB ${(parseInt(radius) / 200) * 100}%, #E5E7EB 100%)`
+              background: `linear-gradient(to right, #0066CC 0%, #0066CC ${(parseInt(radius) / 100) * 100}%, #E5E7EB ${(parseInt(radius) / 100) * 100}%, #E5E7EB 100%)`
             }}
           />
           <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>1 km</span>
-            <span>200 km</span>
+            <span>100 km</span>
           </div>
         </div>
 
