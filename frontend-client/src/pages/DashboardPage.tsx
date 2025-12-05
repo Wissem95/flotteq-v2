@@ -5,11 +5,12 @@ import CostsChart from '@/components/dashboard/CostsChart';
 import AlertsList from '@/components/dashboard/AlertsList';
 import SubscriptionUsage from '@/components/dashboard/SubscriptionUsage';
 import { ExpiringDocumentsWidget } from '@/components/dashboard/ExpiringDocumentsWidget';
-import type { DashboardStats } from '@/types/dashboard.types';
-import { Car, Users, Wrench, Plus } from 'lucide-react';
+import type { DashboardStats, CostAnalysis } from '@/types/dashboard.types';
+import { Car, Users, Wrench, Plus, Euro, TrendingUp, Calculator } from 'lucide-react';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [costAnalysis, setCostAnalysis] = useState<CostAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -20,8 +21,12 @@ export default function DashboardPage() {
   const loadDashboard = async () => {
     try {
       setLoading(true);
-      const data = await dashboardService.getStats();
-      setStats(data);
+      const [statsData, costsData] = await Promise.all([
+        dashboardService.getStats(),
+        dashboardService.getCosts()
+      ]);
+      setStats(statsData);
+      setCostAnalysis(costsData);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erreur de chargement');
     } finally {
@@ -78,6 +83,33 @@ export default function DashboardPage() {
           icon={Wrench}
           iconColor="text-orange-600"
           iconBgColor="bg-orange-50"
+        />
+        <StatsCard
+          title="Valeur de la flotte"
+          value={costAnalysis?.totalFleetPurchaseValue.toLocaleString('fr-FR') || '0'}
+          subtitle="Valeur d'achat totale"
+          suffix="€"
+          icon={TrendingUp}
+          iconColor="text-emerald-600"
+          iconBgColor="bg-emerald-50"
+        />
+        <StatsCard
+          title="Coûts de maintenance"
+          value={costAnalysis?.totalMaintenanceCost.toLocaleString('fr-FR') || '0'}
+          subtitle={`${costAnalysis?.currentMonthTotal.toLocaleString('fr-FR') || '0'}€ ce mois`}
+          suffix="€"
+          icon={Euro}
+          iconColor="text-amber-600"
+          iconBgColor="bg-amber-50"
+        />
+        <StatsCard
+          title="Coût moyen / véhicule"
+          value={costAnalysis?.avgMaintenanceCostPerVehicle.toLocaleString('fr-FR') || '0'}
+          subtitle="Moyenne de maintenance"
+          suffix="€"
+          icon={Calculator}
+          iconColor="text-purple-600"
+          iconBgColor="bg-purple-50"
         />
       </div>
 

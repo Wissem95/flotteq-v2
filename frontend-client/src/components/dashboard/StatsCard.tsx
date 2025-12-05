@@ -5,11 +5,12 @@ type LucideIcon = ForwardRefExoticComponent<Omit<LucideProps, 'ref'> & RefAttrib
 
 interface StatsCardProps {
   title: string;
-  value: number;
+  value: number | string;
   subtitle?: string;
   icon: LucideIcon;
   iconColor?: string;
   iconBgColor?: string;
+  suffix?: string;
   trend?: {
     value: number;
     isPositive: boolean;
@@ -23,6 +24,7 @@ export default function StatsCard({
   icon: Icon,
   iconColor = 'text-flotteq-blue',
   iconBgColor = 'bg-blue-50',
+  suffix,
   trend
 }: StatsCardProps) {
   return (
@@ -30,7 +32,9 @@ export default function StatsCard({
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-gray-600 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-gray-900 mb-2">{value}</p>
+          <p className="text-3xl font-bold text-gray-900 mb-2">
+            {value}{suffix && <span className="text-2xl ml-1">{suffix}</span>}
+          </p>
           {subtitle && (
             <p className="text-sm text-gray-500">{subtitle}</p>
           )}
