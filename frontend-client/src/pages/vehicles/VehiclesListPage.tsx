@@ -36,21 +36,22 @@ export default function VehiclesListPage() {
   const totalPages = data ? Math.ceil(data.total / filters.limit!) : 0;
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="px-4 sm:px-6 py-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Véhicules</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Véhicules</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             {data?.total || 0} véhicule{data && data.total > 1 ? 's' : ''}
           </p>
         </div>
         <ProtectedButton
           permission="vehicles.create"
           onClick={() => setIsModalOpen(true)}
-          className="bg-flotteq-blue text-white px-6 py-2 rounded-md hover:bg-flotteq-navy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-flotteq-blue"
+          className="w-full sm:w-auto bg-flotteq-blue text-white px-4 sm:px-6 py-2 rounded-md hover:bg-flotteq-navy focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-flotteq-blue text-sm sm:text-base"
           disabledMessage="Seuls les managers et admins peuvent ajouter des véhicules"
         >
-          + Ajouter un véhicule
+          <span className="sm:hidden">+</span>
+          <span className="hidden sm:inline">+ Ajouter un véhicule</span>
         </ProtectedButton>
       </div>
 
@@ -72,21 +73,21 @@ export default function VehiclesListPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-center gap-2 flex-wrap">
               <button
                 onClick={() => handlePageChange(filters.page! - 1)}
                 disabled={filters.page === 1}
-                className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-sm sm:text-base"
               >
                 Précédent
               </button>
-              <span className="px-4 py-2 text-gray-700">
+              <span className="px-3 sm:px-4 py-2 text-gray-700 text-sm sm:text-base">
                 Page {filters.page} sur {totalPages}
               </span>
               <button
                 onClick={() => handlePageChange(filters.page! + 1)}
                 disabled={filters.page === totalPages}
-                className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 text-sm sm:text-base"
               >
                 Suivant
               </button>

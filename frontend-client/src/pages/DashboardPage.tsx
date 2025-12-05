@@ -49,8 +49,8 @@ export default function DashboardPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Tableau de bord</h1>
-        <p className="mt-2 text-gray-600">Vue d'ensemble de votre flotte</p>
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tableau de bord</h1>
+        <p className="mt-2 text-sm sm:text-base text-gray-600">Vue d'ensemble de votre flotte</p>
       </div>
 
       {/* Stats Grid */}
