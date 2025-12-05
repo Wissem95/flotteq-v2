@@ -8,6 +8,15 @@ export default {
 	],
 	prefix: "",
 	theme: {
+		// Breakpoints optimisés pour mobile-first
+		screens: {
+			'xs': '375px',   // Extra small - iPhone SE, petits mobiles
+			'sm': '640px',   // Small - Mobiles en paysage, petites tablettes
+			'md': '768px',   // Medium - Tablettes portrait
+			'lg': '1024px',  // Large - Tablettes paysage, petits laptops
+			'xl': '1280px',  // Extra large - Desktops
+			'2xl': '1536px', // 2X Extra large - Large desktops
+		},
 		container: {
 			center: true,
 			padding: '2rem',
@@ -16,6 +25,20 @@ export default {
 			}
 		},
 		extend: {
+			spacing: {
+				// Safe area insets pour iOS (notch, home indicator)
+				'safe-top': 'env(safe-area-inset-top)',
+				'safe-bottom': 'env(safe-area-inset-bottom)',
+				'safe-left': 'env(safe-area-inset-left)',
+				'safe-right': 'env(safe-area-inset-right)',
+			},
+			minHeight: {
+				// Hauteur minimum tactile (Apple Human Interface Guidelines)
+				'touch': '44px',
+			},
+			minWidth: {
+				'touch': '44px',
+			},
 			colors: {
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
@@ -102,6 +125,10 @@ export default {
 			},
 			fontFamily: {
 				'inter': ['Inter', 'sans-serif'],
+			},
+			// Animations smooth pour mobile
+			transitionDuration: {
+				'400': '400ms',
 			}
 		}
 	},

@@ -4,6 +4,7 @@ import { Toaster } from 'sonner';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import TenantLayout from './layouts/TenantLayout';
+import { ResponsiveTest } from './components/ResponsiveTest';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import AcceptInvitationPage from './pages/auth/AcceptInvitationPage';
@@ -46,6 +47,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Toaster position="top-right" richColors closeButton />
+        {/* Composant de test responsive - à supprimer après validation */}
+        {import.meta.env.DEV && <ResponsiveTest />}
         <BrowserRouter>
           <Routes>
             {/* Public routes */}
