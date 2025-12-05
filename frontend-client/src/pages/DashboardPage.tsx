@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { dashboardService } from '@/api/services/dashboard.service';
 import StatsCard from '@/components/dashboard/StatsCard';
-import CostsChart from '@/components/dashboard/CostsChart';
 import AlertsList from '@/components/dashboard/AlertsList';
 import SubscriptionUsage from '@/components/dashboard/SubscriptionUsage';
 import { ExpiringDocumentsWidget } from '@/components/dashboard/ExpiringDocumentsWidget';
