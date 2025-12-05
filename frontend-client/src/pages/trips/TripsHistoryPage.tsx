@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { subDays, format } from 'date-fns';
 import { useTripsHistory, useMonthlyStats } from '../../hooks/useTrips';
 import { TripDetailModal } from '../../components/trips/TripDetailModal';
+import { TripMobileCard } from '../../components/trips/TripMobileCard';
 import { DateRangePicker } from '../../components/common/DateRangePicker';
 import { TripsStatsChart } from '../../components/trips/TripsStatsChart';
 import { TripsMap } from '../../components/trips/TripsMap';
@@ -115,32 +116,32 @@ export const TripsHistoryPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Historique des Trajets</h1>
-          <p className="text-gray-600">Vue globale des trajets de tous les conducteurs</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Historique des Trajets</h1>
+          <p className="text-sm sm:text-base text-gray-600">Vue globale des trajets de tous les conducteurs</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <Link
             to="/trips-reports"
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
           >
-            <BarChart3 className="w-5 h-5" />
-            <span>Rapports</span>
+            <BarChart3 className="w-4 sm:w-5 h-4 sm:h-5" />
+            <span className="hidden xs:inline">Rapports</span>
           </Link>
           <button
             onClick={handleExportPDF}
             disabled={filteredTrips.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors text-sm"
           >
-            <Download className="w-5 h-5" />
-            <span>Exporter PDF</span>
+            <Download className="w-4 sm:w-5 h-4 sm:h-5" />
+            <span className="hidden xs:inline">Export PDF</span>
           </button>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
           <p className="text-sm text-gray-600 mb-1">Total missions</p>
           <p className="text-2xl font-bold text-gray-900">{globalStats.totalTrips}</p>
@@ -190,28 +191,28 @@ export const TripsHistoryPage: React.FC = () => {
         />
 
         {/* Autres filtres */}
-        <div className="flex items-center gap-4 flex-wrap pt-4 border-t border-gray-200">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 pt-4 border-t border-gray-200">
           {/* Recherche */}
-          <div className="relative flex-1 min-w-[250px]">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 sm:w-5 h-4 sm:h-5" />
             <input
               type="text"
-              placeholder="Rechercher par conducteur, immatriculation..."
+              placeholder="Rechercher..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm sm:text-base"
             />
           </div>
 
           {/* Filtre status */}
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-500" />
+            <Filter className="w-4 sm:w-5 h-4 sm:h-5 text-gray-500" />
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as TripStatus | 'all')}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent"
+              className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent text-sm sm:text-base"
             >
-              <option value="all">Tous les status</option>
+              <option value="all">Tous</option>
               <option value="completed">Terminés</option>
               <option value="in_progress">En cours</option>
               <option value="cancelled">Annulés</option>
@@ -233,8 +234,10 @@ export const TripsHistoryPage: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <>
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -340,6 +343,18 @@ export const TripsHistoryPage: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Cards */}
+          <div className="md:hidden p-4 space-y-4">
+            {filteredTrips.map((trip) => (
+              <TripMobileCard
+                key={trip.id}
+                trip={trip}
+                onView={setSelectedTrip}
+              />
+            ))}
+          </div>
+        </>
         )}
       </div>
 

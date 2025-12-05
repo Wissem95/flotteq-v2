@@ -1,4 +1,4 @@
-import { Eye, Car, User, MapPin, Clock, Gauge, AlertTriangle } from 'lucide-react';
+import { Eye, Car, User, Clock, Gauge, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { Trip, TripStatus } from '@/types/trip.types';
