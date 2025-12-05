@@ -113,11 +113,8 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Graphiques et alertes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <CostsChart />
-        <AlertsList />
-      </div>
+      {/* Alertes */}
+      <AlertsList />
 
       {/* Documents expirant */}
       <ExpiringDocumentsWidget />

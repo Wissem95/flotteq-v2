@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import { Plus, Trash2, Edit, Wrench, AlertCircle, FileDown } from 'lucide-react';
 import { exportMaintenancesToPDF } from '../../utils/pdfExport';
 import { ProtectedButton } from '@/components/common/ProtectedButton';
+import { MaintenanceMobileCard } from '@/components/maintenance/MaintenanceMobileCard';
 
 export default function MaintenancesListPage() {
   const navigate = useNavigate();
@@ -150,8 +151,26 @@ export default function MaintenancesListPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+      {/* Mobile Cards */}
+      <div className="md:hidden space-y-4">
+        {filteredMaintenances.length === 0 ? (
+          <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+            <Wrench className="h-12 w-12 mx-auto mb-3 text-gray-400" />
+            <p className="text-gray-500">Aucune maintenance trouvée</p>
+          </div>
+        ) : (
+          filteredMaintenances.map((maintenance) => (
+            <MaintenanceMobileCard
+              key={maintenance.id}
+              maintenance={maintenance}
+              onView={(m) => navigate(`/maintenances/${m.id}`)}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table */}
+      <div className="hidden md:block bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
