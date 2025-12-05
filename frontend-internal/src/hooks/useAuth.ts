@@ -29,12 +29,35 @@ export const useAuth = () => {
   // Effect pour gérer le succès du login
   useEffect(() => {
     if (loginMutation.isSuccess && loginMutation.data) {
+      const userData = loginMutation.data.user;
+
+      // ✅ VALIDATION: Accepter UNIQUEMENT super_admin et support
+      if (userData.role !== 'super_admin' && userData.role !== 'support') {
+        loginMutation.reset();
+
+        if (userData.role === 'tenant_admin' || userData.role === 'manager' || userData.role === 'viewer') {
+          alert('Accès refusé. Utilisez l\'application client de votre tenant.');
+        } else if (userData.role === 'driver') {
+          alert('Accès refusé. Utilisez l\'application conducteur.');
+        } else {
+          alert('Accès refusé. Cette application est réservée aux administrateurs FlotteQ.');
+        }
+        return;
+      }
+
+      // ✅ VALIDATION: Vérifier tenantId = 1 (FlotteQ)
+      if (userData.tenantId !== 1) {
+        loginMutation.reset();
+        alert('Accès refusé. Vous devez être membre de FlotteQ (tenantId=1).');
+        return;
+      }
+
       localStorage.setItem('access_token', loginMutation.data.access_token);
       localStorage.setItem('refresh_token', loginMutation.data.refresh_token);
       queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
       navigate('/dashboard');
     }
-  }, [loginMutation.isSuccess, loginMutation.data, queryClient, navigate]);
+  }, [loginMutation.isSuccess, loginMutation.data, queryClient, navigate, loginMutation]);
 
   // Mutation pour logout
   const logoutMutation = useMutation({

@@ -56,6 +56,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (credentials: LoginCredentials) => {
     const response: AuthResponse = await authService.login(credentials);
+
+    // ✅ VALIDATION: Bloquer super_admin, support et driver
+    const allowedRoles = ['tenant_admin', 'manager', 'viewer'];
+
+    if (!allowedRoles.includes(response.user.role)) {
+      if (response.user.role === 'super_admin' || response.user.role === 'support') {
+        throw new Error('Accès refusé. Utilisez l\'application administrative interne.');
+      }
+      if (response.user.role === 'driver') {
+        throw new Error('Accès refusé. Utilisez l\'application conducteur.');
+      }
+      throw new Error('Accès refusé. Rôle non autorisé pour cette application.');
+    }
+
     localStorage.setItem('access_token', response.access_token);
     localStorage.setItem('refresh_token', response.refresh_token);
     localStorage.setItem('tenant_id', response.user.tenantId.toString());

@@ -21,9 +21,9 @@ export interface User {
 }
 
 export type UserRole =
-  | 'SUPER_ADMIN'
-  | 'SUPPORT'
-  | 'TENANT_ADMIN'
-  | 'MANAGER'
-  | 'DRIVER'
-  | 'VIEWER';
+  | 'super_admin'
+  | 'support'
+  | 'tenant_admin'
+  | 'manager'
+  | 'driver'
+  | 'viewer';

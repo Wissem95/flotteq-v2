@@ -68,6 +68,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (credentials: LoginCredentials, rememberMe: boolean = false) => {
     const response: AuthResponse = await authService.login(credentials);
 
+    // ✅ VALIDATION: Accepter UNIQUEMENT le rôle driver
+    if (response.user.role !== 'driver') {
+      if (response.user.role === 'super_admin' || response.user.role === 'support') {
+        throw new Error('Accès refusé. Utilisez l\'application administrative interne.');
+      }
+      if (response.user.role === 'tenant_admin' || response.user.role === 'manager' || response.user.role === 'viewer') {
+        throw new Error('Accès refusé. Utilisez l\'application client de votre tenant.');
+      }
+      throw new Error('Accès refusé. Cette application est réservée aux conducteurs.');
+    }
+
     // Stocker les tokens selon le choix de l'utilisateur
     setToken('access_token', response.access_token, rememberMe);
     setToken('refresh_token', response.refresh_token, rememberMe);
