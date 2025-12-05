@@ -17,6 +17,7 @@ import {
   Calendar,
   Route,
 } from 'lucide-react';
+import { MobileSidebar } from './components/MobileSidebar';
 
 interface TenantLayoutProps {
   children?: ReactNode;
@@ -98,11 +99,11 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
+      {/* Desktop Sidebar - Hidden on mobile (< 768px) */}
       <aside
         className={`${
           isSidebarOpen ? 'w-64' : 'w-20'
-        } flotteq-gradient flex flex-col transition-all duration-300 shadow-xl`}
+        } hidden md:flex flotteq-gradient flex-col transition-all duration-300 shadow-xl`}
       >
         {/* Logo & Toggle */}
         <div className="p-6 border-b border-white/20 flex items-center justify-between">
@@ -191,6 +192,13 @@ export default function TenantLayout({ children }: TenantLayoutProps) {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
+        {/* Mobile Header with MobileSidebar - Visible only on mobile (< 768px) */}
+        <div className="md:hidden sticky top-0 z-40 flotteq-gradient px-4 py-3 flex items-center justify-between shadow-xl">
+          <MobileSidebar />
+          <h1 className="text-lg font-bold text-white">Flotteq</h1>
+          <div className="w-10" /> {/* Spacer for centering */}
+        </div>
+
         <div className="container mx-auto p-8 max-w-7xl">
           {children || <Outlet />}
         </div>

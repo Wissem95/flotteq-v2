@@ -31,6 +31,7 @@ import BookingFlowPage from './pages/bookings/BookingFlowPage';
 import BookingsCalendarPage from './pages/bookings/BookingsCalendarPage';
 import { TripsHistoryPage } from './pages/trips/TripsHistoryPage';
 import { TripsReportsPage } from './pages/trips/TripsReportsPage';
+import { TestMobileSidebar } from './pages/TestMobileSidebar';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -53,6 +54,16 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+            {/* Test route - Temporary (T-M1.3) */}
+            <Route
+              path="/test-mobile-sidebar"
+              element={
+                <ProtectedRoute>
+                  <TestMobileSidebar />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Onboarding route (protected but standalone) */}
             <Route
