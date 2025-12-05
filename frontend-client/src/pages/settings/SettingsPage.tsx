@@ -54,7 +54,7 @@ export default function SettingsPage() {
 
   const fetchInvoices = async () => {
     try {
-      const response = await api.get('/billing/invoices');
+      const response = await api.get('/subscriptions/invoices');
       setInvoices(response.data);
     } catch (error) {
       console.error('Failed to fetch invoices:', error);
