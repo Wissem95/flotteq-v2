@@ -21,41 +21,41 @@ export default function MarketplacePage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <ShoppingBag className="h-7 w-7 text-flotteq-blue" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <ShoppingBag className="h-6 sm:h-7 w-6 sm:w-7 text-flotteq-blue" />
             Marketplace Partenaires
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Trouvez et réservez des services près de chez vous
           </p>
         </div>
 
         {/* Toggle Vue Liste/Carte */}
         {data && data.data.length > 0 && (
-          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg p-1">
+          <div className="flex items-center gap-1 sm:gap-2 bg-white border border-gray-200 rounded-lg p-1 self-center sm:self-auto">
             <button
               onClick={() => setViewMode('list')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-md transition-colors ${
                 viewMode === 'list'
                   ? 'bg-flotteq-blue text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <List className="h-5 w-5" />
-              <span className="font-medium">Liste</span>
+              <List className="h-4 sm:h-5 w-4 sm:w-5" />
+              <span className="text-xs sm:text-sm font-medium hidden xs:inline">Liste</span>
             </button>
             <button
               onClick={() => setViewMode('map')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${
+              className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 rounded-md transition-colors ${
                 viewMode === 'map'
                   ? 'bg-flotteq-blue text-white'
                   : 'text-gray-600 hover:bg-gray-100'
               }`}
             >
-              <Map className="h-5 w-5" />
-              <span className="font-medium">Carte</span>
+              <Map className="h-4 sm:h-5 w-4 sm:w-5" />
+              <span className="text-xs sm:text-sm font-medium hidden xs:inline">Carte</span>
             </button>
           </div>
         )}
@@ -109,21 +109,21 @@ export default function MarketplacePage() {
 
               {/* Pagination (simple) */}
               {data.meta.totalPages > 1 && (
-                <div className="mt-6 flex justify-center gap-2">
+                <div className="mt-6 flex justify-center gap-2 flex-wrap">
                   <button
                     onClick={() => setSearchParams({ ...searchParams!, page: (searchParams!.page || 1) - 1 })}
                     disabled={!data.meta.hasPreviousPage}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
                     Précédent
                   </button>
-                  <span className="px-4 py-2 bg-white border border-gray-300 rounded-lg">
+                  <span className="px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm sm:text-base">
                     Page {data.meta.page} / {data.meta.totalPages}
                   </span>
                   <button
                     onClick={() => setSearchParams({ ...searchParams!, page: (searchParams!.page || 1) + 1 })}
                     disabled={!data.meta.hasNextPage}
-                    className="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base"
                   >
                     Suivant
                   </button>
