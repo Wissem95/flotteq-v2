@@ -48,6 +48,9 @@ export class Vehicle {
   @Column()
   model: string;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  version: string | null;
+
   @Column({ type: 'int' })
   year: number;
 

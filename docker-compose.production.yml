@@ -104,7 +104,7 @@ services:
       context: ./frontend-client
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.com}
         VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
     container_name: flotteq_frontend_client_prod
     restart: always
@@ -122,7 +122,7 @@ services:
       context: ./frontend-partner
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.com}
     container_name: flotteq_frontend_partner_prod
     restart: always
     networks:
@@ -139,7 +139,7 @@ services:
       context: ./frontend-driver
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.com}
         VITE_STRIPE_PUBLISHABLE_KEY: ${VITE_STRIPE_PUBLISHABLE_KEY}
     container_name: flotteq_frontend_driver_prod
     restart: always
@@ -157,7 +157,7 @@ services:
       context: ./frontend-internal
       dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.com}
     container_name: flotteq_frontend_internal_prod
     restart: always
     networks:

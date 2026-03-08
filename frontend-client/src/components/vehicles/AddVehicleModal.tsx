@@ -112,6 +112,20 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
               </div>
 
               <div>
+                <label htmlFor="version" className="block text-sm font-medium text-gray-700 mb-1">
+                  Version / Finition
+                </label>
+                <input
+                  type="text"
+                  id="version"
+                  value={(formData as any).version || ''}
+                  onChange={(e) => setFormData({ ...formData, ...(e.target.value ? { version: e.target.value } : { version: undefined }) } as any)}
+                  className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"
+                  placeholder="HDi 130 EAT8 Allure"
+                />
+              </div>
+
+              <div>
                 <label htmlFor="year" className="block text-sm font-medium text-gray-700 mb-1">
                   Année *
                 </label>

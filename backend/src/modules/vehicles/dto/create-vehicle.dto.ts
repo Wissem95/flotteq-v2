@@ -31,6 +31,11 @@ export class CreateVehicleDto {
   @IsString()
   model: string;
 
+  @ApiProperty({ description: 'Vehicle version/trim level', required: false })
+  @IsOptional()
+  @IsString()
+  version?: string;
+
   @ApiProperty({ description: 'Vehicle year' })
   @IsNotEmpty()
   @IsInt()
