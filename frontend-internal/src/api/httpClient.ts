@@ -80,8 +80,8 @@ apiClient.interceptors.response.use(
       try {
         // Appeler l'endpoint refresh
         const response = await axios.post<{ access_token: string }>(
-          `${API_BASE_URL}/auth/refresh`,
-          { refresh_token: refreshToken }
+          `${API_BASE_URL}/api/auth/refresh`,
+          { refreshToken }
         );
         const { access_token } = response.data;
         localStorage.setItem('access_token', access_token);

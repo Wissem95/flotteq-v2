@@ -14,6 +14,7 @@ import {
   LogOut,
   Handshake,
   DollarSign,
+  Settings,
 } from 'lucide-react';
 
 export const MainLayout = () => {
@@ -67,6 +68,11 @@ export const MainLayout = () => {
       icon: DollarSign,
       label: 'Commissions',
       path: '/commissions',
+    },
+    {
+      icon: Settings,
+      label: 'Paramètres',
+      path: '/settings',
     },
   ];
 

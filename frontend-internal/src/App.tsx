@@ -12,6 +12,7 @@ import { VehiclesListPage } from './pages/vehicles/VehiclesListPage';
 import { DriversListPage } from './pages/drivers/DriversListPage';
 import { PartnersListPage } from './pages/partners/PartnersListPage';
 import { CommissionsDashboardPage } from './pages/commissions/CommissionsDashboardPage';
+import { SettingsPage } from './pages/settings/SettingsPage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { MainLayout } from './components/layout/MainLayout';
 import { Toaster } from './components/ui/toaster';
@@ -50,6 +51,7 @@ function App() {
             <Route path="/drivers" element={<DriversListPage />} />
             <Route path="/partners" element={<PartnersListPage />} />
             <Route path="/commissions" element={<CommissionsDashboardPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
           </Route>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

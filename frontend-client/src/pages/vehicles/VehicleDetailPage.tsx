@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehiclesService } from '../../api/services/vehicles.service';
@@ -18,6 +18,9 @@ export default function VehicleDetailPage() {
   const [activeTab, setActiveTab] = useState<'info' | 'photos' | 'timeline' | 'km' | 'costs' | 'documents'>('info');
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showCtForm, setShowCtForm] = useState(false);
+  const [ctDate, setCtDate] = useState('');
+  const ctNextRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const { data: vehicle, isLoading, error } = useQuery({
@@ -51,6 +54,34 @@ export default function VehicleDetailPage() {
       console.error('Erreur désassignation:', error);
     },
   });
+
+  const updateCtMutation = useMutation({
+    mutationFn: (data: { lastTechnicalInspection: string; nextTechnicalInspection: string }) =>
+      vehiclesService.updateVehicle(id!, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicle', id] });
+      setShowCtForm(false);
+      setCtDate('');
+    },
+  });
+
+  const handleCtDateChange = (date: string) => {
+    setCtDate(date);
+    if (date && ctNextRef.current) {
+      const next = new Date(date);
+      next.setMonth(next.getMonth() + 24);
+      ctNextRef.current.value = next.toISOString().split('T')[0];
+    }
+  };
+
+  const handleCtSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const next = (form.elements.namedItem('nextCt') as HTMLInputElement).value;
+    if (ctDate && next) {
+      updateCtMutation.mutate({ lastTechnicalInspection: ctDate, nextTechnicalInspection: next });
+    }
+  };
 
   const handleAssignDriver = (driverId: string) => {
     assignDriverMutation.mutate(driverId);
@@ -332,6 +363,93 @@ export default function VehicleDetailPage() {
                 <dd className="mt-1 text-sm text-gray-900">{((vehicle.mileage || vehicle.currentKm) || 0).toLocaleString()} km</dd>
               </div>
             </dl>
+          </div>
+
+          {/* Contrôle Technique */}
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Contrôle Technique</h2>
+              <ProtectedButton
+                onClick={() => {
+                  setShowCtForm(!showCtForm);
+                  if (!showCtForm && vehicle.lastTechnicalInspection) {
+                    setCtDate(vehicle.lastTechnicalInspection.split('T')[0]);
+                  }
+                }}
+                permission="vehicles.update"
+                disabledMessage="Vous n'avez pas la permission de modifier les véhicules"
+                className="px-4 py-2 text-sm bg-flotteq-blue text-white rounded-md hover:bg-flotteq-navy transition-colors"
+              >
+                {showCtForm ? 'Annuler' : 'Mettre à jour'}
+              </ProtectedButton>
+            </div>
+
+            <dl className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mb-4">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Dernier CT</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {vehicle.lastTechnicalInspection
+                    ? new Date(vehicle.lastTechnicalInspection).toLocaleDateString('fr-FR')
+                    : <span className="text-gray-400 italic">Non renseigné</span>}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Prochain CT</dt>
+                <dd className={`mt-1 text-sm font-medium ${
+                  vehicle.nextTechnicalInspection && new Date(vehicle.nextTechnicalInspection) < new Date()
+                    ? 'text-red-600'
+                    : vehicle.nextTechnicalInspection && new Date(vehicle.nextTechnicalInspection) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+                    ? 'text-orange-600'
+                    : 'text-gray-900'
+                }`}>
+                  {vehicle.nextTechnicalInspection
+                    ? new Date(vehicle.nextTechnicalInspection).toLocaleDateString('fr-FR')
+                    : <span className="text-gray-400 italic">Non renseigné</span>}
+                  {vehicle.nextTechnicalInspection && new Date(vehicle.nextTechnicalInspection) < new Date() && (
+                    <span className="ml-2 text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">Expiré</span>
+                  )}
+                </dd>
+              </div>
+            </dl>
+
+            {showCtForm && (
+              <form onSubmit={handleCtSubmit} className="border-t pt-4 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date du CT effectué
+                    </label>
+                    <input
+                      type="date"
+                      required
+                      value={ctDate}
+                      onChange={(e) => handleCtDateChange(e.target.value)}
+                      className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Prochain CT (calculé auto. +24 mois)
+                    </label>
+                    <input
+                      type="date"
+                      name="nextCt"
+                      required
+                      ref={ctNextRef}
+                      defaultValue={vehicle.nextTechnicalInspection?.split('T')[0] || ''}
+                      className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={updateCtMutation.isPending}
+                  className="px-4 py-2 bg-flotteq-blue text-white rounded-md hover:bg-flotteq-navy disabled:opacity-50 text-sm"
+                >
+                  {updateCtMutation.isPending ? 'Enregistrement...' : 'Enregistrer le CT'}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       )}
