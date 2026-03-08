@@ -50,7 +50,7 @@ jobs:
       - name: Health check
         run: |
           sleep 30  # Wait for services to start
-          curl -f https://api.flotteq.com/api/health || exit 1
+          curl -f http://37.59.96.178/api/health || exit 1
 
       - name: Notify Slack (success)
         if: success()
