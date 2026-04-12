@@ -92,7 +92,7 @@ export class StripeController {
       throw new BadRequestException('No Stripe customer found for this tenant');
     }
 
-    const returnUrl = `${process.env.FRONTEND_URL || 'http://localhost:5174'}/billing`;
+    const returnUrl = `${process.env.FRONTEND_CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:5174'}/billing`;
     const url = await this.stripeService.createPortalSession(
       tenant.stripeCustomerId,
       returnUrl,
