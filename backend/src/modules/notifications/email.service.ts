@@ -111,7 +111,7 @@ export class EmailService {
         firstName,
         tenantName,
         email,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -130,7 +130,7 @@ export class EmailService {
         firstName,
         daysUntil: daysUntil === 1 ? 'demain' : `dans ${daysUntil} jours`,
         ...maintenanceData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -149,7 +149,7 @@ export class EmailService {
         firstName,
         daysUntil,
         ...documentData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -166,7 +166,7 @@ export class EmailService {
       context: {
         firstName,
         resetUrl,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -186,7 +186,7 @@ export class EmailService {
         tenantName,
         email,
         tempPassword,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -205,7 +205,7 @@ export class EmailService {
         companyName,
         email,
         siret: '', // Will be populated from context
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -223,7 +223,7 @@ export class EmailService {
         firstName,
         companyName,
         commissionRate: '15', // Default, will be overridden if provided in context
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -242,7 +242,7 @@ export class EmailService {
         firstName,
         companyName,
         rejectionReason,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -259,7 +259,7 @@ export class EmailService {
       context: {
         companyName,
         ...bookingData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -276,7 +276,7 @@ export class EmailService {
       context: {
         companyName,
         ...bookingData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -293,7 +293,7 @@ export class EmailService {
       context: {
         tenantName,
         ...bookingData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -310,7 +310,7 @@ export class EmailService {
       context: {
         tenantName,
         ...bookingData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -327,7 +327,7 @@ export class EmailService {
       context: {
         tenantName,
         ...bookingData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }
@@ -344,7 +344,7 @@ export class EmailService {
       context: {
         tenantName,
         ...bookingData,
-        appUrl: this.configService.get('APP_URL', 'http://localhost:5173'),
+        appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
     });
   }

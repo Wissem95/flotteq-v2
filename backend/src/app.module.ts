@@ -32,15 +32,15 @@ import { HealthModule } from './health/health.module';
 import { DriverModule } from './modules/driver/driver.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { TripsModule } from './modules/trips/trips.module';
-// import { StripeModule } from './stripe/stripe.module';
-// import stripeConfig from './config/stripe.config';
+import { StripeModule } from './stripe/stripe.module';
+import stripeConfig from './config/stripe.config';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
-      // load: [stripeConfig],
+      load: [stripeConfig],
     }),
     ScheduleModule.forRoot(),
     HealthModule,
@@ -71,7 +71,7 @@ import { TripsModule } from './modules/trips/trips.module';
     TenantModule,
     AuthModule,
     OnboardingModule,
-    // StripeModule,  // Temporairement désactivé - nécessite clé Stripe valide
+    StripeModule,
     AuditModule,
     PartnersModule,
     BookingsModule,

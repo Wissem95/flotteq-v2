@@ -512,7 +512,7 @@ export class UsersService {
     // Build invitation link - différent selon le rôle (client vs internal)
     const isInternalRole = ['super_admin', 'support'].includes(role);
     const frontendUrl = isInternalRole
-      ? process.env.FRONTEND_INTERNAL_URL || 'http://localhost:5175'
+      ? process.env.INTERNAL_FRONTEND_URL || process.env.FRONTEND_INTERNAL_URL || 'http://localhost:3001'
       : process.env.FRONTEND_CLIENT_URL || 'http://localhost:5174';
 
     const invitationLink = `${frontendUrl}/accept-invitation?token=${token}`;

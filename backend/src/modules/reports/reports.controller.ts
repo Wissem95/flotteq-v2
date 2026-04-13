@@ -31,7 +31,7 @@ import { UserRole } from '../../entities/user.entity';
 
 @ApiTags('Reports')
 @ApiBearerAuth()
-@Controller('api/reports')
+@Controller('reports')
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
