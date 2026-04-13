@@ -12,6 +12,7 @@ import { SubscriptionPlan } from './subscription-plan.entity';
 import { Tenant } from './tenant.entity';
 
 export enum SubscriptionStatus {
+  INCOMPLETE = 'incomplete',
   ACTIVE = 'active',
   PAST_DUE = 'past_due',
   CANCELED = 'canceled',

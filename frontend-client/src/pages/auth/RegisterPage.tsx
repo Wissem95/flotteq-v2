@@ -70,8 +70,13 @@ export default function RegisterPage() {
       localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('tenant_id', response.user.tenantId.toString());
 
-      // Redirect vers le dashboard
-      window.location.href = '/dashboard';
+      // Plan payant : rediriger vers Stripe Checkout
+      // Plan gratuit : rediriger vers le dashboard
+      if (response.checkoutUrl) {
+        window.location.href = response.checkoutUrl;
+      } else {
+        window.location.href = '/dashboard';
+      }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Erreur lors de l\'inscription');
       setLoading(false);

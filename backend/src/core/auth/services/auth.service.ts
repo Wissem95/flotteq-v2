@@ -114,6 +114,8 @@ export class AuthService {
       await queryRunner.manager.save(user);
 
       // 4c. Créer subscription
+      // Plan gratuit (price=0) → ACTIVE immédiat, sinon INCOMPLETE jusqu'au paiement Stripe
+      const isPaidPlan = Number(plan.price) > 0;
       const now = new Date();
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
@@ -121,7 +123,9 @@ export class AuthService {
       const subscription = queryRunner.manager.create(Subscription, {
         tenantId: tenant.id,
         planId: plan.id,
-        status: SubscriptionStatus.ACTIVE,
+        status: isPaidPlan
+          ? SubscriptionStatus.INCOMPLETE
+          : SubscriptionStatus.ACTIVE,
         currentPeriodStart: now,
         currentPeriodEnd: endDate,
         usage: {
@@ -139,9 +143,31 @@ export class AuthService {
       const tokens = await this.generateTokens(user);
       await this.updateRefreshToken(user.id, tokens.refresh_token);
 
-      // 7. Retourner résultat sans données sensibles
+      // 7. Si plan payant : créer une session Stripe Checkout
+      let checkoutUrl: string | undefined;
+      if (isPaidPlan && tenant.stripeCustomerId && plan.stripePriceId) {
+        try {
+          const frontendUrl =
+            process.env.FRONTEND_CLIENT_URL ||
+            process.env.FRONTEND_URL ||
+            'http://localhost:5174';
+          checkoutUrl = await this.stripeService.createCheckoutSession(
+            tenant.stripeCustomerId,
+            plan.stripePriceId,
+            `${frontendUrl}/billing/success`,
+            `${frontendUrl}/billing`,
+          );
+        } catch (stripeError) {
+          console.error(
+            'Failed to create Stripe checkout session:',
+            stripeError.message,
+          );
+        }
+      }
+
+      // 8. Retourner résultat sans données sensibles
       const { password, refreshToken, ...userWithoutSensitive } = user;
-      return { user: userWithoutSensitive, ...tokens };
+      return { user: userWithoutSensitive, ...tokens, checkoutUrl };
     } catch (error) {
       // 8. ROLLBACK en cas d'erreur
       await queryRunner.rollbackTransaction();
