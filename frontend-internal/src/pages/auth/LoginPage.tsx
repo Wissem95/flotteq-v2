@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -80,12 +81,12 @@ export const LoginPage = () => {
 
           <div className="space-y-2">
             <Label htmlFor="password">Mot de passe</Label>
-            <Input
+            <PasswordInput
               id="password"
               {...register('password')}
-              type="password"
               placeholder="••••••••"
               disabled={isLoginLoading}
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
             />
             {errors.password && (
               <p className="text-sm text-destructive">

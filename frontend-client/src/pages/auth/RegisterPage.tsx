@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { authService, type RegisterDto } from '@/api/services/auth.service';
 import { subscriptionsService, type SubscriptionPlan } from '@/api/services/subscriptions.service';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -293,8 +294,7 @@ export default function RegisterPage() {
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                   Mot de passe
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   name="password"
                   id="password"
                   required

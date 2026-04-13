@@ -4,6 +4,7 @@ import { LogIn } from 'lucide-react';
 import { useAuthStore } from '../stores/authStore';
 import axiosInstance from '../lib/axios';
 import { API_CONFIG } from '../config/api';
+import { PasswordInput } from '../components/ui/PasswordInput';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -97,9 +98,8 @@ export default function LoginPage() {
             <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
               Mot de passe
             </label>
-            <input
+            <PasswordInput
               id="password"
-              type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}

@@ -5,6 +5,7 @@ import axiosInstance from '../lib/axios';
 import { API_CONFIG } from '../config/api';
 import { FileUpload } from '../components/FileUpload';
 import { VALIDATION_RULES } from '../config/constants';
+import { PasswordInput } from '../components/ui/PasswordInput';
 
 type PartnerType = 'garage' | 'car_wash' | 'body_shop' | 'tire_shop' | 'towing' | 'inspection' | 'rental' | 'other';
 
@@ -439,8 +440,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Mot de passe *
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -460,8 +460,7 @@ export default function RegisterPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Confirmer le mot de passe *
               </label>
-              <input
-                type="password"
+              <PasswordInput
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
