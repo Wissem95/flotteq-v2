@@ -57,6 +57,7 @@ services:
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${DB_USER:-flotteq_prod}
+      DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME:-flotteq_production}
       REDIS_HOST: redis
       REDIS_PORT: 6379
