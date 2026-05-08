@@ -6,6 +6,7 @@ import { AudienceAccordion } from './components/AudienceAccordion';
 import { Differentiators } from './components/Differentiators';
 import { HowItWorks } from './components/HowItWorks';
 import { Pricing } from './components/Pricing';
+import { Vision } from './components/Vision';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -19,6 +20,7 @@ export default function App() {
       <Differentiators />
       <HowItWorks />
       <Pricing />
+      <Vision />
       {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
     </main>
   );
