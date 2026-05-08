@@ -4,6 +4,7 @@ import { Hero } from './components/Hero';
 import { MarketStatsCarousel } from './components/MarketStatsCarousel';
 import { AudienceAccordion } from './components/AudienceAccordion';
 import { Differentiators } from './components/Differentiators';
+import { HowItWorks } from './components/HowItWorks';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -15,6 +16,7 @@ export default function App() {
       <MarketStatsCarousel />
       <AudienceAccordion />
       <Differentiators />
+      <HowItWorks />
       {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
     </main>
   );
