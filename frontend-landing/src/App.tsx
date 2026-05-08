@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Header } from './components/Header';
+import { Hero } from './components/Hero';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -7,10 +8,8 @@ export default function App() {
   return (
     <main className="min-h-screen bg-background text-foreground">
       <Header onLoginClick={() => setLoginOpen(true)} />
-      <div className="pt-16 p-8">
-        <h1 className="text-4xl font-extrabold flotteq-gradient-text">Header skeleton OK</h1>
-        {loginOpen && <p>Login overlay would open here</p>}
-      </div>
+      <Hero />
+      {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
     </main>
   );
 }
