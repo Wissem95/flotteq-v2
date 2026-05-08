@@ -11,6 +11,7 @@ import { SecurityBanner } from './components/SecurityBanner';
 import { FAQ } from './components/FAQ';
 import { CTASection } from './components/CTASection';
 import { Footer } from './components/Footer';
+import { LoginOverlay } from './components/LoginOverlay';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function App() {
       <FAQ />
       <CTASection />
       <Footer />
-      {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
+      <LoginOverlay open={loginOpen} onOpenChange={setLoginOpen} />
     </main>
   );
 }
