@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a3a6c"/>
+      <stop offset="100%" stop-color="#0e2148"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2463b0"/>
+      <stop offset="100%" stop-color="#14b8a6"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <text x="80" y="280" font-family="Inter,sans-serif" font-size="84" font-weight="800" fill="white">FlotteQ</text>
+  <text x="80" y="370" font-family="Inter,sans-serif" font-size="48" font-weight="700" fill="white" opacity="0.95">Pilotez vos véhicules</text>
+  <text x="80" y="430" font-family="Inter,sans-serif" font-size="48" font-weight="700" fill="url(#accent)">sereinement.</text>
+  <text x="80" y="540" font-family="Inter,sans-serif" font-size="24" font-weight="500" fill="white" opacity="0.7">flotteq.fr — Hébergé en France</text>
+</svg>
