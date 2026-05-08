@@ -8,6 +8,7 @@ import { HowItWorks } from './components/HowItWorks';
 import { Pricing } from './components/Pricing';
 import { Vision } from './components/Vision';
 import { SecurityBanner } from './components/SecurityBanner';
+import { FAQ } from './components/FAQ';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -23,6 +24,7 @@ export default function App() {
       <Pricing />
       <Vision />
       <SecurityBanner />
+      <FAQ />
       {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
     </main>
   );
