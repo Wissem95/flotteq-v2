@@ -1,8 +1,16 @@
+import { useState } from 'react';
+import { Header } from './components/Header';
+
 export default function App() {
+  const [loginOpen, setLoginOpen] = useState(false);
+
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <h1 className="p-8 text-4xl font-extrabold flotteq-gradient-text">FlotteQ — landing skeleton</h1>
-      <p className="px-8 pb-8 text-muted-foreground">Sections will be added one by one.</p>
+      <Header onLoginClick={() => setLoginOpen(true)} />
+      <div className="pt-16 p-8">
+        <h1 className="text-4xl font-extrabold flotteq-gradient-text">Header skeleton OK</h1>
+        {loginOpen && <p>Login overlay would open here</p>}
+      </div>
     </main>
   );
 }
