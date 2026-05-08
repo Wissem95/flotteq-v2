@@ -7,6 +7,7 @@ import { Differentiators } from './components/Differentiators';
 import { HowItWorks } from './components/HowItWorks';
 import { Pricing } from './components/Pricing';
 import { Vision } from './components/Vision';
+import { SecurityBanner } from './components/SecurityBanner';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -21,6 +22,7 @@ export default function App() {
       <HowItWorks />
       <Pricing />
       <Vision />
+      <SecurityBanner />
       {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
     </main>
   );
