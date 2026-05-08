@@ -5,6 +5,7 @@ import { MarketStatsCarousel } from './components/MarketStatsCarousel';
 import { AudienceAccordion } from './components/AudienceAccordion';
 import { Differentiators } from './components/Differentiators';
 import { HowItWorks } from './components/HowItWorks';
+import { Pricing } from './components/Pricing';
 
 export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
@@ -17,6 +18,7 @@ export default function App() {
       <AudienceAccordion />
       <Differentiators />
       <HowItWorks />
+      <Pricing />
       {loginOpen && <p className="hidden">{/* placeholder until LoginOverlay */}</p>}
     </main>
   );
