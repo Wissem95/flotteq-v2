@@ -171,6 +171,24 @@ services:
       timeout: 3s
       retries: 3
 
+  # Frontend Landing (Public Marketing Site for flotteq.fr apex)
+  frontend-landing:
+    build:
+      context: ./frontend-landing
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.fr}
+        VITE_PUBLIC_URL: https://flotteq.fr
+    container_name: flotteq_frontend_landing_prod
+    restart: always
+    networks:
+      - flotteq_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
   # Nginx Reverse Proxy (HTTPS multi-domaine)
   nginx:
     image: nginx:alpine
@@ -182,7 +200,6 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./nginx/landing:/var/www/landing:ro
       - ./certbot/conf:/etc/letsencrypt:ro
       - ./certbot/www:/var/www/certbot:ro
     depends_on:
@@ -191,6 +208,7 @@ services:
       - frontend-partner
       - frontend-driver
       - frontend-internal
+      - frontend-landing
     networks:
       - flotteq_network
     healthcheck:
