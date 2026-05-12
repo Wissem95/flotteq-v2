@@ -52,7 +52,7 @@ export const audiences: Audience[] = [
     label: 'Partenaire',
     heroSubtitle:
       'Rejoignez le réseau FlotteQ : recevez des clients qualifiés, gérez vos rendez-vous et vos paiements depuis une seule app.',
-    heroImageUrl: 'https://images.unsplash.com/photo-1632823471565-1ecdf2b3a13b?w=1200&q=80&auto=format&fit=crop',
+    heroImageUrl: 'https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=1200&q=80&auto=format&fit=crop',
     accordionTitle: 'Pour les garages, assureurs, contrôles techniques',
     accordionImageUrl: 'https://images.unsplash.com/photo-1486006920555-c77dcf18193c?w=900&q=80&auto=format&fit=crop',
     features: [

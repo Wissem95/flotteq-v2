@@ -19,7 +19,7 @@ export function Pricing() {
             <Card
               key={p.key}
               className={cn(
-                'border-slate-100 relative',
+                'border-slate-100 relative transition-all hover:shadow-xl hover:-translate-y-1',
                 p.highlight && 'border-flotteq-teal border-2 shadow-lg'
               )}
             >

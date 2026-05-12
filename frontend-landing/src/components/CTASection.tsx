@@ -15,7 +15,7 @@ export function CTASection() {
           <Button asChild size="lg" className="bg-white text-flotteq-navy hover:bg-slate-100">
             <a href="https://app.flotteq.fr/register">Commencer gratuitement</a>
           </Button>
-          <Button asChild size="lg" variant="outline" className="border-white text-white hover:bg-white/10">
+          <Button asChild size="lg" variant="outline" className="bg-transparent border-white text-white hover:bg-white/10 hover:text-white">
             <a href="#pricing">Voir les tarifs</a>
           </Button>
         </div>

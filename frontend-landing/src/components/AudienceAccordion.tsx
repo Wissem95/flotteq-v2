@@ -6,10 +6,10 @@ export function AudienceAccordion() {
   return (
     <section id="audiences" className="py-16 md:py-24">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-flotteq-navy">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-white">
           Pour vous, quelle que soit votre situation
         </h2>
-        <p className="mt-3 text-center text-slate-600 max-w-2xl mx-auto">
+        <p className="mt-3 text-center text-white/85 max-w-2xl mx-auto">
           Quatre profils, une seule plateforme. Cliquez pour découvrir le vôtre.
         </p>
 
@@ -19,9 +19,9 @@ export function AudienceAccordion() {
               <AccordionItem
                 key={a.key}
                 value={a.key}
-                className="bg-white rounded-2xl border border-slate-100 px-6 shadow-sm data-[state=open]:shadow-md transition-shadow"
+                className="bg-white rounded-2xl border border-slate-100 px-6 shadow-sm data-[state=open]:shadow-md hover:shadow-md hover:border-flotteq-teal/40 transition-all"
               >
-                <AccordionTrigger className="text-lg md:text-xl font-bold text-flotteq-navy hover:no-underline py-5">
+                <AccordionTrigger className="text-lg md:text-xl font-bold text-flotteq-navy hover:no-underline hover:text-flotteq-blue py-5 transition-colors">
                   {a.accordionTitle}
                 </AccordionTrigger>
                 <AccordionContent className="pb-6">

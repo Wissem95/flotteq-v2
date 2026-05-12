@@ -52,7 +52,9 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter;
+    @apply text-foreground font-inter min-h-screen;
+    background: linear-gradient(to right, #1a3a6c 0%, #2463b0 50%, #14b8a6 100%);
+    background-attachment: fixed;
   }
 
   .flotteq-gradient {

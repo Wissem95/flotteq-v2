@@ -26,7 +26,7 @@ export function Differentiators() {
           {differentiators.map((d) => {
             const Icon = ICONS[d.iconKey];
             return (
-              <Card key={d.title} className="border-slate-100">
+              <Card key={d.title} className="border-slate-100 hover:shadow-lg hover:-translate-y-1 hover:border-flotteq-teal/40 transition-all">
                 <CardContent className="p-7">
                   <div className="h-14 w-14 rounded-xl bg-flotteq-blue/10 grid place-items-center text-flotteq-blue">
                     <Icon className="h-8 w-8" />

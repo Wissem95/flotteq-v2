@@ -4,10 +4,10 @@ export function Vision() {
   return (
     <section className="py-16 md:py-24">
       <div className="container mx-auto px-4">
-        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-flotteq-navy">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-white">
           Notre vision
         </h2>
-        <p className="mt-3 text-center text-slate-600 max-w-2xl mx-auto">
+        <p className="mt-3 text-center text-white/85 max-w-2xl mx-auto">
           Pourquoi nous construisons FlotteQ, pour qui, et avec quel engagement.
         </p>
 

@@ -17,7 +17,7 @@ export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen text-foreground">
       <Header onLoginClick={() => setLoginOpen(true)} />
       <Hero />
       <MarketStatsCarousel />

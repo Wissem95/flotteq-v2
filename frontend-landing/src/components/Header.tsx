@@ -27,23 +27,54 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
       )}
     >
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
-        <a href="/" className="text-xl font-extrabold tracking-tight flotteq-gradient-text">
+        <a
+          href="/"
+          className={cn(
+            'text-xl font-extrabold tracking-tight transition-colors',
+            scrolled ? 'flotteq-gradient-text' : 'text-white'
+          )}
+        >
           FlotteQ
         </a>
 
-        <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
+        <nav
+          className={cn(
+            'hidden md:flex items-center gap-6 text-sm font-medium transition-colors',
+            scrolled ? 'text-slate-700' : 'text-white/90'
+          )}
+        >
           {NAV_ITEMS.map((item) => (
-            <a key={item.href} href={item.href} className="hover:text-flotteq-blue transition-colors">
+            <a
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'transition-colors',
+                scrolled ? 'hover:text-flotteq-blue' : 'hover:text-white'
+              )}
+            >
               {item.label}
             </a>
           ))}
         </nav>
 
         <div className="hidden md:flex items-center gap-3">
-          <Button variant="ghost" onClick={onLoginClick}>
+          <Button
+            variant="ghost"
+            onClick={onLoginClick}
+            className={cn(
+              !scrolled && 'text-white hover:bg-white/10 hover:text-white'
+            )}
+          >
             Connexion
           </Button>
-          <Button asChild className="bg-flotteq-blue hover:bg-flotteq-navy text-white">
+          <Button
+            asChild
+            className={cn(
+              scrolled
+                ? 'bg-flotteq-blue hover:bg-flotteq-navy text-white'
+                : 'bg-white text-flotteq-navy hover:bg-slate-100'
+            )}
+          >
             <a href="https://app.flotteq.fr/register">Essai gratuit</a>
           </Button>
         </div>
@@ -51,7 +82,12 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
         {/* Mobile burger */}
         <Sheet>
           <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon" aria-label="Ouvrir le menu">
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Ouvrir le menu"
+              className={cn(!scrolled && 'text-white hover:bg-white/10 hover:text-white')}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <line x1="4" y1="6" x2="20" y2="6" />
                 <line x1="4" y1="12" x2="20" y2="12" />
