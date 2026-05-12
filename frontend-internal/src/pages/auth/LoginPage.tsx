@@ -41,7 +41,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-flotteq-light via-white to-flotteq-light">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-flotteq-navy via-flotteq-blue to-flotteq-teal p-4">
       <Card className="w-full max-w-md p-8 shadow-xl">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold flotteq-gradient-text mb-2">

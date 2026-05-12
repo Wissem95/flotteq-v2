@@ -28,18 +28,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div>
-          <h2 className="text-center text-4xl font-extrabold text-gray-900">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-flotteq-navy via-flotteq-blue to-flotteq-teal py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-6">
+        <div className="text-center">
+          <h2 className="text-4xl font-extrabold text-white">
             FlotteQ Driver
           </h2>
-          <p className="mt-2 text-center text-base text-gray-600">
+          <p className="mt-2 text-base text-white/85">
             Connectez-vous à votre compte chauffeur
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <form className="space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-lg bg-red-50 p-4 border-2 border-red-200">
               <p className="text-base font-medium text-red-800">{error}</p>
@@ -114,6 +115,7 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
