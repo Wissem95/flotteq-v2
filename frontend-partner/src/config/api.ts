@@ -5,7 +5,8 @@ export const API_CONFIG = {
     PARTNER_REGISTER: '/api/partners/auth/register',
     PARTNER_LOGIN: '/api/partners/auth/login',
     PARTNER_PROFILE: '/api/partners/auth/profile',
-    FORGOT_PASSWORD: '/api/auth/forgot-password',
+    PARTNER_FORGOT_PASSWORD: '/api/partners/auth/forgot-password',
+    PARTNER_RESET_PASSWORD: '/api/partners/auth/reset-password',
     // Partner management
     PARTNER_ME: '/api/partners/me',
     PARTNER_SERVICES: '/api/partners/me/services',

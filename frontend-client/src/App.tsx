@@ -8,6 +8,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import AcceptInvitationPage from './pages/auth/AcceptInvitationPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import OnboardingPage from './pages/onboarding/OnboardingPage';
 import VehiclesListPage from './pages/vehicles/VehiclesListPage';
@@ -54,6 +55,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* Test route - Temporary (T-M1.3) */}
             <Route

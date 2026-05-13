@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import DriverLayout from './layouts/DriverLayout';
 import LoginPage from './pages/auth/LoginPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from './pages/auth/ResetPasswordPage';
 import DriverDashboard from './pages/DriverDashboard';
 import ProfilePage from './pages/profile/ProfilePage';
 import DocumentsPage from './pages/documents/DocumentsPage';
@@ -35,6 +36,7 @@ function App() {
             {/* Public routes */}
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* Protected driver routes */}
             <Route
