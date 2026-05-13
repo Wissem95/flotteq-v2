@@ -68,6 +68,14 @@ export class PartnerUser {
   @Column({ type: 'timestamp', nullable: true, name: 'last_login_at' })
   lastLoginAt: Date | null;
 
+  @ApiPropertyOptional()
+  @Column({ type: 'varchar', nullable: true, name: 'reset_password_token' })
+  resetPasswordToken: string | null;
+
+  @ApiPropertyOptional()
+  @Column({ type: 'timestamp', nullable: true, name: 'reset_password_expires' })
+  resetPasswordExpires: Date | null;
+
   @ApiProperty()
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

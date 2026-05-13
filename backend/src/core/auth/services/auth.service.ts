@@ -310,8 +310,13 @@ export class AuthService {
       },
     );
 
-    // Envoyer email avec lien
-    const resetUrl = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${resetToken}`;
+    // Envoyer email avec lien (URL frontend routée par rôle)
+    const frontendUrl =
+      user.role === UserRole.DRIVER
+        ? this.configService.get('DRIVER_FRONTEND_URL')
+        : this.configService.get('FRONTEND_CLIENT_URL');
+
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
     await this.emailQueueService.queuePasswordResetEmail(
       user.email,

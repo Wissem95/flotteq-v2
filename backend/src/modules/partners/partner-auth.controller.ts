@@ -5,11 +5,14 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { PartnerAuthService } from './partner-auth.service';
 import { PartnersService } from './partners.service';
 import { HybridAuthGuard } from '../../core/auth/guards/hybrid-auth.guard';
 import { CurrentPartner } from './decorators/current-partner.decorator';
 import { PartnerLoginDto } from './dto/partner-login.dto';
+import { PartnerForgotPasswordDto } from './dto/partner-forgot-password.dto';
+import { PartnerResetPasswordDto } from './dto/partner-reset-password.dto';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { Public } from '../../common/decorators/public.decorator';
 
@@ -59,5 +62,34 @@ export class PartnerAuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async getProfile(@CurrentPartner('partnerUserId') partnerUserId: string) {
     return this.partnerAuthService.getProfile(partnerUserId);
+  }
+
+  @Public()
+  @Post('forgot-password')
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({
+    summary:
+      'Demander un lien de réinitialisation de mot de passe (partenaire)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Email envoyé si le partenaire existe",
+  })
+  async forgotPassword(@Body() dto: PartnerForgotPasswordDto) {
+    return this.partnerAuthService.forgotPassword(dto.email);
+  }
+
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({
+    summary: 'Réinitialiser le mot de passe partenaire avec le token',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Mot de passe réinitialisé avec succès',
+  })
+  @ApiResponse({ status: 400, description: 'Token invalide ou expiré' })
+  async resetPassword(@Body() dto: PartnerResetPasswordDto) {
+    return this.partnerAuthService.resetPassword(dto.token, dto.newPassword);
   }
 }
