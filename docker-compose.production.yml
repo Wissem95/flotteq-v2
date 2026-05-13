@@ -189,6 +189,21 @@ services:
       timeout: 3s
       retries: 3
 
+  # Frontend Portal (Espace selector for portal.flotteq.fr — used by external landing)
+  frontend-portal:
+    build:
+      context: ./frontend-portal
+      dockerfile: Dockerfile
+    container_name: flotteq_frontend_portal_prod
+    restart: always
+    networks:
+      - flotteq_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+
   # Nginx Reverse Proxy (HTTPS multi-domaine)
   nginx:
     image: nginx:alpine
@@ -209,6 +224,7 @@ services:
       - frontend-driver
       - frontend-internal
       - frontend-landing
+      - frontend-portal
     networks:
       - flotteq_network
     healthcheck:
