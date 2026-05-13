@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import PartnerLayout from './layouts/PartnerLayout';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import PendingApprovalPage from './pages/PendingApprovalPage';
 import DashboardPage from './pages/DashboardPage';
 import PlanningPage from './pages/PlanningPage';
@@ -31,6 +32,7 @@ function App() {
         {/* Public routes (no layout) */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/pending-approval" element={<PendingApprovalPage />} />
 
         {/* Protected routes */}

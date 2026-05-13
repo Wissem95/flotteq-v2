@@ -110,6 +110,15 @@ export default function LoginPage() {
           </div>
           </div>
 
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className="text-sm text-flotteq-blue hover:text-flotteq-navy"
+            >
+              Mot de passe oublié ?
+            </Link>
+          </div>
+
           <div>
             <button
               type="submit"
