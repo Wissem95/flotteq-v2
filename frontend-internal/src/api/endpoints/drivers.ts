@@ -5,6 +5,7 @@ import type {
   UpdateDriverDto,
   DriversListResponse,
   DriversQueryParams,
+  DriverStatus,
 } from '../types/driver.types';
 
 export const driversApi = {
@@ -26,6 +27,12 @@ export const driversApi = {
 
   update: async (id: string, data: UpdateDriverDto): Promise<Driver> => {
     const response = await apiClient.patch<Driver>(`/api/drivers/${id}`, data);
+    return response.data;
+  },
+
+  // Mise à jour du statut de supervision (actif / inactif / suspendu)
+  updateStatus: async (id: string, status: DriverStatus): Promise<Driver> => {
+    const response = await apiClient.patch<Driver>(`/api/drivers/${id}`, { status });
     return response.data;
   },
 

@@ -794,32 +794,40 @@ async function createSubscriptionPlans(
 
   console.log('🌱 Creating subscription plans...');
 
+  // Grille tarifaire alignée sur la landing flotteq.fr (#pricing) — source de vérité unique :
+  // Starter (Gratuit) · Pro 29€ · Business 79€ · Enterprise (sur devis).
   const plans = [
     {
-      name: 'Freemium',
+      name: 'Starter',
       price: 0,
-      maxVehicles: 2,
-      maxUsers: 1,
-      maxDrivers: 2,
+      maxVehicles: 3,
+      maxUsers: 2,
+      maxDrivers: 3,
       maxStorageMb: 100, // 100MB
       trialDays: 0, // Pas d'essai car c'est gratuit
-      features: ['basic_dashboard', 'email_notifications'],
+      features: ['basic_dashboard', 'email_notifications', 'marketplace_read'],
       isActive: true,
     },
     {
-      name: 'Starter',
+      name: 'Pro',
       price: 29,
       maxVehicles: 10,
       maxUsers: 5,
       maxDrivers: 10,
       maxStorageMb: 1024, // 1GB
       trialDays: 14, // 14 jours d'essai
-      features: ['support_email', 'basic_reports', 'api_access', 'export_pdf'],
+      features: [
+        'support_email',
+        'basic_reports',
+        'api_access',
+        'export_pdf',
+        'marketplace_booking',
+      ],
       isActive: true,
     },
     {
       name: 'Business',
-      price: 99,
+      price: 79,
       maxVehicles: 50,
       maxUsers: 20,
       maxDrivers: 50,
@@ -831,12 +839,15 @@ async function createSubscriptionPlans(
         'api_access',
         'export_excel',
         'custom_fields',
+        'multi_users',
       ],
       isActive: true,
     },
     {
+      // Enterprise = "Sur devis" : price 0 (le tarif réel est négocié, voir contact@flotteq.fr).
+      // Le front affiche "Sur devis" pour ce plan (pas de paiement en self-service).
       name: 'Enterprise',
-      price: 299,
+      price: 0,
       maxVehicles: -1, // Illimité
       maxUsers: -1,
       maxDrivers: -1,

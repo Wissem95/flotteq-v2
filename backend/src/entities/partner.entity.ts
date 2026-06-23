@@ -19,10 +19,11 @@ export enum PartnerType {
 }
 
 export enum PartnerStatus {
+  INCOMPLETE = 'incomplete', // Inscription/onboarding bancaire non terminé
   PENDING = 'pending',
   APPROVED = 'approved',
   REJECTED = 'rejected',
-  SUSPENDED = 'suspended',
+  SUSPENDED = 'suspended', // Suspension volontaire par un admin FlotteQ (abus)
 }
 
 @Entity('partners')

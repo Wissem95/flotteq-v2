@@ -49,17 +49,26 @@ export const PartnersListPage = () => {
       approved: 'default',
       rejected: 'destructive',
       suspended: 'outline',
+      incomplete: 'outline',
     };
-    const colors = {
+    const colors: Record<PartnerStatus, string> = {
       pending: 'bg-yellow-500 hover:bg-yellow-600',
       approved: 'bg-green-500 hover:bg-green-600',
       rejected: 'bg-red-500 hover:bg-red-600',
       suspended: 'bg-gray-500 hover:bg-gray-600',
+      incomplete: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
+    };
+    const labels: Record<PartnerStatus, string> = {
+      pending: 'EN ATTENTE',
+      approved: 'APPROUVÉ',
+      rejected: 'REJETÉ',
+      suspended: 'SUSPENDU',
+      incomplete: 'Configuration incomplète',
     };
 
     return (
       <Badge variant={variants[status]} className={colors[status]}>
-        {status.toUpperCase()}
+        {labels[status]}
       </Badge>
     );
   };
@@ -151,6 +160,7 @@ export const PartnersListPage = () => {
               <SelectItem value="approved">Approuvé</SelectItem>
               <SelectItem value="rejected">Rejeté</SelectItem>
               <SelectItem value="suspended">Suspendu</SelectItem>
+              <SelectItem value="incomplete">Configuration incomplète</SelectItem>
             </SelectContent>
           </Select>
         </div>

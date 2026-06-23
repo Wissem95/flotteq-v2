@@ -10,6 +10,7 @@ export enum PartnerStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
   SUSPENDED = 'suspended',
+  INCOMPLETE = 'incomplete',
 }
 
 export interface Partner {

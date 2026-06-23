@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { driversApi } from '@/api/endpoints/drivers';
-import type { CreateDriverDto, UpdateDriverDto, DriversQueryParams } from '@/api/types/driver.types';
+import type { CreateDriverDto, UpdateDriverDto, DriversQueryParams, DriverStatus } from '@/api/types/driver.types';
 import { useToast } from '@/hooks/use-toast';
 
 export const useDrivers = (params?: DriversQueryParams) => {
@@ -44,6 +44,23 @@ export const useDrivers = (params?: DriversQueryParams) => {
     },
   });
 
+  // Mutation de supervision : changer le statut (désactiver / bannir / réactiver)
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: DriverStatus }) =>
+      driversApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['drivers'] });
+      toast({ title: 'Statut mis à jour', description: 'Le statut du conducteur a été mis à jour' });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error.response?.data?.message || 'Impossible de mettre à jour le statut',
+      });
+    },
+  });
+
   return {
     drivers: data?.data || [],
     total: data?.total || 0,
@@ -53,6 +70,8 @@ export const useDrivers = (params?: DriversQueryParams) => {
     createDriver: createMutation.mutate,
     updateDriver: updateMutation.mutate,
     deleteDriver: deleteMutation.mutate,
+    updateDriverStatus: updateStatusMutation.mutate,
+    isUpdatingStatus: updateStatusMutation.isPending,
     isCreating: createMutation.isPending,
   };
 };

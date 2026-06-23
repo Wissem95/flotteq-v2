@@ -15,6 +15,7 @@ import {
   Handshake,
   DollarSign,
   Settings,
+  ShieldCheck,
 } from 'lucide-react';
 
 export const MainLayout = () => {
@@ -48,6 +49,11 @@ export const MainLayout = () => {
       icon: Users,
       label: 'Utilisateurs',
       path: '/users',
+    },
+    {
+      icon: ShieldCheck,
+      label: 'Équipe FlotteQ',
+      path: '/team',
     },
     {
       icon: Car,

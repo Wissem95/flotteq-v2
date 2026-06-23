@@ -20,7 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, UserPlus, Trash2, Power, PowerOff, Filter } from 'lucide-react';
+import { Search, UserPlus, Power, PowerOff } from 'lucide-react';
 import type { UserRole } from '@/api/types/user.types';
 
 export const UsersListPage = () => {
@@ -31,7 +31,7 @@ export const UsersListPage = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const itemsPerPage = 20;
 
-  const { users, isLoading, deleteUser, activateUser, deactivateUser } = useUsers({});
+  const { users, isLoading, activateUser, deactivateUser } = useUsers({});
 
   const getRoleBadgeColor = (role: UserRole) => {
     const colors = {
@@ -43,12 +43,6 @@ export const UsersListPage = () => {
       viewer: 'bg-slate-500',
     };
     return colors[role] || 'bg-gray-500';
-  };
-
-  const handleDelete = (id: string, email: string) => {
-    if (confirm(`Voulez-vous vraiment supprimer l'utilisateur ${email} ?`)) {
-      deleteUser(id);
-    }
   };
 
   const handleToggleActive = (id: string, isActive: boolean) => {
@@ -188,14 +182,6 @@ export const UsersListPage = () => {
                         ) : (
                           <Power className="h-4 w-4" />
                         )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(user.id, user.email)}
-                        className="text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </TableCell>

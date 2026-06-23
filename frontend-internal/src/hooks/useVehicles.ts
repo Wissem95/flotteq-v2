@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehiclesApi } from '@/api/endpoints/vehicles';
-import type { CreateVehicleDto, UpdateVehicleDto, VehiclesQueryParams } from '@/api/types/vehicle.types';
+import type { CreateVehicleDto, UpdateVehicleDto, VehiclesQueryParams, VehicleStatus } from '@/api/types/vehicle.types';
 import { useToast } from '@/hooks/use-toast';
 
 export const useVehicles = (params?: VehiclesQueryParams) => {
@@ -44,6 +44,23 @@ export const useVehicles = (params?: VehiclesQueryParams) => {
     },
   });
 
+  // Mutation de supervision : changer le statut (hors service / réactiver)
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: VehicleStatus }) =>
+      vehiclesApi.updateStatus(id, status),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vehicles'] });
+      toast({ title: 'Statut mis à jour', description: 'Le statut du véhicule a été mis à jour' });
+    },
+    onError: (error: any) => {
+      toast({
+        variant: 'destructive',
+        title: 'Erreur',
+        description: error.response?.data?.message || 'Impossible de mettre à jour le statut',
+      });
+    },
+  });
+
   return {
     vehicles: data?.data || [],
     total: data?.total || 0,
@@ -53,6 +70,8 @@ export const useVehicles = (params?: VehiclesQueryParams) => {
     createVehicle: createMutation.mutate,
     updateVehicle: updateMutation.mutate,
     deleteVehicle: deleteMutation.mutate,
+    updateVehicleStatus: updateStatusMutation.mutate,
+    isUpdatingStatus: updateStatusMutation.isPending,
     isCreating: createMutation.isPending,
   };
 };

@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Patch,
   Delete,
   Param,
   Query,
@@ -36,6 +37,7 @@ import { DocumentOwnershipGuard } from './guards/document-ownership.guard';
 import { StorageQuotaInterceptor } from './interceptors/storage-quota.interceptor';
 import { UploadDocumentDto } from './dto/upload-document.dto';
 import { QueryDocumentsDto } from './dto/query-documents.dto';
+import { VerifyDocumentDto } from './dto/verify-document.dto';
 import { ExpiringDocumentDto } from './dto/expiring-document.dto';
 import { Document } from '../entities/document.entity';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -133,6 +135,44 @@ export class DocumentsController {
       tenantId,
       query.entityType,
       query.entityId,
+    );
+  }
+
+  @Get('admin/by-entity')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT)
+  @ApiOperation({
+    summary:
+      "Liste les documents d'une entité (toutes tenants) — supervision FlotteQ",
+    description:
+      'Réservé à l\'équipe FlotteQ. Utilisé notamment pour vérifier les documents des partenaires (entityType=partner).',
+  })
+  @ApiResponse({ status: 200, description: 'Documents', type: [Document] })
+  @ApiResponse({ status: 403, description: 'Réservé à l\'équipe FlotteQ' })
+  async findByEntity(
+    @Query('entityType') entityType: string,
+    @Query('entityId') entityId: string,
+  ) {
+    return this.documentsService.findByEntity(entityType, entityId);
+  }
+
+  @Patch(':id/verification')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.SUPPORT)
+  @ApiOperation({
+    summary: 'Valide ou refuse un document (vérification FlotteQ)',
+  })
+  @ApiResponse({ status: 200, description: 'Document mis à jour', type: Document })
+  @ApiResponse({ status: 403, description: 'Réservé à l\'équipe FlotteQ' })
+  @ApiResponse({ status: 404, description: 'Document non trouvé' })
+  async verify(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: VerifyDocumentDto,
+    @Req() req: any,
+  ) {
+    return this.documentsService.verify(
+      id,
+      dto.status,
+      req.user?.id,
+      dto.notes,
     );
   }
 

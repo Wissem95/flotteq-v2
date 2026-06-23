@@ -12,12 +12,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Trash2, AlertCircle } from 'lucide-react';
-import type { DriverStatus } from '@/api/types/driver.types';
+import { Search, AlertCircle, Ban, Power, RotateCcw } from 'lucide-react';
+import { DriverStatus } from '@/api/types/driver.types';
 
 export const DriversListPage = () => {
   const [search, setSearch] = useState('');
-  const { drivers, isLoading, deleteDriver } = useDrivers({
+  const { drivers, isLoading, updateDriverStatus } = useDrivers({
     search,
     limit: 100,
   });
@@ -55,9 +55,15 @@ export const DriversListPage = () => {
     return expiry < today;
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (confirm(`Voulez-vous vraiment supprimer le conducteur ${name} ?`)) {
-      deleteDriver(id);
+  // Actions de supervision avec confirmation (même pattern que les anciens delete)
+  const handleUpdateStatus = (
+    id: string,
+    name: string,
+    status: DriverStatus,
+    actionLabel: string,
+  ) => {
+    if (confirm(`Voulez-vous vraiment ${actionLabel} le conducteur ${name} ?`)) {
+      updateDriverStatus({ id, status });
     }
   };
 
@@ -102,50 +108,87 @@ export const DriversListPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {drivers.map((driver) => (
-                <TableRow key={driver.id}>
-                  <TableCell className="font-medium">
-                    {driver.firstName} {driver.lastName}
-                  </TableCell>
-                  <TableCell>{driver.email}</TableCell>
-                  <TableCell>{driver.phone}</TableCell>
-                  <TableCell className="font-mono">{driver.licenseNumber}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      {isLicenseExpired(driver.licenseExpiryDate) && (
-                        <AlertCircle className="h-4 w-4 text-destructive" />
-                      )}
-                      {isLicenseExpiringSoon(driver.licenseExpiryDate) && !isLicenseExpired(driver.licenseExpiryDate) && (
-                        <AlertCircle className="h-4 w-4 text-yellow-500" />
-                      )}
-                      <span className={isLicenseExpired(driver.licenseExpiryDate) ? 'text-destructive' : ''}>
-                        {new Date(driver.licenseExpiryDate).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(driver.status)}>
-                      {getStatusLabel(driver.status)}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{driver.tenant?.name || 'N/A'}</span>
-                      <span className="text-xs text-muted-foreground">ID: {driver.tenantId}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(driver.id, `${driver.firstName} ${driver.lastName}`)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {drivers.map((driver) => {
+                const fullName = `${driver.firstName} ${driver.lastName}`;
+                return (
+                  <TableRow key={driver.id}>
+                    <TableCell className="font-medium">
+                      {fullName}
+                    </TableCell>
+                    <TableCell>{driver.email}</TableCell>
+                    <TableCell>{driver.phone}</TableCell>
+                    <TableCell className="font-mono">{driver.licenseNumber}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {isLicenseExpired(driver.licenseExpiryDate) && (
+                          <AlertCircle className="h-4 w-4 text-destructive" />
+                        )}
+                        {isLicenseExpiringSoon(driver.licenseExpiryDate) && !isLicenseExpired(driver.licenseExpiryDate) && (
+                          <AlertCircle className="h-4 w-4 text-yellow-500" />
+                        )}
+                        <span className={isLicenseExpired(driver.licenseExpiryDate) ? 'text-destructive' : ''}>
+                          {new Date(driver.licenseExpiryDate).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={getStatusBadgeVariant(driver.status)}>
+                        {getStatusLabel(driver.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{driver.tenant?.name || 'N/A'}</span>
+                        <span className="text-xs text-muted-foreground">ID: {driver.tenantId}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        {/* Désactiver : visible si le conducteur est actif */}
+                        {driver.status === DriverStatus.ACTIVE && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              handleUpdateStatus(driver.id, fullName, DriverStatus.INACTIVE, 'désactiver')
+                            }
+                            title="Désactiver"
+                          >
+                            <Power className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {/* Bannir : visible tant que le conducteur n'est pas déjà suspendu */}
+                        {driver.status !== DriverStatus.SUSPENDED && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              handleUpdateStatus(driver.id, fullName, DriverStatus.SUSPENDED, 'bannir')
+                            }
+                            className="text-destructive"
+                            title="Bannir"
+                          >
+                            <Ban className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {/* Réactiver : visible si le conducteur n'est pas actif */}
+                        {driver.status !== DriverStatus.ACTIVE && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() =>
+                              handleUpdateStatus(driver.id, fullName, DriverStatus.ACTIVE, 'réactiver')
+                            }
+                            title="Réactiver"
+                          >
+                            <RotateCcw className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

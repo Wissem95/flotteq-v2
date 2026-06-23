@@ -41,6 +41,7 @@ export const audiences: Audience[] = [
     features: [
       'Rappels automatiques CT, révisions, assurance',
       "Carnet d'entretien numérique",
+      "Réservation d'entretien en ligne",
       'Devis garage en 1 clic via la marketplace',
       'Suivi kilométrage et budget auto',
     ],

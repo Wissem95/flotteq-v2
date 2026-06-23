@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vehiclesService } from '../../api/services/vehicles.service';
 import VehicleTimeline from '../../components/vehicles/VehicleTimeline';
@@ -15,7 +15,14 @@ import { ProtectedButton } from '@/components/common/ProtectedButton';
 
 export default function VehicleDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState<'info' | 'photos' | 'timeline' | 'km' | 'costs' | 'documents'>('info');
+  const [searchParams] = useSearchParams();
+  // Onglet actif initialisé depuis le query param (ex: ?tab=documents après création d'un véhicule)
+  const validTabs = ['info', 'photos', 'timeline', 'km', 'costs', 'documents'] as const;
+  type TabType = (typeof validTabs)[number];
+  const initialTab = validTabs.includes(searchParams.get('tab') as TabType)
+    ? (searchParams.get('tab') as TabType)
+    : 'info';
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCtForm, setShowCtForm] = useState(false);

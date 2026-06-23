@@ -37,6 +37,8 @@ export const PARTNER_STATUS = {
   APPROVED: 'approved',
   REJECTED: 'rejected',
   SUSPENDED: 'suspended',
+  // Onboarding Stripe Connect commencé mais non finalisé : "Configuration incomplète"
+  INCOMPLETE: 'incomplete',
 } as const;
 
 export const PARTNER_SUPPORT = {

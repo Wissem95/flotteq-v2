@@ -44,12 +44,14 @@ export default function LoginPage() {
         return;
       }
 
-      if (partner.status !== 'approved') {
+      // Le statut 'incomplete' (onboarding Stripe non finalisé) ne doit PAS bloquer
+      // la connexion : le partenaire doit pouvoir se connecter pour terminer sa configuration.
+      if (partner.status !== 'approved' && partner.status !== 'incomplete') {
         setError('Votre compte n\'est pas actif. Contactez le support.');
         return;
       }
 
-      // Only login and redirect if status is approved
+      // Connexion autorisée pour les statuts 'approved' et 'incomplete'
       login(accessToken, partnerUser);
       navigate('/dashboard');
     } catch (err: any) {

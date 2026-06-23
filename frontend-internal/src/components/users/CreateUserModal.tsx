@@ -37,9 +37,18 @@ type CreateUserForm = z.infer<typeof createUserSchema>;
 interface CreateUserModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  // Rôle pré-sélectionné (ex: création d'un employé interne FlotteQ)
+  defaultRole?: UserRole;
+  // Restreint la liste des rôles proposés (ex: uniquement super_admin / support)
+  allowedRoles?: UserRole[];
 }
 
-export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) => {
+export const CreateUserModal = ({
+  open,
+  onOpenChange,
+  defaultRole = UserRole.VIEWER,
+  allowedRoles,
+}: CreateUserModalProps) => {
   const { createUser, isCreating } = useUsers();
   const {
     register,
@@ -50,9 +59,22 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
   } = useForm<CreateUserForm>({
     resolver: zodResolver(createUserSchema),
     defaultValues: {
-      role: UserRole.VIEWER,
+      role: defaultRole,
     },
   });
+
+  // Définition des rôles disponibles dans le select (libellés FR)
+  const allRoleOptions: { value: UserRole; label: string }[] = [
+    { value: UserRole.SUPER_ADMIN, label: 'Super Admin' },
+    { value: UserRole.SUPPORT, label: 'Support' },
+    { value: UserRole.TENANT_ADMIN, label: 'Tenant Admin' },
+    { value: UserRole.MANAGER, label: 'Manager' },
+    { value: UserRole.DRIVER, label: 'Driver' },
+    { value: UserRole.VIEWER, label: 'Viewer' },
+  ];
+  const roleOptions = allowedRoles
+    ? allRoleOptions.filter((opt) => allowedRoles.includes(opt.value))
+    : allRoleOptions;
 
   const onSubmit = (data: CreateUserForm) => {
     createUser(data, {
@@ -127,18 +149,17 @@ export const CreateUserModal = ({ open, onOpenChange }: CreateUserModalProps) =>
             <Label htmlFor="role">Rôle</Label>
             <Select
               onValueChange={(value) => setValue('role', value as UserRole)}
-              defaultValue={UserRole.VIEWER}
+              defaultValue={defaultRole}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Sélectionner un rôle" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
-                <SelectItem value={UserRole.SUPPORT}>Support</SelectItem>
-                <SelectItem value={UserRole.TENANT_ADMIN}>Tenant Admin</SelectItem>
-                <SelectItem value={UserRole.MANAGER}>Manager</SelectItem>
-                <SelectItem value={UserRole.DRIVER}>Driver</SelectItem>
-                <SelectItem value={UserRole.VIEWER}>Viewer</SelectItem>
+                {roleOptions.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

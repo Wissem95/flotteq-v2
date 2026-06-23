@@ -9,7 +9,7 @@ export interface PartnerUser {
     id: string;
     companyName: string;
     type: string;
-    status: 'pending' | 'approved' | 'rejected' | 'suspended';
+    status: 'pending' | 'approved' | 'rejected' | 'suspended' | 'incomplete';
   };
 }
 
@@ -25,7 +25,7 @@ export interface Partner {
   latitude?: number;
   longitude?: number;
   type: 'garage' | 'car_wash' | 'body_shop' | 'tire_shop' | 'towing' | 'inspection' | 'rental' | 'other';
-  status: 'pending' | 'approved' | 'rejected' | 'suspended';
+  status: 'pending' | 'approved' | 'rejected' | 'suspended' | 'incomplete';
   commissionRate: number;
   createdAt: string;
   updatedAt: string;

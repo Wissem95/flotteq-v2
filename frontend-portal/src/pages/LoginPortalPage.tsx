@@ -5,7 +5,7 @@ const CARDS: PortalCard[] = [
   { ...PORTAL_DEFS.client, href: 'https://app.flotteq.fr/login' },
   { ...PORTAL_DEFS.partner, href: 'https://partner.flotteq.fr/login' },
   { ...PORTAL_DEFS.driver, href: 'https://driver.flotteq.fr/login' },
-  { ...PORTAL_DEFS.admin, href: 'https://admin.flotteq.fr/login' },
+  // L'Administration (admin.flotteq.fr) n'est pas listée : accès réservé à l'équipe FlotteQ.
 ];
 
 export default function LoginPortalPage() {

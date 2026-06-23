@@ -179,11 +179,18 @@ export default function SettingsPage() {
             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
               user?.status === 'approved' ? 'bg-green-100 text-green-800' :
               user?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
+              user?.status === 'rejected' ? 'bg-red-100 text-red-800' :
+              user?.status === 'suspended' ? 'bg-red-100 text-red-800' :
+              // 'incomplete' ou tout statut non reconnu / manquant : orange (configuration incomplète)
+              'bg-orange-100 text-orange-800'
             }`}>
               {user?.status === 'approved' ? 'Approuvé' :
                user?.status === 'pending' ? 'En attente' :
-               user?.status === 'rejected' ? 'Rejeté' : 'Suspendu'}
+               user?.status === 'rejected' ? 'Rejeté' :
+               user?.status === 'suspended' ? 'Suspendu' :
+               // Ne jamais retomber sur "Suspendu" par défaut : un statut inconnu/manquant
+               // (ou 'incomplete') signifie une configuration non finalisée.
+               'Configuration incomplète'}
             </span>
           </div>
         </div>

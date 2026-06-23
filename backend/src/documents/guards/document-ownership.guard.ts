@@ -37,9 +37,16 @@ export class DocumentOwnershipGuard implements CanActivate {
     }
 
     // Récupérer le document
+    // SUPER_ADMIN / SUPPORT : accès cross-tenant → on ignore le filtre de tenant
+    const isFlotteqAdmin =
+      user.role === UserRole.SUPER_ADMIN || user.role === UserRole.SUPPORT;
     let document;
     try {
-      document = await this.documentsService.findOne(documentId, user.tenantId);
+      document = await this.documentsService.findOne(
+        documentId,
+        user.tenantId,
+        isFlotteqAdmin,
+      );
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;

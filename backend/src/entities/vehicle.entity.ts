@@ -67,8 +67,10 @@ export class Vehicle {
   })
   status: VehicleStatus;
 
-  @Column({ unique: true })
-  vin: string;
+  // VIN optionnel : en Postgres, une contrainte UNIQUE autorise plusieurs valeurs NULL,
+  // donc plusieurs véhicules sans VIN ne génèrent pas de conflit d'unicité.
+  @Column({ type: 'varchar', unique: true, nullable: true })
+  vin: string | null;
 
   @Column()
   color: string;

@@ -47,8 +47,11 @@ import {
   Loader2,
   Trash2,
   Edit,
+  Download,
 } from 'lucide-react';
 import type { Partner, PartnerStatus } from '@/api/types/partner.types';
+import type { DocumentVerificationStatus } from '@/api/types/document.types';
+import { usePartnerDocuments } from '@/hooks/usePartnerDocuments';
 
 interface PartnerDetailModalProps {
   partner: Partner;
@@ -71,6 +74,37 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
   const deletePartner = useDeletePartner();
 
   const { data: services, isLoading: servicesLoading } = usePartnerServices(partner.id);
+
+  // Documents partenaires à vérifier (chargés uniquement quand le modal est ouvert)
+  const {
+    documents,
+    isLoading: documentsLoading,
+    verifyDocument,
+    isVerifying,
+    downloadDocument,
+  } = usePartnerDocuments(partner.id, open);
+
+  // Validation d'un document
+  const handleApproveDocument = (id: string) => {
+    verifyDocument({ id, data: { status: 'approved' } });
+  };
+
+  // Refus d'un document : on demande une note via prompt
+  const handleRejectDocument = (id: string) => {
+    const notes = window.prompt('Motif du refus (optionnel) :') ?? undefined;
+    verifyDocument({ id, data: { status: 'rejected', notes } });
+  };
+
+  // Badge de statut de vérification d'un document
+  const getDocumentStatusBadge = (status: DocumentVerificationStatus) => {
+    const config: Record<DocumentVerificationStatus, { label: string; className: string }> = {
+      pending: { label: 'En attente', className: 'bg-yellow-500 hover:bg-yellow-600' },
+      approved: { label: 'Validé', className: 'bg-green-500 hover:bg-green-600' },
+      rejected: { label: 'Refusé', className: 'bg-red-500 hover:bg-red-600' },
+    };
+    const { label, className } = config[status] ?? config.pending;
+    return <Badge className={className}>{label}</Badge>;
+  };
 
   useEffect(() => {
     setCommissionRate(partner.commissionRate.toString());
@@ -138,16 +172,24 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
   };
 
   const getStatusBadge = (status: PartnerStatus) => {
-    const variants = {
+    const variants: Record<PartnerStatus, string> = {
       pending: 'bg-yellow-500 hover:bg-yellow-600',
       approved: 'bg-green-500 hover:bg-green-600',
       rejected: 'bg-red-500 hover:bg-red-600',
       suspended: 'bg-gray-500 hover:bg-gray-600',
+      incomplete: 'bg-orange-100 text-orange-800 hover:bg-orange-200',
+    };
+    const labels: Record<PartnerStatus, string> = {
+      pending: 'EN ATTENTE',
+      approved: 'APPROUVÉ',
+      rejected: 'REJETÉ',
+      suspended: 'SUSPENDU',
+      incomplete: 'Configuration incomplète',
     };
 
     return (
       <Badge className={variants[status]}>
-        {status.toUpperCase()}
+        {labels[status]}
       </Badge>
     );
   };
@@ -289,6 +331,78 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
                 </div>
               </>
             )}
+
+            <Separator />
+
+            {/* Documents à vérifier */}
+            <div>
+              <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Documents à vérifier
+              </h3>
+              {documentsLoading ? (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Chargement des documents...
+                </div>
+              ) : documents.length > 0 ? (
+                <div className="space-y-2">
+                  {documents.map((doc) => (
+                    <div
+                      key={doc.id}
+                      className="flex items-center justify-between p-3 border rounded-lg gap-3 flex-wrap"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium truncate">{doc.fileName}</p>
+                          {getDocumentStatusBadge(doc.verificationStatus)}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {doc.documentType} ·{' '}
+                          {new Date(doc.createdAt).toLocaleDateString('fr-FR')}
+                        </p>
+                        {doc.verificationNotes && (
+                          <p className="text-sm text-muted-foreground italic">
+                            Note : {doc.verificationNotes}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => downloadDocument(doc.id, doc.fileName)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Télécharger
+                        </Button>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                          disabled={isVerifying || doc.verificationStatus === 'approved'}
+                          onClick={() => handleApproveDocument(doc.id)}
+                        >
+                          <CheckCircle className="h-4 w-4 mr-1" />
+                          Valider
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          disabled={isVerifying || doc.verificationStatus === 'rejected'}
+                          onClick={() => handleRejectDocument(doc.id)}
+                        >
+                          <XCircle className="h-4 w-4 mr-1" />
+                          Refuser
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Aucun document à vérifier</p>
+              )}
+            </div>
 
             <Separator />
 

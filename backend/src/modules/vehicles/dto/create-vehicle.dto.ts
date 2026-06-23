@@ -8,7 +8,7 @@ import {
   IsNumber,
   Min,
 } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   VehicleStatus,
   TransmissionType,
@@ -42,10 +42,13 @@ export class CreateVehicleDto {
   @Min(1900)
   year: number;
 
-  @ApiProperty({ description: 'Vehicle VIN' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({
+    description:
+      'Vehicle VIN (optionnel — pourra être pré-rempli plus tard via scan de la carte grise + IA)',
+  })
+  @IsOptional()
   @IsString()
-  vin: string;
+  vin?: string;
 
   @ApiProperty({ description: 'Vehicle color' })
   @IsNotEmpty()

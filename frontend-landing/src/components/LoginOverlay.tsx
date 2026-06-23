@@ -19,12 +19,8 @@ const PORTALS = [
     href: 'https://driver.flotteq.fr',
     accent: 'text-emerald-600 bg-emerald-100',
   },
-  {
-    label: 'Administration',
-    domain: 'admin.flotteq.fr',
-    href: 'https://admin.flotteq.fr',
-    accent: 'text-pink-600 bg-pink-100',
-  },
+  // L'Administration (admin.flotteq.fr) est volontairement absente : accès réservé
+  // à l'équipe FlotteQ, non annoncé publiquement sur la page de connexion.
 ];
 
 export function LoginOverlay({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {

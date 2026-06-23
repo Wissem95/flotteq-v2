@@ -8,6 +8,7 @@ import { TenantFormPage } from './pages/tenants/TenantFormPage';
 import { PlansPage } from './pages/subscriptions/PlansPage';
 import { ActiveSubscriptionsPage } from './pages/subscriptions/ActiveSubscriptionsPage';
 import { UsersListPage } from './pages/users/UsersListPage';
+import { TeamPage } from './pages/team/TeamPage';
 import { VehiclesListPage } from './pages/vehicles/VehiclesListPage';
 import { DriversListPage } from './pages/drivers/DriversListPage';
 import { PartnersListPage } from './pages/partners/PartnersListPage';
@@ -47,6 +48,7 @@ function App() {
             <Route path="/subscriptions/plans" element={<PlansPage />} />
             <Route path="/subscriptions/active" element={<ActiveSubscriptionsPage />} />
             <Route path="/users" element={<UsersListPage />} />
+            <Route path="/team" element={<TeamPage />} />
             <Route path="/vehicles" element={<VehiclesListPage />} />
             <Route path="/drivers" element={<DriversListPage />} />
             <Route path="/partners" element={<PartnersListPage />} />

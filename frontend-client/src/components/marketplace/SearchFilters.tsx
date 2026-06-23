@@ -23,6 +23,7 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
   const [isSearchingAddress, setIsSearchingAddress] = useState(false);
   const [radius, setRadius] = useState('10');
   const [type, setType] = useState('');
+  const [serviceType, setServiceType] = useState('');
   const [minRating, setMinRating] = useState('');
   const [sortBy, setSortBy] = useState<'distance' | 'rating' | 'price' | 'relevance'>('relevance');
   const debounceTimer = useRef<NodeJS.Timeout | undefined>(undefined);
@@ -109,6 +110,7 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
     };
 
     if (type) params.type = type;
+    if (serviceType.trim()) params.serviceType = serviceType.trim();
     if (minRating) params.minRating = parseFloat(minRating);
 
     onSearch(params);
@@ -215,7 +217,32 @@ export default function SearchFilters({ onSearch, isLoading }: SearchFiltersProp
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        {/* Type de prestation / réparation (sélection rapide + saisie libre) */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Type de prestation</label>
+          <input
+            type="text"
+            list="service-type-options"
+            value={serviceType}
+            onChange={(e) => setServiceType(e.target.value)}
+            placeholder="Tous (ex: Vidange, Pneus...)"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-flotteq-blue text-sm"
+          />
+          <datalist id="service-type-options">
+            <option value="Vidange" />
+            <option value="Plaquettes de frein" />
+            <option value="Disques de frein" />
+            <option value="Pneus" />
+            <option value="Distribution" />
+            <option value="Révision" />
+            <option value="Climatisation" />
+            <option value="Contrôle technique" />
+            <option value="Carrosserie" />
+            <option value="Diagnostic" />
+          </datalist>
+        </div>
+
         {/* Note minimale */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Note minimale</label>

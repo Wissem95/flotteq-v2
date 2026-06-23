@@ -5,6 +5,7 @@ import type {
   UpdateVehicleDto,
   VehiclesListResponse,
   VehiclesQueryParams,
+  VehicleStatus,
 } from '../types/vehicle.types';
 
 export const vehiclesApi = {
@@ -26,6 +27,12 @@ export const vehiclesApi = {
 
   update: async (id: string, data: UpdateVehicleDto): Promise<Vehicle> => {
     const response = await apiClient.patch<Vehicle>(`/vehicles/${id}`, data);
+    return response.data;
+  },
+
+  // Mise à jour du statut de supervision (disponible / hors service)
+  updateStatus: async (id: string, status: VehicleStatus): Promise<Vehicle> => {
+    const response = await apiClient.patch<Vehicle>(`/vehicles/${id}`, { status });
     return response.data;
   },
 

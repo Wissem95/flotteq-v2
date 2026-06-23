@@ -192,6 +192,12 @@ docker compose -f docker-compose.production.yml up -d --force-recreate --no-deps
 echo "Deploying frontend-internal..."
 docker compose -f docker-compose.production.yml up -d --force-recreate --no-deps frontend-internal
 
+echo "Deploying frontend-landing..."
+docker compose -f docker-compose.production.yml up -d --force-recreate --no-deps frontend-landing
+
+echo "Deploying frontend-portal..."
+docker compose -f docker-compose.production.yml up -d --force-recreate --no-deps frontend-portal
+
 # Nginx (reload configuration sans downtime)
 echo "Reloading Nginx..."
 docker compose -f docker-compose.production.yml exec nginx nginx -s reload 2>/dev/null || echo "Nginx reload skipped (not running)"

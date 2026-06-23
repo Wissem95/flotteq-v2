@@ -5,6 +5,7 @@ import {
   Document,
   DocumentEntityType,
   DocumentType,
+  DocumentVerificationStatus,
 } from '../entities/document.entity';
 import { ExpiringDocumentDto } from './dto/expiring-document.dto';
 import { UploadDocumentDto } from './dto/upload-document.dto';
@@ -90,6 +91,38 @@ export class DocumentsService {
   ): Promise<void> {
     const document = await this.findOne(id, tenantId, skipTenantCheck);
     await this.documentsRepository.softDelete(id);
+  }
+
+  /**
+   * Liste les documents d'une entité SANS filtre de tenant.
+   * Réservé à l'admin FlotteQ (supervision / vérification des documents partenaires).
+   */
+  async findByEntity(
+    entityType: string,
+    entityId: string,
+  ): Promise<Document[]> {
+    return this.documentsRepository.find({
+      where: { entityType: entityType as DocumentEntityType, entityId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
+   * Valide ou refuse un document (vérification par l'équipe FlotteQ).
+   */
+  async verify(
+    id: string,
+    status: DocumentVerificationStatus,
+    verifiedById: string,
+    notes?: string,
+  ): Promise<Document> {
+    // Vérification admin : pas de contrôle de tenant
+    const document = await this.findOne(id, 0, true);
+    document.verificationStatus = status;
+    document.verificationNotes = notes;
+    document.verifiedById = verifiedById;
+    document.verifiedAt = new Date();
+    return this.documentsRepository.save(document);
   }
 
   /**

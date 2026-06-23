@@ -12,12 +12,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Search, Trash2 } from 'lucide-react';
-import type { VehicleStatus } from '@/api/types/vehicle.types';
+import { Search, Ban, RotateCcw } from 'lucide-react';
+import { VehicleStatus } from '@/api/types/vehicle.types';
 
 export const VehiclesListPage = () => {
   const [search, setSearch] = useState('');
-  const { vehicles, isLoading, deleteVehicle } = useVehicles({
+  const { vehicles, isLoading, updateVehicleStatus } = useVehicles({
     search,
     limit: 100,
   });
@@ -42,9 +42,15 @@ export const VehiclesListPage = () => {
     return labels[status] || status;
   };
 
-  const handleDelete = (id: string, registration: string) => {
-    if (confirm(`Voulez-vous vraiment supprimer le véhicule ${registration} ?`)) {
-      deleteVehicle(id);
+  // Actions de supervision avec confirmation (même pattern que les anciens delete)
+  const handleUpdateStatus = (
+    id: string,
+    registration: string,
+    status: VehicleStatus,
+    actionLabel: string,
+  ) => {
+    if (confirm(`Voulez-vous vraiment ${actionLabel} le véhicule ${registration} ?`)) {
+      updateVehicleStatus({ id, status });
     }
   };
 
@@ -110,14 +116,45 @@ export const VehiclesListPage = () => {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDelete(vehicle.id, vehicle.registration)}
-                      className="text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    <div className="flex justify-end gap-2">
+                      {/* Mettre hors service : visible si le véhicule n'est pas déjà hors service */}
+                      {vehicle.status !== VehicleStatus.OUT_OF_SERVICE && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            handleUpdateStatus(
+                              vehicle.id,
+                              vehicle.registration,
+                              VehicleStatus.OUT_OF_SERVICE,
+                              'mettre hors service',
+                            )
+                          }
+                          className="text-destructive"
+                          title="Mettre hors service"
+                        >
+                          <Ban className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {/* Réactiver : visible si le véhicule est hors service */}
+                      {vehicle.status === VehicleStatus.OUT_OF_SERVICE && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            handleUpdateStatus(
+                              vehicle.id,
+                              vehicle.registration,
+                              VehicleStatus.AVAILABLE,
+                              'réactiver',
+                            )
+                          }
+                          title="Réactiver"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

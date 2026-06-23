@@ -30,6 +30,7 @@ export interface SearchPartnersParams {
   longitude: number;
   radius?: number; // km
   type?: string;
+  serviceType?: string; // Filtre sur le nom du service/prestation (recherche insensible à la casse)
   services?: string[];
   minPrice?: number;
   maxPrice?: number;

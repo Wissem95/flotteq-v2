@@ -201,12 +201,11 @@ export default function EditVehicleModal({ isOpen, onClose, vehicle }: EditVehic
 
               <div className="col-span-2">
                 <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-1">
-                  VIN *
+                  VIN (optionnel)
                 </label>
                 <input
                   type="text"
                   id="vin"
-                  required
                   value={formData.vin || ''}
                   onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
                   className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"

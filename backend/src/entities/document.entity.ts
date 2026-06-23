@@ -20,6 +20,12 @@ export enum DocumentEntityType {
   PARTNER_SERVICE = 'partner_service',
 }
 
+export enum DocumentVerificationStatus {
+  PENDING = 'pending', // En attente de vérification par l'équipe FlotteQ
+  APPROVED = 'approved', // Document validé
+  REJECTED = 'rejected', // Document refusé (voir verificationNotes)
+}
+
 export enum DocumentType {
   PERMIS = 'permis',
   CARTE_GRISE = 'carte_grise',
@@ -99,6 +105,30 @@ export class Document {
   })
   @Column({ name: 'notes', type: 'text', nullable: true })
   notes?: string;
+
+  @ApiProperty({ enum: DocumentVerificationStatus, example: 'pending' })
+  @Column({
+    name: 'verification_status',
+    type: 'enum',
+    enum: DocumentVerificationStatus,
+    default: DocumentVerificationStatus.PENDING,
+  })
+  verificationStatus: DocumentVerificationStatus;
+
+  @ApiPropertyOptional({
+    example: 'Document illisible, merci de renvoyer un scan net',
+    description: 'Motif de refus ou note de vérification (équipe FlotteQ)',
+  })
+  @Column({ name: 'verification_notes', type: 'text', nullable: true })
+  verificationNotes?: string;
+
+  @ApiPropertyOptional({ format: 'uuid', description: 'Vérificateur FlotteQ' })
+  @Column({ name: 'verified_by_id', type: 'uuid', nullable: true })
+  verifiedById?: string;
+
+  @ApiPropertyOptional({ description: 'Date de vérification' })
+  @Column({ name: 'verified_at', type: 'timestamp', nullable: true })
+  verifiedAt?: Date;
 
   @ApiProperty()
   @Column({ name: 'tenant_id' })

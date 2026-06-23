@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { vehiclesService } from '../../api/services/vehicles.service';
@@ -12,6 +13,7 @@ interface AddVehicleModalProps {
 
 export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProps) {
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<CreateVehicleData>({
     registration: '',
     brand: '',
@@ -24,7 +26,7 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
 
   const createMutation = useMutation({
     mutationFn: (data: CreateVehicleData) => vehiclesService.createVehicle(data),
-    onSuccess: () => {
+    onSuccess: (createdVehicle) => {
       queryClient.invalidateQueries({ queryKey: ['vehicles'] });
       onClose();
       setFormData({
@@ -36,6 +38,11 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
         color: '',
         status: VehicleStatus.AVAILABLE,
       });
+      // Rediriger vers la page de détail du véhicule sur l'onglet Documents
+      // pour inciter l'utilisateur à ajouter la carte grise après création
+      if (createdVehicle?.id) {
+        navigate(`/vehicles/${createdVehicle.id}?tab=documents`);
+      }
     },
   });
 
@@ -158,12 +165,11 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
 
               <div className="col-span-2">
                 <label htmlFor="vin" className="block text-sm font-medium text-gray-700 mb-1">
-                  VIN *
+                  VIN (optionnel)
                 </label>
                 <input
                   type="text"
                   id="vin"
-                  required
                   value={formData.vin}
                   onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
                   className="w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"
@@ -310,6 +316,17 @@ export default function AddVehicleModal({ isOpen, onClose }: AddVehicleModalProp
                 />
               </div>
             </div>
+          </div>
+
+          {/* Note d'aide : ajout des documents (carte grise) après création */}
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded">
+            <svg className="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-sm">
+              Vous pourrez ajouter la <strong>carte grise</strong> et les autres documents dans l'onglet
+              {' '}<strong>Documents</strong> du véhicule après création.
+            </p>
           </div>
 
           {createMutation.isError && (() => {

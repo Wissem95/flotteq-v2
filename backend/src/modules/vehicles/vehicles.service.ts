@@ -81,18 +81,21 @@ export class VehiclesService {
       );
     }
 
-    // Vérifier si le VIN existe déjà pour ce tenant
-    const existingVin = await this.vehicleRepository.findOne({
-      where: {
-        vin: createVehicleDto.vin,
-        tenantId,
-      },
-    });
+    // Vérifier si le VIN existe déjà pour ce tenant (uniquement s'il est renseigné :
+    // le VIN est désormais optionnel)
+    if (createVehicleDto.vin) {
+      const existingVin = await this.vehicleRepository.findOne({
+        where: {
+          vin: createVehicleDto.vin,
+          tenantId,
+        },
+      });
 
-    if (existingVin) {
-      throw new ConflictException(
-        `Vehicle with VIN ${createVehicleDto.vin} already exists`,
-      );
+      if (existingVin) {
+        throw new ConflictException(
+          `Vehicle with VIN ${createVehicleDto.vin} already exists`,
+        );
+      }
     }
 
     const vehicle = this.vehicleRepository.create({
