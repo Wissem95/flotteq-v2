@@ -9,9 +9,11 @@ export class PartnerStatusIncomplete1763000100000
   implements MigrationInterface
 {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // PG 12+ : ADD VALUE supporté ; IF NOT EXISTS évite l'erreur si déjà présent.
+    // Le type enum du statut partenaire s'appelle "partners_status_enum" (nom par défaut
+    // généré par TypeORM, vérifié en production). PG 12+ : ADD VALUE supporté ;
+    // IF NOT EXISTS évite l'erreur si la valeur est déjà présente.
     await queryRunner.query(
-      `ALTER TYPE "partner_status" ADD VALUE IF NOT EXISTS 'incomplete'`,
+      `ALTER TYPE "partners_status_enum" ADD VALUE IF NOT EXISTS 'incomplete'`,
     );
   }
 
