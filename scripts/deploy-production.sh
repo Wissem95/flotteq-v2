@@ -132,8 +132,24 @@ fi
 echo ""
 echo -e "${YELLOW}🏗️  Step 4/7: Building Docker images${NC}"
 
-# Build images (sans cache pour prod)
-docker compose -f docker-compose.production.yml build --no-cache
+# Build images SÉQUENTIELLEMENT avec retries.
+# Le build parallèle des 7 images (--no-cache) sature le réseau du VPS et provoque
+# des "npm ERR! ECONNRESET" qui font échouer le déploiement. On builde un service à
+# la fois, avec plusieurs tentatives, pour fiabiliser.
+BUILD_SERVICES="backend frontend-client frontend-partner frontend-driver frontend-internal frontend-landing frontend-portal"
+for svc in $BUILD_SERVICES; do
+  built=0
+  for attempt in 1 2 3 4; do
+    echo "  → build $svc (tentative $attempt)"
+    if docker compose -f docker-compose.production.yml build --no-cache "$svc"; then built=1; break; fi
+    echo "  ⚠️  échec build $svc, nouvelle tentative dans 10s..."
+    sleep 10
+  done
+  if [ "$built" -ne 1 ]; then
+    echo -e "${RED}❌ Build définitivement échoué: $svc${NC}"
+    exit 1
+  fi
+done
 
 echo -e "${GREEN}✅ Images built successfully${NC}"
 
@@ -150,10 +166,14 @@ docker compose -f docker-compose.production.yml up -d postgres
 echo "Waiting for PostgreSQL..."
 sleep 10
 
-# Run migrations via backend container
-docker compose -f docker-compose.production.yml run --rm backend npm run migration:run
+# Les migrations s'exécutent automatiquement au BOOT du backend (TypeORM migrationsRun
+# sur le JS compilé). Le CLI `npm run migration:run` est inopérant dans l'image de prod
+# (il tente d'exécuter le .ts sans ts-node) : on ne s'appuie donc PAS dessus pour ne pas
+# faire échouer le déploiement (set -e). La recréation du backend (étape 6) applique les
+# migrations en attente.
+echo "Les migrations seront appliquées au démarrage du backend (étape 6)."
 
-echo -e "${GREEN}✅ Migrations completed${NC}"
+echo -e "${GREEN}✅ Migrations: déléguées au boot du backend${NC}"
 
 # ==========================================
 # ÉTAPE 6: DEPLOY SERVICES (Zero-downtime)

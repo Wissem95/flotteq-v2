@@ -35,8 +35,8 @@ jobs:
 
             echo "🚀 Starting deployment..."
 
-            # Navigate to project
-            cd /opt/flotteq
+            # Navigate to project (chemin réel du projet sur le VPS)
+            cd /home/ubuntu/flotteq-v2
 
             # Pull latest code
             git pull origin main
@@ -50,7 +50,7 @@ jobs:
       - name: Health check
         run: |
           sleep 30  # Wait for services to start
-          curl -f http://37.59.96.178/api/health || exit 1
+          curl -f -L https://api.flotteq.fr/api/health || exit 1
 
       - name: Notify Slack (success)
         if: success()
