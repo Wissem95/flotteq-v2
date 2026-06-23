@@ -15,8 +15,8 @@
 
 import Stripe from 'stripe';
 import { DataSource } from 'typeorm';
+import { join } from 'path';
 import { SubscriptionPlan } from '../entities/subscription-plan.entity';
-import { Subscription } from '../entities/subscription.entity';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
   apiVersion: '2025-09-30.clover' as any,
@@ -32,10 +32,13 @@ async function syncStripePlans() {
     type: 'postgres',
     host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT || '5432'),
-    username: process.env.DB_USERNAME || 'postgres',
+    // En production l'env utilise DB_USER ; on garde DB_USERNAME en repli.
+    username: process.env.DB_USER || process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD || 'flotteq123',
     database: process.env.DB_NAME || 'flotteq_dev',
-    entities: [SubscriptionPlan, Subscription],
+    // Charger toutes les entités (Subscription référence Tenant, etc.) via glob,
+    // sinon TypeORM lève "Entity metadata ... was not found".
+    entities: [join(__dirname, '..', '**', '*.entity.{ts,js}')],
     synchronize: false,
   });
 
