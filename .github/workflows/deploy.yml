@@ -54,6 +54,7 @@ jobs:
 
       - name: Notify Slack (success)
         if: success()
+        continue-on-error: true  # ne pas faire échouer le déploiement si Slack n'est pas configuré
         run: |
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
@@ -65,6 +66,7 @@ jobs:
 
       - name: Notify Slack (failure)
         if: failure()
+        continue-on-error: true  # ne pas faire échouer le déploiement si Slack n'est pas configuré
         run: |
           curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} \
             -H 'Content-Type: application/json' \
