@@ -233,14 +233,33 @@ echo -e "${YELLOW}🏥 Step 7/7: Post-deployment health checks${NC}"
 # Attendre 10 secondes
 sleep 10
 
-# Check API health
-API_HEALTH=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/api/health 2>/dev/null || echo "000")
-if [ "$API_HEALTH" != "200" ]; then
-  echo -e "${RED}❌ API health check failed: HTTP $API_HEALTH${NC}"
+# Check API health.
+# IMPORTANT : le port 3000 du backend n'est PAS publié sur l'hôte (accès via nginx).
+# On vérifie donc via l'URL publique (avec retries), puis en repli via le statut
+# healthcheck Docker du conteneur backend.
+API_OK=0
+for i in 1 2 3 4 5 6; do
+  CODE=$(curl -s -o /dev/null -w "%{http_code}" -L https://api.flotteq.fr/api/health 2>/dev/null || echo "000")
+  if [ "$CODE" = "200" ]; then API_OK=1; break; fi
+  echo "  health check tentative $i: HTTP $CODE — nouvelle tentative dans 5s..."
+  sleep 5
+done
+
+if [ "$API_OK" != "1" ]; then
+  # Repli : statut du healthcheck Docker du conteneur backend
+  BH=$(docker inspect flotteq_backend_prod --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+  if [ "$BH" = "healthy" ]; then
+    API_OK=1
+    echo "  (URL publique injoignable mais conteneur backend 'healthy')"
+  fi
+fi
+
+if [ "$API_OK" != "1" ]; then
+  echo -e "${RED}❌ API health check failed${NC}"
   rollback
 fi
 
-echo -e "${GREEN}✅ API health check passed (HTTP 200)${NC}"
+echo -e "${GREEN}✅ API health check passed${NC}"
 
 # ==========================================
 # ÉTAPE 8: CLEANUP
