@@ -6,6 +6,7 @@ import { TenantsService } from './tenants.service';
 import { Tenant, TenantStatus } from '../../entities/tenant.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { Document } from '../../entities/document.entity';
+import { User } from '../../entities/user.entity';
 import { ConflictException, NotFoundException } from '@nestjs/common';
 import { StripeService } from '../../stripe/stripe.service';
 
@@ -33,6 +34,7 @@ describe('TenantsService', () => {
     find: jest.fn(),
     findOne: jest.fn(),
     delete: jest.fn(),
+    softRemove: jest.fn(),
     createQueryBuilder: jest.fn(),
   };
 
@@ -46,6 +48,12 @@ describe('TenantsService', () => {
   const mockDocumentRepository = {
     find: jest.fn(),
     createQueryBuilder: jest.fn(),
+  };
+
+  const mockUserRepository = {
+    find: jest.fn(),
+    findOne: jest.fn(),
+    count: jest.fn(),
   };
 
   const mockStripeService = {
@@ -78,6 +86,10 @@ describe('TenantsService', () => {
         {
           provide: getRepositoryToken(Document),
           useValue: mockDocumentRepository,
+        },
+        {
+          provide: getRepositoryToken(User),
+          useValue: mockUserRepository,
         },
         {
           provide: StripeService,
@@ -312,15 +324,17 @@ describe('TenantsService', () => {
 
   describe('remove', () => {
     it('should delete a tenant', async () => {
-      mockRepository.delete.mockResolvedValue({ affected: 1 });
+      mockRepository.findOne.mockResolvedValue(mockTenant);
+      mockSubscriptionRepository.findOne.mockResolvedValue(null);
+      mockRepository.softRemove.mockResolvedValue(mockTenant);
 
       await service.remove(1);
 
-      expect(mockRepository.delete).toHaveBeenCalledWith(1);
+      expect(mockRepository.softRemove).toHaveBeenCalledWith(mockTenant);
     });
 
     it('should throw NotFoundException if tenant not found', async () => {
-      mockRepository.delete.mockResolvedValue({ affected: 0 });
+      mockRepository.findOne.mockResolvedValue(null);
 
       await expect(service.remove(999)).rejects.toThrow(NotFoundException);
     });
@@ -384,7 +398,7 @@ describe('TenantsService', () => {
       expect(mockStripeService.isActive).toHaveBeenCalled();
     });
 
-    it('should return true if tenant is in trial period', async () => {
+    it('should deny access when the Stripe subscription is not active', async () => {
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
@@ -393,12 +407,11 @@ describe('TenantsService', () => {
 
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
       mockStripeService.isActive.mockReturnValue(false);
-      mockStripeService.isTrial.mockReturnValue(true);
 
       const result = await service.canAccess(1);
 
-      expect(result).toBe(true);
-      expect(mockStripeService.isTrial).toHaveBeenCalled();
+      expect(result).toBe(false);
+      expect(mockStripeService.isActive).toHaveBeenCalled();
     });
 
     it('should return false if subscription is expired and trial ended', async () => {

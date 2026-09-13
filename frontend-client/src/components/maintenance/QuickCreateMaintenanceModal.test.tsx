@@ -50,7 +50,7 @@ describe('QuickCreateMaintenanceModal', () => {
     );
 
     expect(screen.getByText('Nouvelle maintenance')).toBeInTheDocument();
-    expect(screen.getByText('15/11/2025')).toBeInTheDocument();
+    expect(screen.getByLabelText('Date prévue')).toHaveValue('15/11/2025');
   });
 
   it('should display vehicles in select', () => {
@@ -81,7 +81,7 @@ describe('QuickCreateMaintenanceModal', () => {
       { wrapper }
     );
 
-    const closeButton = screen.getByRole('button', { name: '' }); // X icon button
+    const closeButton = screen.getByRole('button', { name: 'Fermer' });
     fireEvent.click(closeButton);
 
     expect(mockOnClose).toHaveBeenCalled();

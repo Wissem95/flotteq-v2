@@ -13,6 +13,7 @@ import {
   Maintenance,
   MaintenanceStatus,
 } from '../maintenance/entities/maintenance.entity';
+import { MileageHistory } from '../../entities/mileage-history.entity';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
@@ -65,6 +66,12 @@ describe('VehiclesService', () => {
     find: jest.fn(),
   };
 
+  const mockMileageHistoryRepository = {
+    create: jest.fn(),
+    save: jest.fn(),
+    find: jest.fn(),
+  };
+
   const mockSubscriptionsService = {
     updateUsage: jest.fn(),
     checkLimit: jest.fn(),
@@ -87,6 +94,10 @@ describe('VehiclesService', () => {
         {
           provide: getRepositoryToken(Maintenance),
           useValue: mockMaintenanceRepository,
+        },
+        {
+          provide: getRepositoryToken(MileageHistory),
+          useValue: mockMileageHistoryRepository,
         },
         {
           provide: SubscriptionsService,
@@ -167,6 +178,7 @@ describe('VehiclesService', () => {
     const mockQueryBuilder = {
       where: jest.fn().mockReturnThis(),
       andWhere: jest.fn().mockReturnThis(),
+      leftJoinAndSelect: jest.fn().mockReturnThis(),
       skip: jest.fn().mockReturnThis(),
       take: jest.fn().mockReturnThis(),
       orderBy: jest.fn().mockReturnThis(),

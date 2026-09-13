@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { MaintenanceController } from './maintenance.controller';
 import { MaintenanceService } from './maintenance.service';
+import { MaintenanceTemplateService } from './maintenance-template.service';
 import {
   Maintenance,
   MaintenanceStatus,
@@ -48,6 +49,14 @@ describe('MaintenanceController', () => {
     getTotalCostsByTenant: jest.fn(),
   };
 
+  const mockMaintenanceTemplateService = {
+    create: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [MaintenanceController],
@@ -55,6 +64,10 @@ describe('MaintenanceController', () => {
         {
           provide: MaintenanceService,
           useValue: mockMaintenanceService,
+        },
+        {
+          provide: MaintenanceTemplateService,
+          useValue: mockMaintenanceTemplateService,
         },
       ],
     }).compile();
@@ -92,7 +105,7 @@ describe('MaintenanceController', () => {
     it('should return all maintenances for tenant', async () => {
       mockMaintenanceService.findAll.mockResolvedValue([mockMaintenance]);
 
-      const result = await controller.findAll(1);
+      const result = await controller.findAll({ user: { tenantId: 1 } });
 
       expect(result).toEqual([mockMaintenance]);
       expect(service.findAll).toHaveBeenCalledWith(1);
@@ -146,9 +159,11 @@ describe('MaintenanceController', () => {
     it('should remove a maintenance', async () => {
       mockMaintenanceService.remove.mockResolvedValue(undefined);
 
-      await controller.remove(mockMaintenance.id, 1);
+      await controller.remove(mockMaintenance.id, 1, {
+        user: { role: 'tenant_admin' },
+      });
 
-      expect(service.remove).toHaveBeenCalledWith(mockMaintenance.id, 1);
+      expect(service.remove).toHaveBeenCalledWith(mockMaintenance.id, 1, false);
     });
   });
 

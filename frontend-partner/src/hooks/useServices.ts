@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { servicesService } from '../api/services.service';
-import type { PartnerService, UpdateServiceDto } from '../types/partner';
+import type { CreatePartnerServiceDto, UpdateServiceDto } from '../types/partner';
 
 // Query keys
 export const serviceKeys = {
@@ -46,7 +46,7 @@ export function useCreateService() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (service: Omit<PartnerService, 'id' | 'partnerId' | 'createdAt' | 'updatedAt'>) =>
+    mutationFn: (service: CreatePartnerServiceDto) =>
       servicesService.createService(service),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: serviceKeys.myServices() });

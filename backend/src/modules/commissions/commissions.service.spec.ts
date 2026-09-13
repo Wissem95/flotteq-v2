@@ -409,12 +409,12 @@ describe('CommissionsService', () => {
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
         status: 'pending',
-        totalAmount: 100.5,
+        total: 100.5,
         count: 5,
       });
       expect(result[1]).toEqual({
         status: 'paid',
-        totalAmount: 250,
+        total: 250,
         count: 10,
       });
     });
@@ -431,7 +431,13 @@ describe('CommissionsService', () => {
       expect(result).toEqual([mockCommission]);
       expect(commissionRepository.find).toHaveBeenCalledWith({
         where: { status: CommissionStatus.PENDING },
-        relations: ['partner', 'booking'],
+        relations: [
+          'partner',
+          'booking',
+          'booking.tenant',
+          'booking.vehicle',
+          'booking.service',
+        ],
         order: { createdAt: 'DESC' },
       });
     });
@@ -441,6 +447,7 @@ describe('CommissionsService', () => {
     it('should generate Excel buffer with commission data', async () => {
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
+        withDeleted: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue([mockCommission]),

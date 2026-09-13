@@ -124,7 +124,7 @@ describe('DocumentOwnershipGuard', () => {
 
       await guard.canActivate(createContext(user, 'GET', 'doc1'));
 
-      expect(documentsService.findOne).toHaveBeenCalledWith('doc1', 5);
+      expect(documentsService.findOne).toHaveBeenCalledWith('doc1', 5, false);
     });
   });
 

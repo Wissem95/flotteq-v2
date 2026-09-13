@@ -68,6 +68,7 @@ export default function QuickCreateMaintenanceModal({
           </h3>
           <button
             onClick={onClose}
+            aria-label="Fermer"
             className="text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="h-5 w-5" />
@@ -77,10 +78,11 @@ export default function QuickCreateMaintenanceModal({
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenance-date" className="block text-sm font-medium text-gray-700 mb-1">
               Date prévue
             </label>
             <input
+              id="maintenance-date"
               type="text"
               value={selectedDate.toLocaleDateString('fr-FR')}
               disabled
@@ -89,10 +91,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenance-vehicle" className="block text-sm font-medium text-gray-700 mb-1">
               Véhicule *
             </label>
             <select
+              id="maintenance-vehicle"
               value={formData.vehicleId}
               onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
               required
@@ -108,10 +111,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenance-type" className="block text-sm font-medium text-gray-700 mb-1">
               Type *
             </label>
             <select
+              id="maintenance-type"
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as MaintenanceType })}
               required
@@ -126,10 +130,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenance-description" className="block text-sm font-medium text-gray-700 mb-1">
               Description *
             </label>
             <textarea
+              id="maintenance-description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               required
@@ -140,10 +145,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenance-estimated-cost" className="block text-sm font-medium text-gray-700 mb-1">
               Coût estimé (€) *
             </label>
             <input
+              id="maintenance-estimated-cost"
               type="number"
               step="0.01"
               value={formData.estimatedCost}

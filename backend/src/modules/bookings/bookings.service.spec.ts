@@ -7,8 +7,10 @@ import { Booking, BookingStatus } from '../../entities/booking.entity';
 import { Partner, PartnerStatus } from '../../entities/partner.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { Vehicle } from '../../entities/vehicle.entity';
+import { Rating } from '../../entities/rating.entity';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { AuditService } from '../audit/audit.service';
+import { CommissionsService } from '../commissions/commissions.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import { RescheduleBookingDto } from './dto/reschedule-booking.dto';
 
@@ -21,6 +23,12 @@ describe('BookingsService', () => {
   let emailQueueService: EmailQueueService;
   let auditService: AuditService;
 
+  const futureDate = (() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 14);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  })();
+
   const mockBooking: Booking = {
     id: '123e4567-e89b-12d3-a456-426614174000',
     partnerId: 'partner-1',
@@ -28,7 +36,7 @@ describe('BookingsService', () => {
     vehicleId: 'vehicle-1',
     driverId: null,
     serviceId: 'service-1',
-    scheduledDate: new Date('2025-10-20'),
+    scheduledDate: new Date(`${futureDate}T12:00:00`),
     scheduledTime: '14:00',
     endTime: '16:00',
     status: BookingStatus.PENDING,
@@ -96,6 +104,9 @@ describe('BookingsService', () => {
     vehicleRepository: {
       findOne: jest.fn(),
     },
+    ratingRepository: {
+      findOne: jest.fn(),
+    },
   };
 
   const mockEmailQueueService = {
@@ -108,6 +119,10 @@ describe('BookingsService', () => {
 
   const mockAuditService = {
     create: jest.fn(),
+  };
+
+  const mockCommissionsService = {
+    createFromBooking: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -131,12 +146,20 @@ describe('BookingsService', () => {
           useValue: mockRepositories.vehicleRepository,
         },
         {
+          provide: getRepositoryToken(Rating),
+          useValue: mockRepositories.ratingRepository,
+        },
+        {
           provide: EmailQueueService,
           useValue: mockEmailQueueService,
         },
         {
           provide: AuditService,
           useValue: mockAuditService,
+        },
+        {
+          provide: CommissionsService,
+          useValue: mockCommissionsService,
         },
       ],
     }).compile();
@@ -169,7 +192,7 @@ describe('BookingsService', () => {
       partnerId: 'partner-1',
       vehicleId: 'vehicle-1',
       serviceId: 'service-1',
-      scheduledDate: '2025-10-20',
+      scheduledDate: futureDate,
       scheduledTime: '14:00',
       endTime: '16:00',
       customerNotes: 'Check brakes',
@@ -282,16 +305,28 @@ describe('BookingsService', () => {
   describe('findOne', () => {
     it('should return a booking by id', async () => {
       mockRepositories.bookingRepository.findOne.mockResolvedValue(mockBooking);
+      mockRepositories.ratingRepository.findOne.mockResolvedValue(null);
 
       const result = await service.findOne(
         '123e4567-e89b-12d3-a456-426614174000',
         1,
       );
 
-      expect(result).toEqual(mockBooking);
+      expect(result).toMatchObject({
+        id: '123e4567-e89b-12d3-a456-426614174000',
+        partnerId: 'partner-1',
+        partnerName: 'Garage Test',
+        tenantId: 1,
+        tenantName: 'Test Company',
+        vehicleId: 'vehicle-1',
+        vehicleRegistration: 'ABC-123',
+        serviceId: 'service-1',
+        serviceName: 'Oil Change',
+        hasRating: false,
+      });
       expect(mockRepositories.bookingRepository.findOne).toHaveBeenCalledWith({
         where: { id: '123e4567-e89b-12d3-a456-426614174000', tenantId: 1 },
-        relations: ['partner', 'service', 'vehicle', 'driver'],
+        relations: ['partner', 'service', 'vehicle', 'driver', 'tenant'],
       });
     });
 
@@ -404,7 +439,7 @@ describe('BookingsService', () => {
 
   describe('reschedule', () => {
     const rescheduleDto: RescheduleBookingDto = {
-      scheduledDate: '2025-11-01',
+      scheduledDate: futureDate,
       scheduledTime: '10:00',
       endTime: '12:00',
     };
@@ -419,7 +454,7 @@ describe('BookingsService', () => {
       );
       mockRepositories.bookingRepository.save.mockResolvedValue({
         ...bookingToReschedule,
-        scheduledDate: new Date('2025-11-01'),
+        scheduledDate: new Date(`${futureDate}T12:00:00`),
         scheduledTime: '10:00',
         endTime: '12:00',
       });

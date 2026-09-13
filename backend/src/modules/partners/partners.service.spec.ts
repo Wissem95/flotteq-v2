@@ -18,6 +18,7 @@ import {
 } from '../../entities/partner-user.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
 import { EmailQueueService } from '../notifications/email-queue.service';
+import { StripeService } from '../../stripe/stripe.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 
 describe('PartnersService', () => {
@@ -81,6 +82,7 @@ describe('PartnersService', () => {
             find: jest.fn(),
             create: jest.fn(),
             save: jest.fn(),
+            createQueryBuilder: jest.fn(),
           },
         },
         {
@@ -111,6 +113,15 @@ describe('PartnersService', () => {
         {
           provide: DataSource,
           useValue: dataSource,
+        },
+        {
+          provide: StripeService,
+          useValue: {
+            stripe: {
+              accounts: { create: jest.fn(), retrieve: jest.fn() },
+              accountLinks: { create: jest.fn() },
+            },
+          },
         },
       ],
     }).compile();
@@ -191,13 +202,23 @@ describe('PartnersService', () => {
   describe('findAll', () => {
     it('should return all partners', async () => {
       const partners = [mockPartner, { ...mockPartner, id: 'another-id' }];
-      partnerRepository.find.mockResolvedValue(partners as Partner[]);
+      const queryBuilder = {
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([partners, 2]),
+      };
+      partnerRepository.createQueryBuilder.mockReturnValue(queryBuilder as any);
 
       const result = await service.findAll();
 
-      expect(result).toEqual(partners);
-      expect(partnerRepository.find).toHaveBeenCalledWith({
-        order: { createdAt: 'DESC' },
+      expect(result).toEqual({
+        data: partners,
+        total: 2,
+        page: 1,
+        limit: 10,
       });
     });
   });

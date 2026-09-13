@@ -33,6 +33,7 @@ describe('SearchService', () => {
     companyName: 'Garage Paris',
     type: PartnerType.GARAGE,
     status: PartnerStatus.APPROVED,
+    city: 'Paris',
     latitude: PARIS_LAT,
     longitude: PARIS_LNG,
     rating: 4.5,

@@ -104,23 +104,37 @@ export default function RegisterPage() {
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-flotteq-blue"></div>
               </div>
             ) : (
-              <div className="grid md:grid-cols-3 gap-6">
-                {plans.map((plan) => (
-                  <div
-                    key={plan.id}
-                    className={`bg-white rounded-lg shadow-sm border-2 p-6 cursor-pointer transition-all ${
-                      selectedPlan?.id === plan.id
-                        ? 'border-flotteq-blue'
-                        : 'border-gray-200 hover:border-flotteq-blue'
-                    }`}
-                    onClick={() => handlePlanSelect(plan)}
-                  >
+              <>
+                {error && (
+                  <div className="rounded-md bg-red-50 p-4">
+                    <p className="text-sm text-red-800">{error}</p>
+                  </div>
+                )}
+                <div className="grid md:grid-cols-3 gap-6">
+                  {plans.map((plan) => {
+                    const isQuoteOnlyPlan =
+                      Number(plan.price) === 0 && plan.maxVehicles === -1;
+
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`bg-white rounded-lg shadow-sm border-2 p-6 transition-all ${
+                          isQuoteOnlyPlan
+                            ? 'border-gray-200'
+                            : selectedPlan?.id === plan.id
+                              ? 'border-flotteq-blue cursor-pointer'
+                              : 'border-gray-200 hover:border-flotteq-blue cursor-pointer'
+                        }`}
+                        onClick={() => {
+                          if (!isQuoteOnlyPlan) handlePlanSelect(plan);
+                        }}
+                      >
                     <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
                     <div className="mt-4 flex items-baseline">
                       <span className="text-4xl font-extrabold text-gray-900">
-                        {Number(plan.price).toFixed(2)}€
+                        {isQuoteOnlyPlan ? 'Sur devis' : `${Number(plan.price).toFixed(2)}€`}
                       </span>
-                      <span className="ml-1 text-gray-500">/mois</span>
+                      {!isQuoteOnlyPlan && <span className="ml-1 text-gray-500">/mois</span>}
                     </div>
                     <ul className="mt-6 space-y-3">
                       <li className="flex items-start">
@@ -190,15 +204,26 @@ export default function RegisterPage() {
                         </li>
                       )}
                     </ul>
-                    <button
-                      type="button"
-                      className="mt-6 w-full bg-flotteq-blue text-white py-2 px-4 rounded-md hover:bg-flotteq-navy transition-colors"
-                    >
-                      Choisir {plan.name}
-                    </button>
-                  </div>
-                ))}
-              </div>
+                    {isQuoteOnlyPlan ? (
+                      <a
+                        href="mailto:contact@flotteq.fr?subject=Demande%20Enterprise"
+                        className="mt-6 block w-full bg-flotteq-blue text-center text-white py-2 px-4 rounded-md hover:bg-flotteq-navy transition-colors"
+                      >
+                        Demander une offre Enterprise
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        className="mt-6 w-full bg-flotteq-blue text-white py-2 px-4 rounded-md hover:bg-flotteq-navy transition-colors"
+                      >
+                        Choisir {plan.name}
+                      </button>
+                    )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
             )}
           </div>
         )}

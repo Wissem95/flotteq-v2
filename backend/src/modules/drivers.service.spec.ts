@@ -1,10 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { DriversService } from './drivers.service';
 import { Driver, DriverStatus } from '../entities/driver.entity';
+import { User } from '../entities/user.entity';
 import { Vehicle, VehicleStatus } from '../entities/vehicle.entity';
 
 describe('DriversService', () => {
@@ -12,6 +13,12 @@ describe('DriversService', () => {
   let driverRepository: Repository<Driver>;
   let vehicleRepository: Repository<Vehicle>;
   let mockRequest: any;
+
+  const mockUserRepository = {
+    create: jest.fn(),
+    findOne: jest.fn(),
+    save: jest.fn(),
+  };
 
   const mockDriver: Driver = {
     id: '123e4567-e89b-12d3-a456-426614174000',
@@ -59,6 +66,7 @@ describe('DriversService', () => {
 
   beforeEach(async () => {
     mockRequest = { tenantId: 1 };
+    mockUserRepository.findOne.mockResolvedValue({ id: 'existing-user' });
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -83,6 +91,12 @@ describe('DriversService', () => {
             find: jest.fn(),
             save: jest.fn(),
             count: jest.fn(),
+          },
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            getRepository: jest.fn().mockReturnValue(mockUserRepository),
           },
         },
         {
@@ -327,10 +341,20 @@ describe('DriversService', () => {
   });
 
   describe('tenant isolation', () => {
-    it('should throw error if tenantId is missing', async () => {
-      mockRequest.tenantId = undefined;
+    it('should return all tenants when the controller explicitly passes null for a super admin', async () => {
+      jest
+        .spyOn(driverRepository, 'findAndCount')
+        .mockResolvedValue([[mockDriver], 1]);
 
-      await expect(service.findAll()).rejects.toThrow(BadRequestException);
+      await expect(service.findAll(1, 10, undefined, null)).resolves.toEqual({
+        data: [mockDriver],
+        total: 1,
+        page: 1,
+        limit: 10,
+      });
+      expect(driverRepository.findAndCount).toHaveBeenCalledWith(
+        expect.objectContaining({ where: {} }),
+      );
     });
   });
 });

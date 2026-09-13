@@ -1,8 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { ModuleRef } from '@nestjs/core';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StripeService } from './stripe.service';
 import { Tenant, TenantStatus } from '../entities/tenant.entity';
+import { SubscriptionPlan } from '../entities/subscription-plan.entity';
+import { Subscription } from '../entities/subscription.entity';
 import stripeConfig from '../config/stripe.config';
 import Stripe from 'stripe';
 
@@ -53,6 +56,14 @@ describe('StripeService', () => {
         retrieve: jest.fn(),
         cancel: jest.fn(),
       },
+      invoices: {
+        retrieve: jest.fn(),
+      },
+      checkout: {
+        sessions: {
+          create: jest.fn(),
+        },
+      },
       billingPortal: {
         sessions: {
           create: jest.fn(),
@@ -75,6 +86,26 @@ describe('StripeService', () => {
           useValue: {
             findOne: jest.fn(),
             save: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(SubscriptionPlan),
+          useValue: {
+            findOne: jest.fn(),
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Subscription),
+          useValue: {
+            findOne: jest.fn(),
+            save: jest.fn(),
+          },
+        },
+        {
+          provide: ModuleRef,
+          useValue: {
+            get: jest.fn(),
           },
         },
       ],
@@ -123,7 +154,7 @@ describe('StripeService', () => {
   });
 
   describe('createSubscription', () => {
-    it('should create a subscription with trial', async () => {
+    it('should create a subscription without a trial period', async () => {
       const mockSubscription = {
         id: 'sub_new_123',
         status: 'trialing',
@@ -139,7 +170,6 @@ describe('StripeService', () => {
       expect(stripeMock.subscriptions.create).toHaveBeenCalledWith({
         customer: 'cus_test_123',
         items: [{ price: 'price_test_123' }],
-        trial_period_days: 14,
         payment_behavior: 'default_incomplete',
         payment_settings: {
           save_default_payment_method: 'on_subscription',
@@ -192,6 +222,51 @@ describe('StripeService', () => {
     });
   });
 
+  describe('createCheckoutSession', () => {
+    it('laisse Stripe proposer les moyens de paiement compatibles avec le mode abonnement', async () => {
+      stripeMock.checkout.sessions.create.mockResolvedValue({
+        id: 'cs_test_123',
+        url: 'https://checkout.stripe.com/c/pay/cs_test_123',
+      });
+
+      await service.createCheckoutSession(
+        'cus_test_123',
+        'price_test_123',
+        'https://app.flotteq.fr/billing/success',
+        'https://app.flotteq.fr/billing',
+      );
+
+      expect(stripeMock.checkout.sessions.create).toHaveBeenCalledWith({
+        customer: 'cus_test_123',
+        line_items: [{ price: 'price_test_123', quantity: 1 }],
+        mode: 'subscription',
+        success_url: 'https://app.flotteq.fr/billing/success',
+        cancel_url: 'https://app.flotteq.fr/billing',
+        allow_promotion_codes: true,
+      });
+    });
+  });
+
+  describe('getInvoice', () => {
+    it('should return the Stripe customer owning the invoice', async () => {
+      stripeMock.invoices.retrieve.mockResolvedValue({
+        id: 'in_test_123',
+        customer: 'cus_test_123',
+        amount_paid: 2900,
+        currency: 'eur',
+        status: 'paid',
+        invoice_pdf: 'https://pay.stripe.com/invoices/in_test_123.pdf',
+        number: 'F-2026-001',
+        created: 1_789_091_200,
+      });
+
+      const result = await service.getInvoice('in_test_123');
+
+      expect(stripeMock.invoices.retrieve).toHaveBeenCalledWith('in_test_123');
+      expect(result.customer).toBe('cus_test_123');
+    });
+  });
+
   // isTrial() has been removed - no more trial period, all tenants use Stripe subscriptions
 
   describe('isActive', () => {
@@ -200,9 +275,9 @@ describe('StripeService', () => {
       expect(service.isActive(tenant)).toBe(true);
     });
 
-    it('should return true if tenant is in valid trial', () => {
+    it('should return false if tenant has a trial status', () => {
       const tenant = { ...mockTenant, subscriptionStatus: 'trial' };
-      expect(service.isActive(tenant)).toBe(true);
+      expect(service.isActive(tenant)).toBe(false);
     });
 
     it('should return false if subscription is cancelled', () => {

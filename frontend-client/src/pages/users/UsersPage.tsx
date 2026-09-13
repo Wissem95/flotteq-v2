@@ -9,8 +9,10 @@ import { AddUserModal } from '../../components/users/AddUserModal';
 import { InviteUserModal } from '../../components/users/InviteUserModal';
 import { ProtectedButton } from '../../components/common/ProtectedButton';
 import { Pagination } from '../../components/common/Pagination';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const UsersPage: React.FC = () => {
+  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
@@ -335,16 +337,18 @@ export const UsersPage: React.FC = () => {
                           <UserCheck className="w-4 h-4" />
                         )}
                       </ProtectedButton>
-                      <ProtectedButton
-                        permission="users.delete"
-                        onClick={() => handleDelete(user)}
-                        className="text-red-600 hover:text-red-900 transition-colors p-1"
-                        title="Supprimer"
-                        disabled={deleteMutation.isPending}
-                        disabledMessage="Vous ne pouvez pas supprimer les utilisateurs"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </ProtectedButton>
+                      {currentUser?.id !== user.id && (
+                        <ProtectedButton
+                          permission="users.delete"
+                          onClick={() => handleDelete(user)}
+                          className="text-red-600 hover:text-red-900 transition-colors p-1"
+                          title="Supprimer"
+                          disabled={deleteMutation.isPending}
+                          disabledMessage="Vous ne pouvez pas supprimer les utilisateurs"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </ProtectedButton>
+                      )}
                     </div>
                   </td>
                 </tr>

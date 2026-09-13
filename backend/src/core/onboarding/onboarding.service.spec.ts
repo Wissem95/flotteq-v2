@@ -19,22 +19,12 @@ describe('OnboardingService', () => {
   let usersRepository: Repository<User>;
   let emailService: EmailService;
 
-  const mockTenant = {
-    id: 1,
-    name: 'Test Tenant',
-    email: 'test@example.com',
-  };
-
-  const mockUser = {
-    id: 'user-123',
-    email: 'admin@example.com',
-    tenantId: 1,
-    tenant: mockTenant,
-  };
+  let mockTenant: any;
+  let mockUser: any;
 
   const mockTenantsRepository = {
     findOne: jest.fn(),
-    update: jest.fn(),
+    save: jest.fn(),
   };
 
   const mockVehiclesRepository = {
@@ -53,6 +43,17 @@ describe('OnboardingService', () => {
   };
 
   beforeEach(async () => {
+    mockTenant = {
+      id: 1,
+      name: 'Test Tenant',
+      email: 'test@example.com',
+    };
+    mockUser = {
+      id: 'user-123',
+      email: 'admin@example.com',
+      tenantId: 1,
+      tenant: mockTenant,
+    };
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OnboardingService,
@@ -87,7 +88,7 @@ describe('OnboardingService', () => {
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    jest.resetAllMocks();
   });
 
   describe('completeOnboarding', () => {
@@ -120,18 +121,20 @@ describe('OnboardingService', () => {
 
     it('should update tenant profile successfully', async () => {
       mockUsersRepository.findOne.mockResolvedValue(mockUser);
-      mockTenantsRepository.update.mockResolvedValue({ affected: 1 });
 
       const result = await service.completeOnboarding('user-123', completeDto);
 
-      expect(mockTenantsRepository.update).toHaveBeenCalledWith(1, {
-        name: 'New Company',
-        address: '123 Test St',
-        city: 'Paris',
-        postalCode: '75001',
-        country: 'France',
-        onboardingCompleted: true,
-      });
+      expect(mockTenantsRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 1,
+          name: 'New Company',
+          address: '123 Test St',
+          city: 'Paris',
+          postalCode: '75001',
+          country: 'France',
+          onboardingCompleted: true,
+        }),
+      );
       expect(result.message).toBe('Onboarding complété avec succès');
     });
 
@@ -216,7 +219,7 @@ describe('OnboardingService', () => {
       expect(mockEmailService.sendDriverWelcomeEmail).toHaveBeenCalledWith(
         'john@example.com',
         'John',
-        'Test Tenant',
+        'New Company',
         expect.any(String),
       );
     });

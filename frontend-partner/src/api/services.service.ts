@@ -1,6 +1,6 @@
 import axiosInstance from '../lib/axios';
 import { API_CONFIG } from '../config/api';
-import type { PartnerService, UpdateServiceDto } from '../types/partner';
+import type { CreatePartnerServiceDto, PartnerService, UpdateServiceDto } from '../types/partner';
 
 interface ServicesResponse {
   message: string;
@@ -38,7 +38,7 @@ export const servicesService = {
   /**
    * Create a new service
    */
-  createService: async (service: Omit<PartnerService, 'id' | 'partnerId' | 'createdAt' | 'updatedAt'>): Promise<PartnerService> => {
+  createService: async (service: CreatePartnerServiceDto): Promise<PartnerService> => {
     const { data } = await axiosInstance.post<ServiceResponse>(
       API_CONFIG.ENDPOINTS.PARTNER_SERVICES,
       service

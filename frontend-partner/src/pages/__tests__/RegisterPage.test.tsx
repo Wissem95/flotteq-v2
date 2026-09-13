@@ -42,7 +42,7 @@ describe('RegisterPage', () => {
   describe('Multi-step navigation', () => {
     it('should render step 1 (Entreprise) by default', () => {
       renderComponent();
-      expect(screen.getByText('Devenir partenaire')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'FlotteQ Partner' })).toBeInTheDocument();
       expect(screen.getByLabelText(/Nom de l'entreprise/i)).toBeInTheDocument();
     });
 
@@ -233,7 +233,7 @@ describe('RegisterPage', () => {
       fireEvent.change(screen.getByLabelText(/Prénom/i), {
         target: { value: 'John' },
       });
-      fireEvent.change(screen.getByLabelText(/Nom/i), {
+      fireEvent.change(screen.getByLabelText(/^Nom \*$/i), {
         target: { value: 'Doe' },
       });
       fireEvent.change(screen.getAllByLabelText(/Mot de passe/i)[0], {
@@ -259,7 +259,7 @@ describe('RegisterPage', () => {
       fireEvent.change(screen.getByLabelText(/Prénom/i), {
         target: { value: 'John' },
       });
-      fireEvent.change(screen.getByLabelText(/Nom/i), {
+      fireEvent.change(screen.getByLabelText(/^Nom \*$/i), {
         target: { value: 'Doe' },
       });
       fireEvent.change(screen.getAllByLabelText(/Mot de passe/i)[0], {
@@ -283,7 +283,7 @@ describe('RegisterPage', () => {
       fireEvent.change(screen.getByLabelText(/Prénom/i), {
         target: { value: 'John' },
       });
-      fireEvent.change(screen.getByLabelText(/Nom/i), {
+      fireEvent.change(screen.getByLabelText(/^Nom \*$/i), {
         target: { value: 'Doe' },
       });
       fireEvent.change(screen.getAllByLabelText(/Mot de passe/i)[0], {
@@ -307,7 +307,7 @@ describe('RegisterPage', () => {
       fireEvent.change(screen.getByLabelText(/Prénom/i), {
         target: { value: 'John' },
       });
-      fireEvent.change(screen.getByLabelText(/Nom/i), {
+      fireEvent.change(screen.getByLabelText(/^Nom \*$/i), {
         target: { value: 'Doe' },
       });
       fireEvent.change(screen.getAllByLabelText(/Mot de passe/i)[0], {

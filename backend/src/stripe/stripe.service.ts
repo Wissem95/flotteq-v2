@@ -430,7 +430,6 @@ export class StripeService {
     try {
       const session = await this.stripe.checkout.sessions.create({
         customer: customerId,
-        payment_method_types: ['card'],
         line_items: [
           {
             price: priceId,
@@ -496,6 +495,7 @@ export class StripeService {
       const invoice = await this.stripe.invoices.retrieve(invoiceId);
       return {
         id: invoice.id,
+        customer: invoice.customer,
         amountPaid: invoice.amount_paid,
         currency: invoice.currency,
         status: invoice.status,

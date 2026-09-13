@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Res,
+  BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -150,6 +151,12 @@ export class SubscriptionsController {
       throw new NotFoundException('Tenant not found');
     }
 
+    if (tenant.stripeSubscriptionId) {
+      throw new BadRequestException(
+        'Use the customer portal to change an existing subscription',
+      );
+    }
+
     // Créer le customer Stripe s'il n'existe pas
     if (!tenant.stripeCustomerId) {
       const customerId = await this.stripeService.createCustomer(
@@ -219,6 +226,10 @@ export class SubscriptionsController {
     }
 
     const invoice = await this.stripeService.getInvoice(invoiceId);
+
+    if (invoice.customer !== tenant.stripeCustomerId) {
+      throw new NotFoundException('Invoice not found');
+    }
 
     if (!invoice.pdfUrl) {
       throw new NotFoundException('Invoice PDF not available');

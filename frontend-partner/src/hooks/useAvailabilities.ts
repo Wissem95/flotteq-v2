@@ -3,9 +3,7 @@ import { toast } from 'sonner';
 import { availabilitiesService } from '../api/availabilities.service';
 import type {
   SetAvailabilityDto,
-  AddUnavailabilityDto,
-  Availability,
-  Unavailability
+  AddUnavailabilityDto
 } from '../types/partner';
 
 // Query keys

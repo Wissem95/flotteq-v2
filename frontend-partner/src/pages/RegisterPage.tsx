@@ -247,11 +247,12 @@ export default function RegisterPage() {
         {currentStep === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="companyName" className="block text-sm font-medium text-gray-700 mb-1">
                 Nom de l'entreprise *
               </label>
               <input
                 type="text"
+                id="companyName"
                 name="companyName"
                 value={formData.companyName}
                 onChange={handleChange}
@@ -265,8 +266,9 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
+              <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type *</label>
               <select
+                id="type"
                 name="type"
                 value={formData.type}
                 onChange={handleChange}
@@ -284,11 +286,12 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                 Email professionnel *
               </label>
               <input
                 type="email"
+                id="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -302,9 +305,10 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">Téléphone *</label>
               <input
                 type="tel"
+                id="phone"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -319,11 +323,12 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="siret" className="block text-sm font-medium text-gray-700 mb-1">
                 SIRET (14 chiffres) *
               </label>
               <input
                 type="text"
+                id="siret"
                 name="siret"
                 value={formData.siret}
                 onChange={handleChange}
@@ -344,9 +349,10 @@ export default function RegisterPage() {
         {currentStep === 2 && (
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
+              <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">Adresse *</label>
               <input
                 type="text"
+                id="address"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
@@ -361,11 +367,12 @@ export default function RegisterPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                   Code postal *
                 </label>
                 <input
                   type="text"
+                  id="postalCode"
                   name="postalCode"
                   value={formData.postalCode}
                   onChange={handleChange}
@@ -381,9 +388,10 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
+                <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">Ville *</label>
                 <input
                   type="text"
+                  id="city"
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
@@ -404,9 +412,10 @@ export default function RegisterPage() {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1">Prénom *</label>
                 <input
                   type="text"
+                  id="firstName"
                   name="firstName"
                   value={formData.firstName}
                   onChange={handleChange}
@@ -420,9 +429,10 @@ export default function RegisterPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
                 <input
                   type="text"
+                  id="lastName"
                   name="lastName"
                   value={formData.lastName}
                   onChange={handleChange}
@@ -437,10 +447,11 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                 Mot de passe *
               </label>
               <PasswordInput
+                id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -457,10 +468,11 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
                 Confirmer le mot de passe *
               </label>
               <PasswordInput
+                id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}

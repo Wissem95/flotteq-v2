@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Search, Calendar, Filter, Eye, Check, X, Clock, Car, User, Mail, Phone } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { Booking, RescheduleBookingDto, CompleteBookingDto } from '../../types/partner';
+import type { Booking, RescheduleBookingDto } from '../../types/partner';
 import {
   useBookings,
   useConfirmBooking,
@@ -273,7 +273,6 @@ export default function BookingsListPage() {
           showRescheduleForm={showRescheduleForm}
           setShowRescheduleForm={setShowRescheduleForm}
           showCompleteForm={showCompleteForm}
-          setShowCompleteForm={setShowCompleteForm}
         />
       )}
     </div>
@@ -290,7 +289,6 @@ interface BookingDetailModalProps {
   showRescheduleForm: boolean;
   setShowRescheduleForm: (show: boolean) => void;
   showCompleteForm: boolean;
-  setShowCompleteForm: (show: boolean) => void;
 }
 
 function BookingDetailModal({
@@ -302,7 +300,6 @@ function BookingDetailModal({
   showRescheduleForm,
   setShowRescheduleForm,
   showCompleteForm,
-  setShowCompleteForm,
 }: BookingDetailModalProps) {
   const confirmMutation = useConfirmBooking();
   const rejectMutation = useRejectBooking();

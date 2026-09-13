@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { User, UserRole } from '../../entities/user.entity';
+import { Driver } from '../../entities/driver.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { ForbiddenException, ConflictException } from '@nestjs/common';
@@ -35,6 +36,12 @@ describe('UsersService', () => {
     updateUsage: jest.fn(),
   };
 
+  const mockDriversRepository = {
+    create: jest.fn(),
+    findOne: jest.fn(),
+    save: jest.fn(),
+  };
+
   const mockEmailQueueService = {
     queueWelcomeEmail: jest.fn().mockResolvedValue(undefined),
   };
@@ -46,6 +53,10 @@ describe('UsersService', () => {
         {
           provide: getRepositoryToken(User),
           useValue: mockRepository,
+        },
+        {
+          provide: getRepositoryToken(Driver),
+          useValue: mockDriversRepository,
         },
         {
           provide: SubscriptionsService,

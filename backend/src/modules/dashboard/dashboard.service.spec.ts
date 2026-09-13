@@ -168,13 +168,13 @@ describe('DashboardService', () => {
 
       mockMaintenanceRepository.find.mockResolvedValue([
         {
-          cost: 100,
+          actualCost: 100,
           type: MaintenanceType.OIL_CHANGE,
           createdAt: now,
           status: MaintenanceStatus.COMPLETED,
         },
         {
-          cost: 200,
+          actualCost: 200,
           type: MaintenanceType.PREVENTIVE,
           createdAt: now,
           status: MaintenanceStatus.COMPLETED,
@@ -272,21 +272,21 @@ describe('DashboardService', () => {
       mockMaintenanceRepository.find.mockResolvedValue([
         {
           status: MaintenanceStatus.COMPLETED,
-          cost: 100,
+          actualCost: 100,
           type: MaintenanceType.OIL_CHANGE,
           scheduledDate,
           completedDate,
         },
         {
           status: MaintenanceStatus.COMPLETED,
-          cost: 200,
+          actualCost: 200,
           type: MaintenanceType.OIL_CHANGE,
           scheduledDate,
           completedDate,
         },
         {
           status: MaintenanceStatus.SCHEDULED,
-          cost: 150,
+          actualCost: 150,
           type: MaintenanceType.PREVENTIVE,
           scheduledDate,
           completedDate: null,

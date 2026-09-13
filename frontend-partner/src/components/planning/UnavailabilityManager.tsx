@@ -109,8 +109,8 @@ export default function UnavailabilityManager() {
     };
 
     if (!formData.isFullDay) {
-      payload.startTime = normalizeTime(formData.startTime);
-      payload.endTime = normalizeTime(formData.endTime);
+      payload.startTime = normalizeTime(formData.startTime ?? '');
+      payload.endTime = normalizeTime(formData.endTime ?? '');
     }
 
     // Remove undefined/empty fields to avoid validation issues

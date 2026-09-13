@@ -8,13 +8,17 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { AuthService } from './auth.service';
 import { User, UserRole } from '../../../entities/user.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { EmailQueueService } from '../../../modules/notifications/email-queue.service';
+import { Tenant } from '../../../entities/tenant.entity';
+import { Subscription } from '../../../entities/subscription.entity';
+import { SubscriptionPlan } from '../../../entities/subscription-plan.entity';
+import { StripeService } from '../../../stripe/stripe.service';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -56,6 +60,21 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
+    const queryRunner = {
+      connect: jest.fn(),
+      startTransaction: jest.fn(),
+      commitTransaction: jest.fn(),
+      rollbackTransaction: jest.fn(),
+      release: jest.fn(),
+      manager: {
+        create: jest.fn((entity, values) => ({
+          ...values,
+          id: entity === User ? 'new-uuid' : 1,
+        })),
+        save: jest.fn(async (entity) => entity),
+      },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
@@ -65,6 +84,25 @@ describe('AuthService', () => {
             findOne: jest.fn(),
             save: jest.fn(),
             update: jest.fn(),
+          },
+        },
+        {
+          provide: getRepositoryToken(Tenant),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(Subscription),
+          useValue: {},
+        },
+        {
+          provide: getRepositoryToken(SubscriptionPlan),
+          useValue: {
+            findOne: jest.fn().mockResolvedValue({
+              id: 1,
+              name: 'Starter',
+              price: 0,
+              maxVehicles: 3,
+            }),
           },
         },
         {
@@ -84,7 +122,7 @@ describe('AuthService', () => {
                 JWT_REFRESH_SECRET: 'test_refresh_secret',
                 JWT_ACCESS_EXPIRES: '15m',
                 JWT_REFRESH_EXPIRES: '7d',
-                FRONTEND_URL: 'http://localhost:5174',
+                FRONTEND_CLIENT_URL: 'http://localhost:5174',
               };
               return config[key] || defaultValue;
             }),
@@ -94,6 +132,18 @@ describe('AuthService', () => {
           provide: EmailQueueService,
           useValue: {
             queuePasswordResetEmail: jest.fn(),
+          },
+        },
+        {
+          provide: StripeService,
+          useValue: {
+            createCustomer: jest.fn().mockResolvedValue('cus_test_123'),
+          },
+        },
+        {
+          provide: DataSource,
+          useValue: {
+            createQueryRunner: jest.fn(() => queryRunner),
           },
         },
       ],

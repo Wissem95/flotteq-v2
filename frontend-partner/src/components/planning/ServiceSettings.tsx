@@ -27,7 +27,7 @@ export default function ServiceSettings() {
     setEditForm({
       name: service.name,
       description: service.description || '',
-      price: service.price,
+      price: Number(service.price),
       durationMinutes: service.durationMinutes,
     });
   };
@@ -83,7 +83,7 @@ export default function ServiceSettings() {
     if (editForm.description !== (originalService.description || '')) {
       updates.description = editForm.description;
     }
-    if (editForm.price !== originalService.price) updates.price = editForm.price;
+    if (editForm.price !== Number(originalService.price)) updates.price = editForm.price;
     if (editForm.durationMinutes !== originalService.durationMinutes) {
       updates.durationMinutes = editForm.durationMinutes;
     }

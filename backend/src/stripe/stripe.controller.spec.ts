@@ -1,11 +1,15 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
+import { getRepositoryToken } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { StripeController } from './stripe.controller';
 import { StripeService } from './stripe.service';
+import { Tenant } from '../entities/tenant.entity';
 
 describe('StripeController', () => {
   let controller: StripeController;
   let stripeService: StripeService;
+  let tenantRepository: Repository<Tenant>;
 
   const mockStripeService = {
     handleWebhook: jest.fn(),
@@ -20,11 +24,20 @@ describe('StripeController', () => {
           provide: StripeService,
           useValue: mockStripeService,
         },
+        {
+          provide: getRepositoryToken(Tenant),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     controller = module.get<StripeController>(StripeController);
     stripeService = module.get<StripeService>(StripeService);
+    tenantRepository = module.get<Repository<Tenant>>(
+      getRepositoryToken(Tenant),
+    );
   });
 
   it('should be defined', () => {
@@ -100,11 +113,13 @@ describe('StripeController', () => {
     it('should create a portal session successfully', async () => {
       const mockRequest: any = {
         user: {
-          tenant: {
-            stripeCustomerId: 'cus_test_123',
-          },
+          tenantId: 1,
         },
       };
+
+      jest.spyOn(tenantRepository, 'findOne').mockResolvedValue({
+        stripeCustomerId: 'cus_test_123',
+      } as Tenant);
 
       mockStripeService.createPortalSession.mockResolvedValue(
         'https://billing.stripe.com/session_123',
@@ -115,18 +130,20 @@ describe('StripeController', () => {
       expect(result).toEqual({ url: 'https://billing.stripe.com/session_123' });
       expect(mockStripeService.createPortalSession).toHaveBeenCalledWith(
         'cus_test_123',
-        expect.stringContaining('/settings/billing'),
+        expect.stringContaining('/billing'),
       );
     });
 
     it('should throw BadRequestException if tenant has no Stripe customer', async () => {
       const mockRequest: any = {
         user: {
-          tenant: {
-            stripeCustomerId: null,
-          },
+          tenantId: 1,
         },
       };
+
+      jest.spyOn(tenantRepository, 'findOne').mockResolvedValue({
+        stripeCustomerId: null,
+      } as unknown as Tenant);
 
       await expect(controller.createPortalSession(mockRequest)).rejects.toThrow(
         BadRequestException,
@@ -136,9 +153,11 @@ describe('StripeController', () => {
     it('should throw BadRequestException if tenant is missing', async () => {
       const mockRequest: any = {
         user: {
-          tenant: null,
+          tenantId: 1,
         },
       };
+
+      jest.spyOn(tenantRepository, 'findOne').mockResolvedValue(null);
 
       await expect(controller.createPortalSession(mockRequest)).rejects.toThrow(
         BadRequestException,

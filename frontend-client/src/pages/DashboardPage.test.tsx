@@ -5,6 +5,11 @@ import DashboardPage from './DashboardPage';
 import { dashboardService } from '@/api/services/dashboard.service';
 
 vi.mock('@/api/services/dashboard.service');
+vi.mock('@/components/dashboard/AlertsList', () => ({ default: () => null }));
+vi.mock('@/components/dashboard/SubscriptionUsage', () => ({ default: () => null }));
+vi.mock('@/components/dashboard/ExpiringDocumentsWidget', () => ({
+  ExpiringDocumentsWidget: () => null,
+}));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
   <BrowserRouter>{children}</BrowserRouter>
@@ -13,6 +18,15 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 describe('DashboardPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(dashboardService.getCosts).mockResolvedValue({
+      totalFleetPurchaseValue: 0,
+      totalMaintenanceCost: 0,
+      currentMonthTotal: 0,
+      avgMaintenanceCostPerVehicle: 0,
+      monthlyMaintenanceCosts: [],
+      costsByType: [],
+      lastMonthTotal: 0,
+    });
   });
 
   it('should show loading state initially', () => {

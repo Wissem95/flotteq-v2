@@ -52,7 +52,7 @@ export default function LoginPage() {
       }
 
       // Connexion autorisée pour les statuts 'approved' et 'incomplete'
-      login(accessToken, partnerUser);
+      login(accessToken, { ...partnerUser, partner });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Échec de la connexion. Vérifiez vos identifiants.');

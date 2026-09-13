@@ -13,6 +13,7 @@ interface StripeStatus {
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
+  const partner = user?.partner;
   const [stripeStatus, setStripeStatus] = useState<StripeStatus | null>(null);
   const [commissionRate, setCommissionRate] = useState<number>(10); // Default 10%
   const [isLoading, setIsLoading] = useState(false);
@@ -168,7 +169,7 @@ export default function SettingsPage() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">Entreprise</label>
-            <p className="mt-1 text-sm text-gray-900">{user?.companyName}</p>
+            <p className="mt-1 text-sm text-gray-900">{partner?.companyName || 'Non renseignée'}</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
@@ -177,17 +178,17 @@ export default function SettingsPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700">Statut</label>
             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-              user?.status === 'approved' ? 'bg-green-100 text-green-800' :
-              user?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-              user?.status === 'rejected' ? 'bg-red-100 text-red-800' :
-              user?.status === 'suspended' ? 'bg-red-100 text-red-800' :
+              partner?.status === 'approved' ? 'bg-green-100 text-green-800' :
+              partner?.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+              partner?.status === 'rejected' ? 'bg-red-100 text-red-800' :
+              partner?.status === 'suspended' ? 'bg-red-100 text-red-800' :
               // 'incomplete' ou tout statut non reconnu / manquant : orange (configuration incomplète)
               'bg-orange-100 text-orange-800'
             }`}>
-              {user?.status === 'approved' ? 'Approuvé' :
-               user?.status === 'pending' ? 'En attente' :
-               user?.status === 'rejected' ? 'Rejeté' :
-               user?.status === 'suspended' ? 'Suspendu' :
+              {partner?.status === 'approved' ? 'Approuvé' :
+               partner?.status === 'pending' ? 'En attente' :
+               partner?.status === 'rejected' ? 'Rejeté' :
+               partner?.status === 'suspended' ? 'Suspendu' :
                // Ne jamais retomber sur "Suspendu" par défaut : un statut inconnu/manquant
                // (ou 'incomplete') signifie une configuration non finalisée.
                'Configuration incomplète'}

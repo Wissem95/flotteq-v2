@@ -11,6 +11,7 @@ import {
 } from '../../entities/partner-user.entity';
 import { Partner, PartnerStatus } from '../../entities/partner.entity';
 import { PartnerLoginDto } from './dto/partner-login.dto';
+import { EmailQueueService } from '../notifications/email-queue.service';
 
 describe('PartnerAuthService', () => {
   let service: PartnerAuthService;
@@ -68,6 +69,12 @@ describe('PartnerAuthService', () => {
               if (key === 'PARTNER_TOKEN_EXPIRY') return '7d';
               return null;
             }),
+          },
+        },
+        {
+          provide: EmailQueueService,
+          useValue: {
+            queuePartnerPasswordResetEmail: jest.fn(),
           },
         },
       ],

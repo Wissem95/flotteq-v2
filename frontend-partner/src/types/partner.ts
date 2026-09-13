@@ -5,6 +5,7 @@ export interface PartnerUser {
   lastName: string;
   partnerId: string;
   role?: string;
+  isActive?: boolean;
   partner?: {
     id: string;
     companyName: string;
@@ -41,6 +42,13 @@ export interface PartnerService {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreatePartnerServiceDto {
+  name: string;
+  description?: string;
+  price: number;
+  durationMinutes: number;
 }
 
 export interface Booking {
@@ -87,6 +95,8 @@ export interface Booking {
   tenantName?: string;
   tenantEmail?: string;
   vehicleRegistration?: string;
+  vehicleBrand?: string;
+  vehicleModel?: string;
   driverName?: string;
   serviceName?: string;
   serviceDescription?: string;
@@ -211,6 +221,6 @@ export interface CommissionFilters {
 
 export interface CommissionTotalDto {
   status: 'pending' | 'paid' | 'cancelled';
-  totalAmount: number;
+  total: number;
   count: number;
 }

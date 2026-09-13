@@ -1,8 +1,16 @@
-import { describe, it, expect, vi } from 'vitest';
+import { beforeEach, describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import UpcomingMaintenancesList from './UpcomingMaintenancesList';
+
+const { mockUseUpcomingMaintenances } = vi.hoisted(() => ({
+  mockUseUpcomingMaintenances: vi.fn(),
+}));
+
+vi.mock('../../hooks/useMaintenance', () => ({
+  useUpcomingMaintenances: mockUseUpcomingMaintenances,
+}));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,13 +25,15 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('UpcomingMaintenancesList', () => {
+  beforeEach(() => {
+    mockUseUpcomingMaintenances.mockReset();
+  });
+
   it('should show loading state', () => {
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: undefined,
-        isLoading: true,
-      }),
-    }));
+    mockUseUpcomingMaintenances.mockReturnValue({
+      data: undefined,
+      isLoading: true,
+    });
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -31,12 +41,7 @@ describe('UpcomingMaintenancesList', () => {
   });
 
   it('should display header correctly', () => {
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: [],
-        isLoading: false,
-      }),
-    }));
+    mockUseUpcomingMaintenances.mockReturnValue({ data: [], isLoading: false });
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -44,12 +49,7 @@ describe('UpcomingMaintenancesList', () => {
   });
 
   it('should show empty state when no maintenances', () => {
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: [],
-        isLoading: false,
-      }),
-    }));
+    mockUseUpcomingMaintenances.mockReturnValue({ data: [], isLoading: false });
 
     render(<UpcomingMaintenancesList daysAhead={7} />, { wrapper });
 
@@ -76,12 +76,10 @@ describe('UpcomingMaintenancesList', () => {
       },
     ];
 
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: mockAlerts,
-        isLoading: false,
-      }),
-    }));
+    mockUseUpcomingMaintenances.mockReturnValue({
+      data: mockAlerts,
+      isLoading: false,
+    });
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -102,12 +100,10 @@ describe('UpcomingMaintenancesList', () => {
       alertReason: `Maintenance in ${i} days`,
     }));
 
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: mockAlerts,
-        isLoading: false,
-      }),
-    }));
+    mockUseUpcomingMaintenances.mockReturnValue({
+      data: mockAlerts,
+      isLoading: false,
+    });
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -150,12 +146,10 @@ describe('UpcomingMaintenancesList', () => {
       },
     ];
 
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: mockAlerts,
-        isLoading: false,
-      }),
-    }));
+    mockUseUpcomingMaintenances.mockReturnValue({
+      data: mockAlerts,
+      isLoading: false,
+    });
 
     const { container } = render(<UpcomingMaintenancesList />, { wrapper });
 

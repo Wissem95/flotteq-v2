@@ -42,7 +42,7 @@ describe('TenantLayout', () => {
 
   it('should render the sidebar with logo', () => {
     renderWithRouter(<TenantLayout />);
-    expect(screen.getByText('FlotteQ')).toBeInTheDocument();
+    expect(screen.getAllByText('Flotteq').length).toBeGreaterThan(0);
     expect(screen.getByText('Gestion de flotte')).toBeInTheDocument();
   });
 
@@ -69,16 +69,16 @@ describe('TenantLayout', () => {
     expect(maintenancesButton).toBeInTheDocument();
   });
 
-  it('should disable navigation items marked as disabled', () => {
+  it('should keep the fleet navigation available', () => {
     renderWithRouter(<TenantLayout />);
 
     const vehiclesButton = screen.getByRole('button', { name: /véhicules/i });
     const driversButton = screen.getByRole('button', { name: /conducteurs/i });
     const maintenancesButton = screen.getByRole('button', { name: /maintenances/i });
 
-    expect(vehiclesButton).toBeDisabled();
-    expect(driversButton).toBeDisabled();
-    expect(maintenancesButton).toBeDisabled();
+    expect(vehiclesButton).toBeEnabled();
+    expect(driversButton).toBeEnabled();
+    expect(maintenancesButton).toBeEnabled();
   });
 
   it('should render user information', () => {
@@ -124,6 +124,6 @@ describe('TenantLayout', () => {
     const { container } = renderWithRouter(<TenantLayout />);
 
     const sidebar = container.querySelector('aside');
-    expect(sidebar).toHaveClass('bg-white', 'border-r', 'border-gray-200');
+    expect(sidebar).toHaveClass('flotteq-gradient', 'shadow-xl');
   });
 });

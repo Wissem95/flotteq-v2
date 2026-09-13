@@ -25,6 +25,28 @@ describe('AvailabilitiesService', () => {
   let bookingRepository: Repository<Booking>;
   let auditService: AuditService;
 
+  const toLocalDate = (date: Date): string =>
+    `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+  const nextWeekday = (dayOfWeek: number): string => {
+    const date = new Date();
+    let daysUntilTarget = (dayOfWeek - date.getDay() + 7) % 7;
+    if (daysUntilTarget === 0) {
+      daysUntilTarget = 7;
+    }
+    date.setDate(date.getDate() + daysUntilTarget);
+    return toLocalDate(date);
+  };
+
+  const nextMonday = nextWeekday(1);
+  const nextSunday = nextWeekday(0);
+  const nextMondayAtNoon = new Date(`${nextMonday}T12:00:00`);
+  const futureClosureDate = (() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 14);
+    return toLocalDate(date);
+  })();
+
   const mockPartner: Partner = {
     id: 'partner-123',
     companyName: 'Test Garage',
@@ -301,7 +323,7 @@ describe('AvailabilitiesService', () => {
 
   describe('getAvailableSlots - Basic Generation', () => {
     const query: AvailableSlotsQueryDto = {
-      date: '2025-12-01', // Monday
+      date: nextMonday,
       duration: 30,
       advanceNoticeHours: 0, // Disable for testing
     };
@@ -359,7 +381,7 @@ describe('AvailabilitiesService', () => {
 
   describe('getAvailableSlots - Exclude Bookings', () => {
     const query: AvailableSlotsQueryDto = {
-      date: '2025-12-01',
+      date: nextMonday,
       duration: 30,
       advanceNoticeHours: 0,
     };
@@ -368,7 +390,7 @@ describe('AvailabilitiesService', () => {
       const booking: Booking = {
         id: 'booking-1',
         partnerId: 'partner-123',
-        scheduledDate: new Date('2025-12-01'),
+        scheduledDate: nextMondayAtNoon,
         scheduledTime: '10:00',
         endTime: '11:00',
         status: BookingStatus.CONFIRMED,
@@ -398,7 +420,7 @@ describe('AvailabilitiesService', () => {
       const booking: Booking = {
         id: 'booking-2',
         partnerId: 'partner-123',
-        scheduledDate: new Date('2025-12-01'),
+        scheduledDate: nextMondayAtNoon,
         scheduledTime: '14:00',
         endTime: '15:00',
         status: BookingStatus.IN_PROGRESS,
@@ -420,7 +442,7 @@ describe('AvailabilitiesService', () => {
 
   describe('getAvailableSlots - Exclude Unavailabilities', () => {
     const query: AvailableSlotsQueryDto = {
-      date: '2025-12-01',
+      date: nextMonday,
       duration: 30,
       advanceNoticeHours: 0,
     };
@@ -429,7 +451,7 @@ describe('AvailabilitiesService', () => {
       const unavail = {
         id: 'unavail-1',
         partnerId: 'partner-123',
-        date: new Date('2025-12-01'),
+        date: nextMondayAtNoon,
         reason: 'Holiday',
         isFullDay: true,
         startTime: null,
@@ -460,7 +482,7 @@ describe('AvailabilitiesService', () => {
       const unavail = {
         id: 'unavail-2',
         partnerId: 'partner-123',
-        date: new Date('2025-12-01'),
+        date: nextMondayAtNoon,
         reason: 'Lunch break',
         isFullDay: false,
         startTime: '12:00',
@@ -503,7 +525,7 @@ describe('AvailabilitiesService', () => {
         {
           id: 'unavail-3',
           partnerId: 'partner-123',
-          date: new Date('2025-12-01'),
+          date: nextMondayAtNoon,
           reason: 'Meeting',
           isFullDay: false,
           startTime: '10:00',
@@ -516,7 +538,7 @@ describe('AvailabilitiesService', () => {
         {
           id: 'unavail-4',
           partnerId: 'partner-123',
-          date: new Date('2025-12-01'),
+          date: nextMondayAtNoon,
           reason: 'Break',
           isFullDay: false,
           startTime: '15:00',
@@ -552,7 +574,7 @@ describe('AvailabilitiesService', () => {
   describe('getAvailableSlots - Edge Cases', () => {
     it('should return empty slots if no availability for day', async () => {
       const query: AvailableSlotsQueryDto = {
-        date: '2025-12-07', // Sunday (no availability)
+        date: nextSunday, // Sunday (no availability)
         duration: 30,
       };
 
@@ -572,7 +594,7 @@ describe('AvailabilitiesService', () => {
         endTime: '23:59',
       };
       const query: AvailableSlotsQueryDto = {
-        date: '2025-12-01',
+        date: nextMonday,
         duration: 60,
         advanceNoticeHours: 0,
       };
@@ -619,7 +641,7 @@ describe('AvailabilitiesService', () => {
 
   describe('addUnavailability', () => {
     const dto: AddUnavailabilityDto = {
-      date: '2025-12-25',
+      date: futureClosureDate,
       reason: 'Christmas',
       isFullDay: true,
     };
@@ -628,7 +650,7 @@ describe('AvailabilitiesService', () => {
       const mockUnavail = {
         id: 'unavail-new',
         partnerId: 'partner-123',
-        date: new Date('2025-12-25'),
+        date: new Date(`${futureClosureDate}T12:00:00`),
         reason: 'Christmas',
         isFullDay: true,
         startTime: null,

@@ -35,7 +35,7 @@ describe('AuthContext', () => {
   });
 
   it('should login and set user', async () => {
-    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'admin', tenantId: 1 };
+    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'tenant_admin', tenantId: 1 };
     const mockAuthResponse = {
       user: mockUser,
       access_token: 'token',
