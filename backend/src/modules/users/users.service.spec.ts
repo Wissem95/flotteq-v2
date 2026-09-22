@@ -5,7 +5,11 @@ import { User, UserRole } from '../../entities/user.entity';
 import { Driver } from '../../entities/driver.entity';
 import { SubscriptionsService } from '../subscriptions/subscriptions.service';
 import { EmailQueueService } from '../notifications/email-queue.service';
-import { ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
@@ -27,6 +31,7 @@ describe('UsersService', () => {
     save: jest.fn(),
     find: jest.fn(),
     findOne: jest.fn(),
+    count: jest.fn(),
     update: jest.fn(),
     delete: jest.fn(),
   };
@@ -207,6 +212,50 @@ describe('UsersService', () => {
         order: { createdAt: 'DESC' },
         relations: ['tenant'],
       });
+    });
+  });
+
+  describe('protection de l’administrateur du tenant', () => {
+    it('refuse la suppression du dernier administrateur du tenant', async () => {
+      const soleAdmin = {
+        ...mockUser,
+        id: 'sole-admin-id',
+        role: UserRole.TENANT_ADMIN,
+      };
+      const anotherAdmin = {
+        ...mockUser,
+        id: 'another-admin-id',
+        role: UserRole.TENANT_ADMIN,
+      };
+
+      mockRepository.findOne.mockResolvedValue(soleAdmin);
+      mockRepository.count.mockResolvedValue(1);
+
+      await expect(service.remove(soleAdmin.id, anotherAdmin as any)).rejects.toThrow(
+        BadRequestException,
+      );
+
+      expect(mockRepository.delete).not.toHaveBeenCalled();
+    });
+
+    it('refuse la désactivation du dernier administrateur du tenant', async () => {
+      const soleAdmin = {
+        ...mockUser,
+        id: 'sole-admin-id',
+        role: UserRole.TENANT_ADMIN,
+      };
+      const anotherAdmin = {
+        ...mockUser,
+        id: 'another-admin-id',
+        role: UserRole.TENANT_ADMIN,
+      };
+
+      mockRepository.findOne.mockResolvedValue(soleAdmin);
+      mockRepository.count.mockResolvedValue(1);
+
+      await expect(
+        service.deactivate(soleAdmin.id, anotherAdmin as any),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 });

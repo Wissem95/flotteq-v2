@@ -359,6 +359,18 @@ export class UsersService {
       );
     }
 
+    if (user.role === UserRole.TENANT_ADMIN) {
+      const tenantAdminCount = await this.usersRepository.count({
+        where: { tenantId: user.tenantId, role: UserRole.TENANT_ADMIN },
+      });
+
+      if (tenantAdminCount <= 1) {
+        throw new BadRequestException(
+          'Vous ne pouvez pas supprimer le dernier administrateur du compte',
+        );
+      }
+    }
+
     await this.usersRepository.delete(id);
 
     // Décrémenter l'usage
@@ -417,6 +429,22 @@ export class UsersService {
       throw new ForbiddenException(
         'Vous ne pouvez pas désactiver un super administrateur',
       );
+    }
+
+    if (user.role === UserRole.TENANT_ADMIN && user.isActive) {
+      const activeTenantAdminCount = await this.usersRepository.count({
+        where: {
+          tenantId: user.tenantId,
+          role: UserRole.TENANT_ADMIN,
+          isActive: true,
+        },
+      });
+
+      if (activeTenantAdminCount <= 1) {
+        throw new BadRequestException(
+          'Vous ne pouvez pas désactiver le dernier administrateur du compte',
+        );
+      }
     }
 
     user.isActive = false;

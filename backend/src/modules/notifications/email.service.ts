@@ -85,7 +85,10 @@ export class EmailService {
       const bodyHtml = template(options.context);
 
       // Wrap with layout
-      const html = this.layoutTemplate({ body: bodyHtml });
+      const html = this.layoutTemplate({
+        body: bodyHtml,
+        currentYear: new Date().getFullYear(),
+      });
 
       await this.transporter.sendMail({
         from: this.configService.get('EMAIL_FROM'),
@@ -292,6 +295,7 @@ export class EmailService {
       template: 'booking-confirmed',
       context: {
         tenantName,
+        bookingData,
         ...bookingData,
         appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
@@ -309,6 +313,7 @@ export class EmailService {
       template: 'booking-rejected',
       context: {
         tenantName,
+        bookingData,
         ...bookingData,
         appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },
@@ -326,6 +331,7 @@ export class EmailService {
       template: 'booking-completed',
       context: {
         tenantName,
+        bookingData,
         ...bookingData,
         appUrl: this.configService.get('FRONTEND_CLIENT_URL') || this.configService.get('APP_URL', 'http://localhost:5174'),
       },

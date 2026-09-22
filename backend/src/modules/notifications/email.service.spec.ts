@@ -63,6 +63,15 @@ describe('EmailService', () => {
     expect(service['layoutTemplate']).toBeDefined();
   });
 
+  it('should render the current year in the shared layout', () => {
+    const html = service['layoutTemplate']({
+      body: '<p>Contenu de test</p>',
+      currentYear: 2026,
+    });
+
+    expect(html).toContain('© 2026 FlotteQ');
+  });
+
   it('should configure SMTP transporter with correct settings', () => {
     expect(configService.get).toHaveBeenCalledWith('SMTP_HOST');
     expect(configService.get).toHaveBeenCalledWith('SMTP_PORT');
@@ -366,6 +375,7 @@ describe('EmailService', () => {
         context: expect.objectContaining({
           tenantName: 'FleetCorp',
           bookingId: 'BK-789',
+          bookingData,
         }),
       });
 
@@ -397,6 +407,7 @@ describe('EmailService', () => {
         context: expect.objectContaining({
           tenantName: 'FleetCorp',
           bookingId: 'BK-999',
+          bookingData,
         }),
       });
 
@@ -430,6 +441,7 @@ describe('EmailService', () => {
           tenantName: 'FleetCorp',
           bookingId: 'BK-111',
           price: 89.99,
+          bookingData,
         }),
       });
 
