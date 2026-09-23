@@ -34,6 +34,10 @@ export class AlignCoreSchemaToEntities1763000800000
 
     await queryRunner.query(`
       ALTER TABLE "subscriptions"
+      ADD COLUMN IF NOT EXISTS "trialEnd" date
+    `);
+    await queryRunner.query(`
+      ALTER TABLE "subscriptions"
       ALTER COLUMN "trialEnd" TYPE date USING "trialEnd"::date
     `);
 

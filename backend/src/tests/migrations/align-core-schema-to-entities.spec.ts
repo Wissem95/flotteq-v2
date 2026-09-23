@@ -26,4 +26,16 @@ describe('AlignCoreSchemaToEntities1763000800000', () => {
     expect(commissionEnumQuery).toContain('ALTER TYPE %I ADD VALUE IF NOT EXISTS');
     expect(commissionEnumQuery).not.toContain('ALTER TYPE "commission_status"');
   });
+
+  it('crée trialEnd lorsqu’un schéma historique ne contient pas encore cette colonne', async () => {
+    await new AlignCoreSchemaToEntities1763000800000().up(queryRunner);
+
+    const queries = jest
+      .mocked(queryRunner.query)
+      .mock.calls.map(([query]) => String(query));
+
+    expect(queries).toContainEqual(
+      expect.stringContaining('ADD COLUMN IF NOT EXISTS "trialEnd" date'),
+    );
+  });
 });
