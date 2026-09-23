@@ -5,13 +5,29 @@ export class CreateDocumentsTable1759750000000 implements MigrationInterface {
   name = 'CreateDocumentsTable1759750000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    // Certains environnements historiques possèdent déjà cette table, créée
+    // avant l'introduction de cette migration dans l'historique TypeORM.
+    // Dans ce cas, la migration doit simplement être enregistrée, sans
+    // essayer de recréer les types ou la table existants.
+    if (await queryRunner.hasTable('documents')) {
+      return;
+    }
+
     await queryRunner.query(`
-      CREATE TYPE "public"."document_entity_type" AS ENUM ('vehicle', 'driver', 'maintenance')
+      DO $$ BEGIN
+        CREATE TYPE "public"."document_entity_type" AS ENUM ('vehicle', 'driver', 'maintenance');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
     await queryRunner.query(`
-      CREATE TYPE "public"."document_type" AS ENUM (
-        'permis', 'carte_grise', 'assurance', 'controle_technique', 'facture', 'contrat', 'autre'
-      )
+      DO $$ BEGIN
+        CREATE TYPE "public"."document_type" AS ENUM (
+          'permis', 'carte_grise', 'assurance', 'controle_technique', 'facture', 'contrat', 'autre'
+        );
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
     `);
     await queryRunner.query(`
       CREATE TABLE "documents" (

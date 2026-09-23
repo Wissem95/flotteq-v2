@@ -232,14 +232,22 @@ echo "Deploying backend..."
 DATABASE_MAY_HAVE_CHANGED=1
 docker compose -f docker-compose.production.yml up -d --force-recreate --no-deps backend
 
-# Attendre que le backend soit healthy
+# Attendre le healthcheck. Les migrations sur un schéma réel peuvent prendre
+# davantage que 30 secondes, sans constituer un échec du backend.
 echo "Waiting for backend health check..."
-sleep 30
+BACKEND_HEALTH="starting"
+for attempt in 1 2 3 4 5 6 7 8 9; do
+  BACKEND_HEALTH=$(docker inspect flotteq_backend_prod --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+  if [ "$BACKEND_HEALTH" = "healthy" ] || [ "$BACKEND_HEALTH" = "unknown" ]; then
+    break
+  fi
+  echo "  backend health attempt $attempt: $BACKEND_HEALTH"
+  sleep 10
+done
 
-# Vérifier healthcheck
-BACKEND_HEALTH=$(docker inspect flotteq_backend_prod --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
 if [ "$BACKEND_HEALTH" != "healthy" ] && [ "$BACKEND_HEALTH" != "unknown" ]; then
   echo -e "${RED}❌ Backend health check failed: $BACKEND_HEALTH${NC}"
+  docker logs --tail 200 flotteq_backend_prod || true
   rollback
 fi
 
