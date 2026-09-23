@@ -1,5 +1,5 @@
 import { QueryRunner } from 'typeorm';
-import { CreateDocumentsTable1759750000000 } from './1759750000000-CreateDocumentsTable';
+import { CreateDocumentsTable1759750000000 } from '../../migrations/1759750000000-CreateDocumentsTable';
 
 describe('CreateDocumentsTable1759750000000', () => {
   const queryRunner = {
