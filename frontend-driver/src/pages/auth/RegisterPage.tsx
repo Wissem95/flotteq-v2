@@ -71,10 +71,13 @@ export default function RegisterPage() {
       localStorage.setItem('refresh_token', response.refresh_token);
       localStorage.setItem('tenant_id', response.user.tenantId.toString());
 
-      // Redirect vers le dashboard
-      window.location.href = '/dashboard';
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Erreur lors de l\'inscription');
+      // Un plan payant doit passer par Stripe Checkout avant l’accès au tableau de bord.
+      window.location.href = response.checkoutUrl || '/dashboard';
+    } catch (err: unknown) {
+      const message = (
+        err as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      setError(message || 'Erreur lors de l\'inscription');
       setLoading(false);
     }
   };

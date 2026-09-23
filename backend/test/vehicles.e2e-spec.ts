@@ -120,6 +120,7 @@ describe('VehiclesController (e2e)', () => {
           model: 'Partner',
           year: 2022,
           vin: 'VF9876543210ZYXWV',
+          color: 'Blanc',
           mileage: 3000,
         })
         .expect(409);

@@ -144,10 +144,10 @@ export class DocumentsController {
     summary:
       "Liste les documents d'une entité (toutes tenants) — supervision FlotteQ",
     description:
-      'Réservé à l\'équipe FlotteQ. Utilisé notamment pour vérifier les documents des partenaires (entityType=partner).',
+      "Réservé à l'équipe FlotteQ. Utilisé notamment pour vérifier les documents des partenaires (entityType=partner).",
   })
   @ApiResponse({ status: 200, description: 'Documents', type: [Document] })
-  @ApiResponse({ status: 403, description: 'Réservé à l\'équipe FlotteQ' })
+  @ApiResponse({ status: 403, description: "Réservé à l'équipe FlotteQ" })
   async findByEntity(
     @Query('entityType') entityType: string,
     @Query('entityId') entityId: string,
@@ -160,8 +160,12 @@ export class DocumentsController {
   @ApiOperation({
     summary: 'Valide ou refuse un document (vérification FlotteQ)',
   })
-  @ApiResponse({ status: 200, description: 'Document mis à jour', type: Document })
-  @ApiResponse({ status: 403, description: 'Réservé à l\'équipe FlotteQ' })
+  @ApiResponse({
+    status: 200,
+    description: 'Document mis à jour',
+    type: Document,
+  })
+  @ApiResponse({ status: 403, description: "Réservé à l'équipe FlotteQ" })
   @ApiResponse({ status: 404, description: 'Document non trouvé' })
   async verify(
     @Param('id', ParseUUIDPipe) id: string,

@@ -61,9 +61,9 @@ describe('AuthContext', () => {
     });
   });
 
-  it.skip('should logout and clear user', async () => {
+  it('should logout and clear user', async () => {
     // First set up a logged in user
-    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'admin', tenantId: 1 };
+    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'tenant_admin', tenantId: 1 };
     const mockAuthResponse = {
       user: mockUser,
       access_token: 'token',
@@ -71,6 +71,11 @@ describe('AuthContext', () => {
     };
 
     vi.mocked(authService.login).mockResolvedValue(mockAuthResponse);
+    vi.mocked(authService.logout).mockImplementation(async () => {
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('tenant_id');
+    });
 
     const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -79,7 +84,9 @@ describe('AuthContext', () => {
     });
 
     // Login first
-    await result.current.login({ email: 'test@test.com', password: 'pass' });
+    await act(async () => {
+      await result.current.login({ email: 'test@test.com', password: 'pass' });
+    });
 
     // Verify logged in
     await waitFor(() => {

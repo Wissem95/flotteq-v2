@@ -1,7 +1,10 @@
 import { Repository } from 'typeorm';
 import { Tenant } from '../src/entities/tenant.entity';
 import { User, UserRole } from '../src/entities/user.entity';
-import { Subscription } from '../src/entities/subscription.entity';
+import {
+  Subscription,
+  SubscriptionStatus,
+} from '../src/entities/subscription.entity';
 import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
 import * as bcrypt from 'bcrypt';
 
@@ -25,16 +28,11 @@ export async function createTestTenant(
     userData?: Partial<User>;
   },
 ): Promise<TestTenant> {
-  // Ensure a basic plan exists
-  let plan = await plansRepo.findOne({ where: { name: 'Basic' } });
+  // S'appuyer sur le catalogue réellement migré, sans injecter un faux plan
+  // actif qui polluerait l'endpoint public des offres.
+  const plan = await plansRepo.findOne({ where: { name: 'Business' } });
   if (!plan) {
-    plan = await plansRepo.save({
-      name: 'Basic',
-      price: 49.99,
-      maxVehicles: 10,
-      maxUsers: 5,
-      maxDrivers: 10,
-    });
+    throw new Error('Le plan Business doit exister après les migrations E2E');
   }
 
   // Create tenant
@@ -49,7 +47,7 @@ export async function createTestTenant(
   const subscription = await subscriptionsRepo.save({
     tenantId: tenant.id,
     planId: plan.id,
-    status: 'active',
+    status: SubscriptionStatus.ACTIVE,
     startDate: new Date(),
   });
 

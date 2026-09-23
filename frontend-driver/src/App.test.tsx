@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -8,6 +8,13 @@ import TenantLayout from './layouts/TenantLayout';
 import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
+vi.mock('@/api/services/subscriptions.service', () => ({
+  subscriptionsService: {
+    getPlans: vi.fn().mockResolvedValue([
+      { id: 1, name: 'Starter', price: 0, maxVehicles: 5, maxUsers: 2, maxDrivers: 5, trialDays: 0, isActive: true },
+    ]),
+  },
+}));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +58,7 @@ describe('App Routing', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('FlotteQ')).toBeInTheDocument();
+    expect(screen.getByText('FlotteQ Driver')).toBeInTheDocument();
     expect(screen.getByText(/connectez-vous à votre compte/i)).toBeInTheDocument();
   });
 
@@ -81,7 +88,7 @@ describe('App Routing', () => {
     });
   });
 
-  it('should have register route accessible', () => {
+  it('should have register route accessible', async () => {
     render(
       <MemoryRouter initialEntries={['/register']}>
         <Routes>
@@ -90,6 +97,6 @@ describe('App Routing', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Créer votre compte FlotteQ')).toBeInTheDocument();
+    expect(await screen.findByText('Starter')).toBeInTheDocument();
   });
 });

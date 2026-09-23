@@ -173,9 +173,9 @@ export class MaintenanceService {
   ): Promise<MaintenanceCostSummaryDto> {
     const result = await this.maintenanceRepository
       .createQueryBuilder('m')
-      .select('SUM(m.cost)', 'totalCost')
+      .select('SUM(m.actualCost)', 'totalCost')
       .addSelect('COUNT(*)', 'maintenanceCount')
-      .addSelect('AVG(m.cost)', 'averageCost')
+      .addSelect('AVG(m.actualCost)', 'averageCost')
       .where('m.vehicleId = :vehicleId', { vehicleId })
       .andWhere('m.tenantId = :tenantId', { tenantId })
       .andWhere('m.status = :status', { status: MaintenanceStatus.COMPLETED })
@@ -192,7 +192,7 @@ export class MaintenanceService {
   async getTotalCostsByTenant(tenantId: number): Promise<number> {
     const result = await this.maintenanceRepository
       .createQueryBuilder('m')
-      .select('SUM(m.cost)', 'total')
+      .select('SUM(m.actualCost)', 'total')
       .where('m.tenantId = :tenantId', { tenantId })
       .andWhere('m.status = :status', { status: MaintenanceStatus.COMPLETED })
       .getRawOne();

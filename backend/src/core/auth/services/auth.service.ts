@@ -59,8 +59,7 @@ export class AuthService {
       );
     }
 
-    const isQuoteOnlyPlan =
-      Number(plan.price) === 0 && plan.maxVehicles === -1;
+    const isQuoteOnlyPlan = Number(plan.price) === 0 && plan.maxVehicles === -1;
     if (isQuoteOnlyPlan) {
       throw new BadRequestException('This plan requires a custom quote');
     }

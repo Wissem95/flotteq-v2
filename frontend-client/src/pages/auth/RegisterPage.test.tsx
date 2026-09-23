@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { subscriptionsService } from '@/api/services/subscriptions.service';
 import RegisterPage from './RegisterPage';
 
@@ -10,7 +10,7 @@ vi.mock('@/api/services/subscriptions.service', () => ({
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
-  <BrowserRouter>{children}</BrowserRouter>
+  <MemoryRouter initialEntries={['/register']}>{children}</MemoryRouter>
 );
 
 const plans = [
@@ -72,6 +72,19 @@ describe('RegisterPage', () => {
       'mailto:contact@flotteq.fr?subject=Demande%20Enterprise',
     );
     expect(screen.queryByRole('button', { name: 'Choisir Enterprise' })).not.toBeInTheDocument();
+  });
+
+  it('préselectionne le plan demandé par le lien commercial', async () => {
+    const registerWrapper = ({ children }: { children: React.ReactNode }) => (
+      <MemoryRouter initialEntries={['/register?plan=pro']}>
+        {children}
+      </MemoryRouter>
+    );
+
+    render(<RegisterPage />, { wrapper: registerWrapper });
+
+    expect(await screen.findByText(/Plan sélectionné:/i)).toHaveTextContent('Pro');
+    expect(screen.getByLabelText(/prénom/i)).toBeInTheDocument();
   });
 
   it('affiche une erreur si le catalogue ne peut pas être chargé', async () => {

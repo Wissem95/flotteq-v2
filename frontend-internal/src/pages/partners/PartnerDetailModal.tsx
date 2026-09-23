@@ -51,6 +51,7 @@ import {
 } from 'lucide-react';
 import type { Partner, PartnerStatus } from '@/api/types/partner.types';
 import type { DocumentVerificationStatus } from '@/api/types/document.types';
+import type { PartnerDocument } from '@/api/types/document.types';
 import { usePartnerDocuments } from '@/hooks/usePartnerDocuments';
 
 interface PartnerDetailModalProps {
@@ -85,14 +86,22 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
   } = usePartnerDocuments(partner.id, open);
 
   // Validation d'un document
-  const handleApproveDocument = (id: string) => {
-    verifyDocument({ id, data: { status: 'approved' } });
+  const handleApproveDocument = (document: PartnerDocument) => {
+    verifyDocument({
+      id: document.id,
+      source: document.source,
+      data: { status: 'approved' },
+    });
   };
 
   // Refus d'un document : on demande une note via prompt
-  const handleRejectDocument = (id: string) => {
+  const handleRejectDocument = (document: PartnerDocument) => {
     const notes = window.prompt('Motif du refus (optionnel) :') ?? undefined;
-    verifyDocument({ id, data: { status: 'rejected', notes } });
+    verifyDocument({
+      id: document.id,
+      source: document.source,
+      data: { status: 'rejected', notes },
+    });
   };
 
   // Badge de statut de vérification d'un document
@@ -371,7 +380,7 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => downloadDocument(doc.id, doc.fileName)}
+                          onClick={() => downloadDocument(doc.id, doc.fileName, doc.source)}
                         >
                           <Download className="h-4 w-4 mr-1" />
                           Télécharger
@@ -381,7 +390,7 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
                           disabled={isVerifying || doc.verificationStatus === 'approved'}
-                          onClick={() => handleApproveDocument(doc.id)}
+                          onClick={() => handleApproveDocument(doc)}
                         >
                           <CheckCircle className="h-4 w-4 mr-1" />
                           Valider
@@ -390,7 +399,7 @@ export const PartnerDetailModal = ({ partner, open, onClose, onEdit }: PartnerDe
                           variant="destructive"
                           size="sm"
                           disabled={isVerifying || doc.verificationStatus === 'rejected'}
-                          onClick={() => handleRejectDocument(doc.id)}
+                          onClick={() => handleRejectDocument(doc)}
                         >
                           <XCircle className="h-4 w-4 mr-1" />
                           Refuser

@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { Repository } from 'typeorm';
@@ -8,6 +9,12 @@ import { User } from '../src/entities/user.entity';
 import { Tenant } from '../src/entities/tenant.entity';
 import { Vehicle } from '../src/entities/vehicle.entity';
 import { AuditLog } from '../src/entities/audit-log.entity';
+import { Subscription } from '../src/entities/subscription.entity';
+import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
+import { StripeService } from '../src/stripe/stripe.service';
+import { MileageHistory } from '../src/entities/mileage-history.entity';
+import { AuditService } from '../src/modules/audit/audit.service';
+import { AuditInterceptor } from '../src/common/interceptors/audit.interceptor';
 
 describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
   let app: INestApplication;
@@ -15,11 +22,15 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
   let tenantsRepository: Repository<Tenant>;
   let vehiclesRepository: Repository<Vehicle>;
   let auditLogsRepository: Repository<AuditLog>;
+  let subscriptionsRepository: Repository<Subscription>;
+  let plansRepository: Repository<SubscriptionPlan>;
+  let mileageHistoryRepository: Repository<MileageHistory>;
 
   let accessToken: string;
   let tenantId: number;
   let vehicleId: string;
   let userId: string;
+  let starterPlanId: number;
 
   const uniqueEmail = `test-flow-${Date.now()}@example.com`;
   const uniqueCompany = `FlowTest-${Date.now()}`;
@@ -28,14 +39,20 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider('EmailQueueService')
+      .overrideProvider(StripeService)
       .useValue({
-        queueWelcomeEmail: jest.fn().mockResolvedValue(undefined),
-        queuePasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+        createCustomer: jest.fn().mockResolvedValue('cus_e2e'),
+        createCheckoutSession: jest.fn(),
       })
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalInterceptors(
+      new AuditInterceptor(
+        moduleFixture.get(Reflector),
+        moduleFixture.get(AuditService),
+      ),
+    );
     app.setGlobalPrefix('api');
     app.useGlobalPipes(
       new ValidationPipe({
@@ -50,11 +67,24 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
     vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
     auditLogsRepository = moduleFixture.get(getRepositoryToken(AuditLog));
+    subscriptionsRepository = moduleFixture.get(
+      getRepositoryToken(Subscription),
+    );
+    plansRepository = moduleFixture.get(getRepositoryToken(SubscriptionPlan));
+    mileageHistoryRepository = moduleFixture.get(
+      getRepositoryToken(MileageHistory),
+    );
+    const starterPlan = await plansRepository.findOne({
+      where: { name: 'Starter' },
+    });
+    if (!starterPlan) throw new Error('Le plan Starter doit exister en base E2E');
+    starterPlanId = starterPlan.id;
   });
 
   afterAll(async () => {
     // Cleanup : supprimer les données de test créées
     if (vehicleId) {
+      await mileageHistoryRepository.delete({ vehicleId });
       await vehiclesRepository.delete({ id: vehicleId });
     }
     if (userId) {
@@ -62,6 +92,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     }
     if (tenantId) {
       await auditLogsRepository.delete({ tenantId });
+      await subscriptionsRepository.delete({ tenantId });
       await tenantsRepository.delete({ id: tenantId });
     }
 
@@ -71,23 +102,22 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
   // 1. Inscription d'un nouveau tenant
   it('should register a new tenant', async () => {
     const response = await request(app.getHttpServer())
-      .post('/api/onboarding/register')
+      .post('/api/auth/register')
       .send({
         email: uniqueEmail,
         password: 'Test123!@#',
         firstName: 'Test',
         lastName: 'Flow',
         companyName: uniqueCompany,
-        planId: '16', // Freemium
+        planId: String(starterPlanId),
       })
       .expect(201);
 
-    expect(response.body).toHaveProperty('accessToken');
-    expect(response.body).toHaveProperty('tenant');
-    expect(response.body.tenant).toHaveProperty('id');
+    expect(response.body).toHaveProperty('access_token');
+    expect(response.body.user).toHaveProperty('tenantId');
 
-    accessToken = response.body.accessToken;
-    tenantId = response.body.tenant.id;
+    accessToken = response.body.access_token;
+    tenantId = response.body.user.tenantId;
     userId = response.body.user.id;
 
     // Vérifier que le tenant existe bien dans la base
@@ -102,6 +132,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/api/vehicles')
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         registration: `TEST-${Date.now()}`,
         brand: 'Toyota',
@@ -137,6 +168,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get(`/api/audit-logs/entity/Vehicle/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(Array.isArray(response.body)).toBe(true);
@@ -157,6 +189,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const response = await request(app.getHttpServer())
       .patch(`/api/vehicles/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         currentKm: 10000,
       })
@@ -180,6 +213,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get(`/api/audit-logs/entity/Vehicle/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(response.body.length).toBeGreaterThanOrEqual(2);
@@ -195,6 +229,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     await request(app.getHttpServer())
       .delete(`/api/vehicles/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     // Vérifier que le véhicule est soft deleted
@@ -215,6 +250,7 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get(`/api/audit-logs?entityType=Vehicle`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(response.body).toHaveProperty('data');

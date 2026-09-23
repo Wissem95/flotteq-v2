@@ -256,6 +256,14 @@ describe('MaintenanceService', () => {
       expect(result.totalCost).toBe(500.0);
       expect(result.maintenanceCount).toBe(3);
       expect(result.averageCost).toBe(166.67);
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith(
+        'SUM(m.actualCost)',
+        'totalCost',
+      );
+      expect(mockQueryBuilder.addSelect).toHaveBeenCalledWith(
+        'AVG(m.actualCost)',
+        'averageCost',
+      );
     });
   });
 
@@ -275,6 +283,10 @@ describe('MaintenanceService', () => {
       const result = await service.getTotalCostsByTenant(1);
 
       expect(result).toBe(1200.0);
+      expect(mockQueryBuilder.select).toHaveBeenCalledWith(
+        'SUM(m.actualCost)',
+        'total',
+      );
     });
 
     it('should return 0 if no completed maintenances', async () => {

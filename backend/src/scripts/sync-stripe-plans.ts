@@ -24,7 +24,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
 
 async function syncStripePlans() {
   if (!process.env.STRIPE_SECRET_KEY) {
-    console.error('❌ STRIPE_SECRET_KEY manquant dans l\'environnement.');
+    console.error("❌ STRIPE_SECRET_KEY manquant dans l'environnement.");
     process.exit(1);
   }
 

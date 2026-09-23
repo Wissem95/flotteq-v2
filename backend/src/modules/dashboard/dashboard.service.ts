@@ -32,6 +32,7 @@ import {
   RecentTenantDto,
 } from './dto/internal-stats.dto';
 import { SubscriptionUsageDto } from './dto/subscription-usage.dto';
+import { DocumentsService } from '../../documents/documents.service';
 
 @Injectable()
 export class DashboardService {
@@ -48,6 +49,7 @@ export class DashboardService {
     private subscriptionRepository: Repository<Subscription>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private documentsService: DocumentsService,
   ) {}
 
   private getMaintenanceTypeLabel(type: string): string {
@@ -855,6 +857,11 @@ export class DashboardService {
   }
 
   async getSubscriptionUsage(tenantId: number): Promise<SubscriptionUsageDto> {
+    const storageUsedBytes =
+      await this.documentsService.getTenantStorageUsage(tenantId);
+    const storageUsedMB =
+      Math.round((storageUsedBytes / 1024 / 1024) * 100) / 100;
+
     // Get tenant's subscription and plan
     const subscription = await this.subscriptionRepository.findOne({
       where: { tenantId },
@@ -876,7 +883,7 @@ export class DashboardService {
         currentVehicles: vehiclesCount,
         maxDrivers: 0,
         currentDrivers: driversCount,
-        storageUsedMB: 0,
+        storageUsedMB,
         storageQuotaMB: 0,
         usagePercentage: {
           vehicles: 0,
@@ -892,8 +899,6 @@ export class DashboardService {
       this.driverRepository.count({ where: { tenantId } }),
     ]);
 
-    // Get storage usage (simplified - you might want to calculate actual document storage)
-    const storageUsedMB = 0; // TODO: Calculate from documents table
     const storageQuotaMB = subscription.plan.maxStorageMb || 10240; // Default 10GB
 
     // Calculate percentages

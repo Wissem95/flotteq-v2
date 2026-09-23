@@ -12,6 +12,7 @@ import {
 import { Tenant } from '../../entities/tenant.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
+import { DocumentsService } from '../../documents/documents.service';
 
 describe('DashboardService', () => {
   let service: DashboardService;
@@ -43,6 +44,7 @@ describe('DashboardService', () => {
   const mockSubscriptionRepository = {
     count: jest.fn(),
     find: jest.fn(),
+    findOne: jest.fn(),
     createQueryBuilder: jest.fn(),
   };
 
@@ -51,10 +53,18 @@ describe('DashboardService', () => {
     find: jest.fn(),
   };
 
+  const mockDocumentsService = {
+    getTenantStorageUsage: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         DashboardService,
+        {
+          provide: DocumentsService,
+          useValue: mockDocumentsService,
+        },
         {
           provide: getRepositoryToken(Vehicle),
           useValue: mockVehicleRepository,
@@ -158,6 +168,41 @@ describe('DashboardService', () => {
 
       expect(result.total).toBe(0);
       expect(result.utilizationRate).toBe(0);
+    });
+  });
+
+  describe('getSubscriptionUsage', () => {
+    it('reports tenant storage converted to megabytes for an active plan', async () => {
+      mockDocumentsService.getTenantStorageUsage.mockResolvedValue(1.5 * 1024 * 1024);
+      mockSubscriptionRepository.findOne.mockResolvedValue({
+        plan: {
+          name: 'Pro',
+          maxVehicles: 20,
+          maxDrivers: 10,
+          maxStorageMb: 100,
+        },
+      });
+      mockVehicleRepository.count.mockResolvedValue(5);
+      mockDriverRepository.count.mockResolvedValue(2);
+
+      const result = await service.getSubscriptionUsage(42);
+
+      expect(mockDocumentsService.getTenantStorageUsage).toHaveBeenCalledWith(42);
+      expect(result.storageUsedMB).toBe(1.5);
+      expect(result.storageQuotaMB).toBe(100);
+      expect(result.usagePercentage.storage).toBe(1.5);
+    });
+
+    it('keeps actual tenant storage visible when there is no subscription', async () => {
+      mockDocumentsService.getTenantStorageUsage.mockResolvedValue(2 * 1024 * 1024);
+      mockSubscriptionRepository.findOne.mockResolvedValue(null);
+      mockVehicleRepository.count.mockResolvedValue(1);
+      mockDriverRepository.count.mockResolvedValue(0);
+
+      const result = await service.getSubscriptionUsage(42);
+
+      expect(result.storageUsedMB).toBe(2);
+      expect(result.storageQuotaMB).toBe(0);
     });
   });
 

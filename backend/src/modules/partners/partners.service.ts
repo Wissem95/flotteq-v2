@@ -20,6 +20,14 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 import { GetPartnersQueryDto } from './dto/get-partners-query.dto';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { StripeService } from '../../stripe/stripe.service';
+import {
+  PartnerDocument,
+  PartnerDocumentType,
+  PartnerDocumentVerificationStatus,
+} from '../../entities/partner-document.entity';
+import { basename, join, resolve } from 'path';
+import { mkdir, rm, writeFile } from 'fs/promises';
+import { randomUUID } from 'crypto';
 
 @Injectable()
 export class PartnersService {
@@ -37,7 +45,11 @@ export class PartnersService {
     private stripeService: StripeService,
   ) {}
 
-  async create(createPartnerDto: CreatePartnerDto): Promise<Partner> {
+  async create(
+    createPartnerDto: CreatePartnerDto,
+    uploadedFiles: Express.Multer.File[] = [],
+    documentType?: PartnerDocumentType,
+  ): Promise<Partner> {
     // Check email uniqueness BEFORE transaction
     const existingPartner = await this.partnerRepository.findOne({
       where: { email: createPartnerDto.email },
@@ -72,6 +84,7 @@ export class PartnersService {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
+    const createdFilePaths: string[] = [];
 
     try {
       // Create partner
@@ -103,24 +116,98 @@ export class PartnersService {
       });
       await queryRunner.manager.save(partnerUser);
 
+      if (uploadedFiles.length > 0 && !documentType) {
+        throw new BadRequestException('Le type de justificatif est requis');
+      }
+
+      for (const file of uploadedFiles) {
+        this.validatePartnerDocument(file);
+        const partnerDocumentsDirectory = resolve(
+          process.cwd(),
+          'uploads',
+          'partners',
+          partner.id,
+        );
+        await mkdir(partnerDocumentsDirectory, {
+          recursive: true,
+          mode: 0o700,
+        });
+
+        const safeOriginalName = basename(file.originalname)
+          .replace(/[^a-zA-Z0-9._-]/g, '_')
+          .slice(-180);
+        const storedName = `${randomUUID()}-${safeOriginalName || 'document'}`;
+        const filePath = join(partnerDocumentsDirectory, storedName);
+        createdFilePaths.push(filePath);
+        await writeFile(filePath, file.buffer, { flag: 'wx', mode: 0o600 });
+
+        const partnerDocument = queryRunner.manager.create(PartnerDocument, {
+          partnerId: partner.id,
+          uploadedByPartnerUserId: partnerUser.id,
+          fileName: safeOriginalName || 'document',
+          filePath,
+          mimeType: file.mimetype,
+          size: file.size,
+          documentType,
+          verificationStatus: PartnerDocumentVerificationStatus.PENDING,
+        });
+        await queryRunner.manager.save(partnerDocument);
+      }
+
       await queryRunner.commitTransaction();
 
       this.logger.log(`Partner ${partner.companyName} registered successfully`);
 
       // Send welcome email (async)
-      await this.emailQueueService.queuePartnerWelcomeEmail(
-        createPartnerDto.ownerEmail,
-        createPartnerDto.ownerFirstName,
-        createPartnerDto.companyName,
-      );
+      try {
+        await this.emailQueueService.queuePartnerWelcomeEmail(
+          createPartnerDto.ownerEmail,
+          createPartnerDto.ownerFirstName,
+          createPartnerDto.companyName,
+        );
+      } catch (error) {
+        this.logger.warn(
+          `Partner created but welcome email could not be queued: ${error instanceof Error ? error.message : 'unknown error'}`,
+        );
+      }
 
       return partner;
     } catch (error) {
       await queryRunner.rollbackTransaction();
+      await Promise.allSettled(
+        createdFilePaths.map((filePath) => rm(filePath, { force: true })),
+      );
       this.logger.error('Failed to create partner', error);
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  private validatePartnerDocument(file: Express.Multer.File): void {
+    const allowedSignatures: Record<string, (buffer: Buffer) => boolean> = {
+      'application/pdf': (buffer) =>
+        buffer.subarray(0, 5).toString() === '%PDF-',
+      'image/jpeg': (buffer) =>
+        buffer.length >= 3 &&
+        buffer[0] === 0xff &&
+        buffer[1] === 0xd8 &&
+        buffer[2] === 0xff,
+      'image/png': (buffer) =>
+        buffer.length >= 8 &&
+        buffer
+          .subarray(0, 8)
+          .equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])),
+    };
+
+    const isAllowed =
+      Buffer.isBuffer(file.buffer) &&
+      file.size === file.buffer.length &&
+      allowedSignatures[file.mimetype]?.(file.buffer);
+    if (!isAllowed || file.size > 5 * 1024 * 1024) {
+      throw new BadRequestException(
+        'Le justificatif doit être un PDF, JPG ou PNG valide de 5 Mo maximum',
+      );
     }
   }
 

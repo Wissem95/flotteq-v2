@@ -1,9 +1,22 @@
-import { Controller, Post, Get, Body, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Controller,
+  Post,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Body,
+  UseGuards,
+  UseInterceptors,
+  UploadedFiles,
+} from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { PartnerAuthService } from './partner-auth.service';
@@ -15,6 +28,9 @@ import { PartnerForgotPasswordDto } from './dto/partner-forgot-password.dto';
 import { PartnerResetPasswordDto } from './dto/partner-reset-password.dto';
 import { CreatePartnerDto } from './dto/create-partner.dto';
 import { Public } from '../../common/decorators/public.decorator';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { PartnerDocumentType } from '../../entities/partner-document.entity';
 
 @ApiTags('partners-auth')
 @Controller('partners/auth')
@@ -26,18 +42,67 @@ export class PartnerAuthController {
 
   @Public()
   @Post('register')
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @UseInterceptors(
+    FileFieldsInterceptor([{ name: 'documents', maxCount: 1 }], {
+      storage: memoryStorage(),
+      limits: { files: 1, fileSize: 5 * 1024 * 1024 },
+      fileFilter: (_request, file, callback) => {
+        const allowedMimeTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+        if (allowedMimeTypes.includes(file.mimetype)) {
+          callback(null, true);
+          return;
+        }
+        callback(
+          new BadRequestException(
+            'Seuls les fichiers PDF, JPG et PNG sont acceptés',
+          ),
+          false,
+        );
+      },
+    }),
+  )
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['documents', 'documentType'],
+      properties: {
+        documents: { type: 'string', format: 'binary' },
+        documentType: {
+          type: 'string',
+          enum: Object.values(PartnerDocumentType),
+        },
+      },
+    },
+  })
   @ApiOperation({ summary: 'Register a new partner (public)' })
   @ApiResponse({
     status: 201,
     description: 'Partner registered successfully. Pending admin approval.',
   })
   @ApiResponse({ status: 409, description: 'Email or SIRET already exists.' })
-  async register(@Body() createPartnerDto: CreatePartnerDto) {
-    return this.partnersService.create(createPartnerDto);
+  async register(
+    @Body() createPartnerDto: CreatePartnerDto,
+    @UploadedFiles()
+    uploadedFiles: { documents?: Express.Multer.File[] },
+  ) {
+    const documents = uploadedFiles?.documents || [];
+    if (documents.length !== 1 || !createPartnerDto.documentType) {
+      throw new BadRequestException(
+        'Un justificatif SIRET ou une attestation d’assurance est requis',
+      );
+    }
+    return this.partnersService.create(
+      createPartnerDto,
+      documents,
+      createPartnerDto.documentType,
+    );
   }
 
   @Public()
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Partner user login' })
   @ApiResponse({
     status: 200,
@@ -73,7 +138,7 @@ export class PartnerAuthController {
   })
   @ApiResponse({
     status: 200,
-    description: "Email envoyé si le partenaire existe",
+    description: 'Email envoyé si le partenaire existe',
   })
   async forgotPassword(@Body() dto: PartnerForgotPasswordDto) {
     return this.partnerAuthService.forgotPassword(dto.email);

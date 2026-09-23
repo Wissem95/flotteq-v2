@@ -142,13 +142,18 @@ describe('DocumentOwnershipGuard', () => {
   });
 
   describe('POST requests', () => {
-    it('should allow upload for all authenticated users', async () => {
+  it('should forbid driver uploads', async () => {
       const user = { id: 'user1', role: UserRole.DRIVER, tenantId: 2 };
 
       await expect(
         guard.canActivate(createContext(user, 'POST')),
-      ).resolves.toBe(true);
+      ).rejects.toThrow(ForbiddenException);
       expect(documentsService.findOne).not.toHaveBeenCalled();
+    });
+
+    it('allows manager uploads', async () => {
+      const user = { id: 'manager', role: UserRole.MANAGER, tenantId: 2 };
+      await expect(guard.canActivate(createContext(user, 'POST'))).resolves.toBe(true);
     });
   });
 });

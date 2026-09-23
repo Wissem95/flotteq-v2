@@ -12,8 +12,14 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { PartnerType } from '../../../entities/partner.entity';
+import { PartnerDocumentType } from '../../../entities/partner-document.entity';
 
 export class CreatePartnerDto {
+  @ApiPropertyOptional({ enum: PartnerDocumentType })
+  @IsOptional()
+  @IsEnum(PartnerDocumentType)
+  documentType?: PartnerDocumentType;
+
   @ApiProperty({ example: 'Garage Martin' })
   @IsNotEmpty()
   @IsString()

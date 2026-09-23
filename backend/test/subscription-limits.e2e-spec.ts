@@ -8,6 +8,10 @@ import { User } from '../src/entities/user.entity';
 import { Tenant } from '../src/entities/tenant.entity';
 import { Vehicle } from '../src/entities/vehicle.entity';
 import { Subscription } from '../src/entities/subscription.entity';
+import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
+import { MileageHistory } from '../src/entities/mileage-history.entity';
+import { StripeService } from '../src/stripe/stripe.service';
+import { EmailQueueService } from '../src/modules/notifications/email-queue.service';
 
 describe('Subscription Limits Enforcement (e2e)', () => {
   let app: INestApplication;
@@ -15,6 +19,10 @@ describe('Subscription Limits Enforcement (e2e)', () => {
   let tenantsRepository: Repository<Tenant>;
   let vehiclesRepository: Repository<Vehicle>;
   let subscriptionsRepository: Repository<Subscription>;
+  let plansRepository: Repository<SubscriptionPlan>;
+  let mileageHistoryRepository: Repository<MileageHistory>;
+  let starterPlanId: number;
+  let businessPlanId: number;
 
   let accessToken: string;
   let tenantId: number;
@@ -28,10 +36,14 @@ describe('Subscription Limits Enforcement (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider('EmailQueueService')
+      .overrideProvider(EmailQueueService)
       .useValue({
         queueWelcomeEmail: jest.fn().mockResolvedValue(undefined),
         queuePasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+      })
+      .overrideProvider(StripeService)
+      .useValue({
+        createCustomer: jest.fn().mockResolvedValue('cus_e2e'),
       })
       .compile();
 
@@ -52,27 +64,44 @@ describe('Subscription Limits Enforcement (e2e)', () => {
     subscriptionsRepository = moduleFixture.get(
       getRepositoryToken(Subscription),
     );
+    plansRepository = moduleFixture.get(getRepositoryToken(SubscriptionPlan));
+    mileageHistoryRepository = moduleFixture.get(
+      getRepositoryToken(MileageHistory),
+    );
+
+    const starterPlan = await plansRepository.findOne({
+      where: { name: 'Starter' },
+    });
+    const businessPlan = await plansRepository.findOne({
+      where: { name: 'Business' },
+    });
+    if (!starterPlan || !businessPlan) {
+      throw new Error('Les plans Starter et Business doivent exister en base E2E');
+    }
+    starterPlanId = starterPlan.id;
+    businessPlanId = businessPlan.id;
 
     // Setup : créer tenant avec plan Freemium (max 3 véhicules)
     const registerResponse = await request(app.getHttpServer())
-      .post('/api/onboarding/register')
+      .post('/api/auth/register')
       .send({
         email: uniqueEmail,
         password: 'Test123!@#',
         firstName: 'Test',
         lastName: 'Limits',
         companyName: uniqueCompany,
-        planId: '16', // Freemium - max 3 véhicules
+        planId: String(starterPlanId),
       });
 
-    accessToken = registerResponse.body.accessToken;
-    tenantId = registerResponse.body.tenant.id;
+    accessToken = registerResponse.body.access_token;
+    tenantId = registerResponse.body.user.tenantId;
     userId = registerResponse.body.user.id;
   });
 
   afterAll(async () => {
     // Cleanup
     for (const vehicleId of vehicleIds) {
+      await mileageHistoryRepository.delete({ vehicleId });
       await vehiclesRepository.delete({ id: vehicleId });
     }
     if (userId) {
@@ -93,6 +122,7 @@ describe('Subscription Limits Enforcement (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/api/vehicles')
         .set('Authorization', `Bearer ${accessToken}`)
+        .set('X-Tenant-ID', String(tenantId))
         .send({
           registration: `LIMIT-TEST-${Date.now()}-${i}`,
           brand: 'Toyota',
@@ -116,6 +146,7 @@ describe('Subscription Limits Enforcement (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/api/vehicles')
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         registration: `LIMIT-TEST-${Date.now()}-4`,
         brand: 'Toyota',
@@ -144,17 +175,24 @@ describe('Subscription Limits Enforcement (e2e)', () => {
 
     expect(subscription).toBeDefined();
     expect(subscription).not.toBeNull();
-    expect(subscription!.planId).toBe(16); // Freemium
+    expect(subscription!.planId).toBe(starterPlanId);
 
     // Simuler un upgrade vers le plan Business (plan ID 2, max 50 véhicules)
     // Note : Dans un vrai scénario, cela passerait par Stripe
-    subscription!.planId = 11; // Business
-    await subscriptionsRepository.save(subscription!);
+    await subscriptionsRepository.update(subscription!.id, {
+      planId: businessPlanId,
+    });
+    const upgradedSubscription = await subscriptionsRepository.findOne({
+      where: { id: subscription!.id },
+      relations: ['plan'],
+    });
+    expect(upgradedSubscription?.plan.name).toBe('Business');
 
     // Maintenant, créer un 4ème véhicule → doit réussir
     const response = await request(app.getHttpServer())
       .post('/api/vehicles')
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         registration: `LIMIT-TEST-${Date.now()}-4-UPGRADED`,
         brand: 'Toyota',
@@ -165,8 +203,9 @@ describe('Subscription Limits Enforcement (e2e)', () => {
         initialMileage: 5000,
         currentKm: 5000,
         purchasePrice: 20000,
-      })
-      .expect(201);
+      });
+
+    expect(response.status).toBe(201);
 
     expect(response.body).toHaveProperty('id');
     vehicleIds.push(response.body.id);

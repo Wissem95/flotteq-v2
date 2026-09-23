@@ -38,10 +38,10 @@ export class User {
   @Column({ select: false })
   password: string;
 
-  @Column({ name: 'first_name' })
+  @Column({ name: 'first_name', nullable: true })
   firstName: string;
 
-  @Column({ name: 'last_name' })
+  @Column({ name: 'last_name', nullable: true })
   lastName: string;
 
   @Column({
@@ -81,7 +81,12 @@ export class User {
   @Column({ nullable: true, name: 'reset_password_expires' })
   resetPasswordExpires: Date;
 
-  @Column({ type: 'varchar', nullable: true, name: 'invitation_token' })
+  @Column({
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+    name: 'invitation_token',
+  })
   invitationToken: string | null;
 
   @Column({ type: 'timestamp', nullable: true, name: 'invitation_expires_at' })

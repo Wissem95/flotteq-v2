@@ -50,7 +50,7 @@ describe('QuickCreateMaintenanceModal', () => {
     );
 
     expect(screen.getByText('Nouvelle maintenance')).toBeInTheDocument();
-    expect(screen.getByText('15/11/2025')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('15/11/2025')).toBeInTheDocument();
   });
 
   it('should display vehicles in select', () => {

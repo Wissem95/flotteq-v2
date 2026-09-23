@@ -10,6 +10,7 @@ describe('DriversController (e2e)', () => {
   let authToken: string;
   let driverId: string;
   let vehicleId: string;
+  let planId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -24,20 +25,29 @@ describe('DriversController (e2e)', () => {
 
     dataSource = moduleFixture.get<DataSource>(DataSource);
 
+    const [standardPlan] = await dataSource.query(
+      'SELECT id FROM subscription_plans WHERE name = $1 LIMIT 1',
+      ['Standard'],
+    );
+    if (!standardPlan) {
+      throw new Error('Le plan Standard doit être créé par les migrations E2E');
+    }
+    planId = Number(standardPlan.id);
+
     // Create test tenant and user for E2E tests
     await dataSource.query(`
       INSERT INTO tenants (id, name, email, subscription_status, status, plan_id)
-      VALUES (999, 'E2E Test Tenant', 'e2e-test@tenant.com', 'active', 'active', 10)
+      VALUES (999, 'E2E Test Tenant', 'e2e-test@tenant.com', 'active', 'active', $1)
       ON CONFLICT ON CONSTRAINT "PK_53be67a04681c66b87ee27c9321"
-      DO UPDATE SET plan_id = 10, subscription_status = 'active', status = 'active'
-    `);
+      DO UPDATE SET plan_id = EXCLUDED.plan_id, subscription_status = 'active', status = 'active'
+    `, [planId]);
 
     // Create subscription for tenant (delete first if exists, then insert)
     await dataSource.query(`DELETE FROM subscriptions WHERE "tenantId" = 999`);
     await dataSource.query(`
       INSERT INTO subscriptions ("tenantId", "planId", status, usage)
-      VALUES (999, 10, 'active', '{"vehicles": 0, "users": 0, "drivers": 0}')
-    `);
+      VALUES (999, $1, 'active', '{"vehicles": 0, "users": 0, "drivers": 0}')
+    `, [planId]);
 
     // Password hash for 'Test12345' (bcrypt)
     const passwordHash =

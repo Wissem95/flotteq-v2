@@ -10,6 +10,7 @@ import { EmailQueueService } from './email-queue.service';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
+        prefix: configService.get('REDIS_PREFIX') || undefined,
         redis: {
           host: configService.get('REDIS_HOST', 'localhost'),
           port: configService.get('REDIS_PORT', 6379),

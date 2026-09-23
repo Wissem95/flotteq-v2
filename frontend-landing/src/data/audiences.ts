@@ -52,7 +52,7 @@ export const audiences: Audience[] = [
     key: 'partner',
     label: 'Partenaire',
     heroSubtitle:
-      'Rejoignez le réseau FlotteQ : recevez des clients qualifiés, gérez vos rendez-vous et vos paiements depuis une seule app.',
+      'Rejoignez le réseau FlotteQ : recevez des demandes de clients et gérez vos rendez-vous depuis votre espace partenaire.',
     heroImageUrl: 'https://images.unsplash.com/photo-1486754735734-325b5831c3ad?w=1200&q=80&auto=format&fit=crop',
     accordionTitle: 'Pour les garages, assureurs, contrôles techniques',
     accordionImageUrl: 'https://images.unsplash.com/photo-1486006920555-c77dcf18193c?w=900&q=80&auto=format&fit=crop',
@@ -60,7 +60,7 @@ export const audiences: Audience[] = [
       'Agenda de réservations en ligne',
       'Leads qualifiés depuis FlotteQ',
       'Gestion des devis et factures',
-      'Paiements sécurisés via Stripe Connect',
+      'Suivi de vos demandes et de vos réservations',
     ],
     ctaLabel: 'Devenir partenaire',
     ctaHref: 'https://partner.flotteq.fr/register',

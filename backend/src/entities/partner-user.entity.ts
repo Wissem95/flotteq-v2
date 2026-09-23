@@ -56,6 +56,7 @@ export class PartnerUser {
   @Column({
     type: 'enum',
     enum: PartnerUserRole,
+    enumName: 'partner_user_role',
     default: PartnerUserRole.OWNER,
   })
   role: PartnerUserRole;

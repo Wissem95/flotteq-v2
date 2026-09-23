@@ -13,8 +13,11 @@ describe('Partner Email Notifications E2E', () => {
   let emailService: EmailService;
   let emailQueue: Queue;
   let sendEmailSpy: jest.SpyInstance;
+  const previousRedisPrefix = process.env.REDIS_PREFIX;
 
   beforeAll(async () => {
+    // Isoler cette suite des autres applications E2E partageant le Redis local.
+    process.env.REDIS_PREFIX = `flotteq-test-partner-emails-${process.pid}-${Date.now()}`;
     const module = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({
@@ -39,6 +42,11 @@ describe('Partner Email Notifications E2E', () => {
   afterAll(async () => {
     await emailQueue.close();
     await app.close();
+    if (previousRedisPrefix === undefined) {
+      delete process.env.REDIS_PREFIX;
+    } else {
+      process.env.REDIS_PREFIX = previousRedisPrefix;
+    }
   });
 
   beforeEach(async () => {

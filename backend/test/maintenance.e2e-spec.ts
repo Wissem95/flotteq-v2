@@ -80,16 +80,23 @@ describe('Maintenance (e2e)', () => {
     const vehicleResponse = await request(app.getHttpServer())
       .post('/vehicles')
       .set('Authorization', `Bearer ${authToken}`)
+      .set('X-Tenant-ID', tenantId.toString())
       .send({
         registration: 'TEST-MAINT-001',
         brand: 'Test',
         model: 'Maintenance',
         year: 2023,
         vin: 'TEST123456789MAINT',
+        color: 'Gris',
         purchasePrice: 25000,
         currentKm: 10000,
       });
 
+    if (vehicleResponse.status !== 201 || !vehicleResponse.body.id) {
+      throw new Error(
+        `Échec de création du véhicule E2E (${vehicleResponse.status}): ${JSON.stringify(vehicleResponse.body)}`,
+      );
+    }
     vehicleId = vehicleResponse.body.id;
   });
 
@@ -121,6 +128,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/maintenance')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .send({
           vehicleId,
           type: MaintenanceType.PREVENTIVE,
@@ -134,7 +142,7 @@ describe('Maintenance (e2e)', () => {
 
       expect(response.body).toHaveProperty('id');
       expect(response.body.type).toBe(MaintenanceType.PREVENTIVE);
-      expect(response.body.estimatedCost).toBe('150.00');
+      expect(Number(response.body.estimatedCost)).toBe(150);
       expect(response.body.status).toBe(MaintenanceStatus.SCHEDULED);
 
       maintenanceId = response.body.id;
@@ -144,6 +152,7 @@ describe('Maintenance (e2e)', () => {
       await request(app.getHttpServer())
         .post('/maintenance')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .send({
           vehicleId: '00000000-0000-0000-0000-000000000000',
           type: MaintenanceType.PREVENTIVE,
@@ -160,6 +169,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get('/maintenance')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -173,6 +183,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get(`/maintenance/${maintenanceId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
 
       expect(response.body.id).toBe(maintenanceId);
@@ -183,6 +194,7 @@ describe('Maintenance (e2e)', () => {
       await request(app.getHttpServer())
         .get('/maintenance/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(404);
     });
   });
@@ -192,6 +204,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .patch(`/maintenance/${maintenanceId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .send({
           status: MaintenanceStatus.IN_PROGRESS,
           actualCost: 175.5,
@@ -199,7 +212,7 @@ describe('Maintenance (e2e)', () => {
         .expect(200);
 
       expect(response.body.status).toBe(MaintenanceStatus.IN_PROGRESS);
-      expect(response.body.actualCost).toBe('175.50');
+      expect(Number(response.body.actualCost)).toBe(175.5);
     });
   });
 
@@ -208,6 +221,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get('/maintenance/alerts/upcoming?daysAhead=30')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -219,9 +233,10 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get('/maintenance/costs/total')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
 
-      expect(typeof response.body).toBe('number');
+      expect(Number.isFinite(Number(response.text))).toBe(true);
     });
   });
 
@@ -230,6 +245,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/maintenance/templates')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .send({
           name: 'Vidange standard',
           type: MaintenanceType.OIL_CHANGE,
@@ -253,6 +269,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get('/maintenance/templates')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
 
       expect(Array.isArray(response.body)).toBe(true);
@@ -265,6 +282,7 @@ describe('Maintenance (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post(`/maintenance/from-template/${templateId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .send({
           vehicleId,
           scheduledDate: '2025-12-01',
@@ -281,6 +299,7 @@ describe('Maintenance (e2e)', () => {
       await request(app.getHttpServer())
         .post('/maintenance/from-template/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .send({
           vehicleId,
           scheduledDate: '2025-12-01',
@@ -294,12 +313,14 @@ describe('Maintenance (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/maintenance/${maintenanceId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
 
       // Verify deletion
       await request(app.getHttpServer())
         .get(`/maintenance/${maintenanceId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(404);
     });
   });
@@ -309,6 +330,7 @@ describe('Maintenance (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/maintenance/templates/${templateId}`)
         .set('Authorization', `Bearer ${authToken}`)
+        .set('X-Tenant-ID', tenantId.toString())
         .expect(200);
     });
   });

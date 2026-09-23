@@ -15,7 +15,7 @@ export const differentiators: Differentiator[] = [
     iconKey: 'handshake',
     title: 'Marketplace intégrée',
     description:
-      'Garages, assureurs et contrôles techniques directement dans l\'app. Devis, réservations et paiements en quelques clics.',
+      'Garages, assureurs et contrôles techniques directement dans l\'app. Trouvez un partenaire, demandez un devis et suivez vos réservations.',
   },
   {
     iconKey: 'hexagon',

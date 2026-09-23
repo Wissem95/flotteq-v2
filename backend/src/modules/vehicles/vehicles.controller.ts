@@ -89,10 +89,7 @@ export class VehiclesController {
     status: 200,
     description: 'Liste des véhicules récupérée avec succès.',
   })
-  findAll(
-    @Query() query: QueryVehicleDto,
-    @Req() req: any,
-  ) {
+  findAll(@Query() query: QueryVehicleDto, @Req() req: any) {
     // Si super_admin (défini par TenantGuard), voir tous les véhicules
     const isSuperAdmin = req.isSuperAdmin === true;
     const tenantId = isSuperAdmin ? null : req.user?.tenantId;

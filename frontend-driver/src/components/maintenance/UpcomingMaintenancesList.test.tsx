@@ -1,8 +1,19 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import UpcomingMaintenancesList from './UpcomingMaintenancesList';
+import { useUpcomingMaintenances } from '../../hooks/useMaintenance';
+
+vi.mock('../../hooks/useMaintenance', () => ({
+  useUpcomingMaintenances: vi.fn(),
+}));
+
+const mockUpcomingResult = (data: unknown, isLoading: boolean) => {
+  vi.mocked(useUpcomingMaintenances).mockReturnValue(
+    { data, isLoading } as unknown as ReturnType<typeof useUpcomingMaintenances>,
+  );
+};
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,13 +28,12 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 );
 
 describe('UpcomingMaintenancesList', () => {
+  beforeEach(() => {
+    mockUpcomingResult([], false);
+  });
+
   it('should show loading state', () => {
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: undefined,
-        isLoading: true,
-      }),
-    }));
+    mockUpcomingResult(undefined, true);
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -31,26 +41,12 @@ describe('UpcomingMaintenancesList', () => {
   });
 
   it('should display header correctly', () => {
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: [],
-        isLoading: false,
-      }),
-    }));
-
     render(<UpcomingMaintenancesList />, { wrapper });
 
     expect(screen.getByText('Maintenances à venir')).toBeInTheDocument();
   });
 
   it('should show empty state when no maintenances', () => {
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: [],
-        isLoading: false,
-      }),
-    }));
-
     render(<UpcomingMaintenancesList daysAhead={7} />, { wrapper });
 
     expect(screen.getByText(/Aucune maintenance prévue dans les 7 prochains jours/)).toBeInTheDocument();
@@ -76,12 +72,7 @@ describe('UpcomingMaintenancesList', () => {
       },
     ];
 
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: mockAlerts,
-        isLoading: false,
-      }),
-    }));
+    mockUpcomingResult(mockAlerts, false);
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -102,12 +93,7 @@ describe('UpcomingMaintenancesList', () => {
       alertReason: `Maintenance in ${i} days`,
     }));
 
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: mockAlerts,
-        isLoading: false,
-      }),
-    }));
+    mockUpcomingResult(mockAlerts, false);
 
     render(<UpcomingMaintenancesList />, { wrapper });
 
@@ -150,12 +136,7 @@ describe('UpcomingMaintenancesList', () => {
       },
     ];
 
-    vi.mock('../../hooks/useMaintenance', () => ({
-      useUpcomingMaintenances: () => ({
-        data: mockAlerts,
-        isLoading: false,
-      }),
-    }));
+    mockUpcomingResult(mockAlerts, false);
 
     const { container } = render(<UpcomingMaintenancesList />, { wrapper });
 

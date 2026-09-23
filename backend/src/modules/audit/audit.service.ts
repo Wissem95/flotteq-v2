@@ -53,19 +53,19 @@ export class AuditService {
 
     // Filtrer par tenantId uniquement si fourni (super_admin voit tous les tenants)
     if (tenantId !== null) {
-      query.where('audit.tenant_id = :tenantId', { tenantId });
+      query.where('audit.tenantId = :tenantId', { tenantId });
     }
 
     if (userId) {
-      query.andWhere('audit.user_id = :userId', { userId });
+      query.andWhere('audit.userId = :userId', { userId });
     }
 
     if (entityType) {
-      query.andWhere('audit.entity_type = :entityType', { entityType });
+      query.andWhere('audit.entityType = :entityType', { entityType });
     }
 
     if (entityId) {
-      query.andWhere('audit.entity_id = :entityId', { entityId });
+      query.andWhere('audit.entityId = :entityId', { entityId });
     }
 
     if (action) {
@@ -73,14 +73,14 @@ export class AuditService {
     }
 
     if (startDate && endDate) {
-      query.andWhere('audit.created_at BETWEEN :startDate AND :endDate', {
+      query.andWhere('audit.createdAt BETWEEN :startDate AND :endDate', {
         startDate,
         endDate,
       });
     }
 
     query
-      .orderBy('audit.created_at', 'DESC')
+      .orderBy('audit.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 

@@ -54,6 +54,7 @@ export class Commission {
   @Column({
     type: 'enum',
     enum: CommissionStatus,
+    enumName: 'commission_status',
     default: CommissionStatus.PENDING,
   })
   status: CommissionStatus;

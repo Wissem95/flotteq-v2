@@ -54,6 +54,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
+      BUILD_SHA: ${BUILD_SHA:-unknown}
       DB_HOST: postgres
       DB_PORT: 5432
       DB_USER: ${DB_USER:-flotteq_prod}

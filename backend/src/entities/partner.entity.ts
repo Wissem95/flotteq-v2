@@ -45,6 +45,7 @@ export class Partner {
   @Column({
     type: 'enum',
     enum: PartnerType,
+    enumName: 'partner_type',
   })
   type: PartnerType;
 
@@ -133,6 +134,7 @@ export class Partner {
   @Column({
     type: 'enum',
     enum: PartnerStatus,
+    enumName: 'partner_status',
     default: PartnerStatus.PENDING,
   })
   status: PartnerStatus;

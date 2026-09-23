@@ -100,7 +100,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId }: Upgrade
                       <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
                       <div className="text-3xl font-bold text-flotteq-blue">
                         {plan.price}€
-                        <span className="text-base font-normal text-gray-500">/mois</span>
+                        <span className="text-base font-normal text-gray-500">/mois TTC</span>
                       </div>
                     </div>
 

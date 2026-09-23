@@ -34,7 +34,7 @@ export default function CurrentPlanCard({ stats, onUpgrade }: CurrentPlanCardPro
           <h3 className="text-2xl font-bold text-gray-900">{stats.plan.name}</h3>
           <p className="text-3xl font-bold text-flotteq-blue mt-2">
             {stats.plan.price}€
-            <span className="text-base font-normal text-gray-500">/mois</span>
+            <span className="text-base font-normal text-gray-500">/mois TTC</span>
           </p>
         </div>
 
@@ -64,7 +64,7 @@ export default function CurrentPlanCard({ stats, onUpgrade }: CurrentPlanCardPro
           className="w-full mt-4 bg-flotteq-blue text-white px-6 py-3 rounded-lg hover:bg-flotteq-navy transition-colors font-medium flex items-center justify-center gap-2 shadow-md hover:shadow-lg"
         >
           <TrendingUp className="h-5 w-5" />
-          {!isPaidPlan ? 'Passer à un plan payant' : 'Changer de plan'}
+          {!isPaidPlan ? 'Passer à un plan payant' : 'Gérer mon abonnement'}
         </button>
       </div>
     </div>

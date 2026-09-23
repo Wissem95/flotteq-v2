@@ -10,8 +10,7 @@ export interface Plan {
   highlight?: boolean;
 }
 
-// Prices below are placeholders to validate against the live Stripe dashboard before ship.
-// See spec §4.7 open question. Backend seeds: backend/src/seeds/seed.ts
+// Prix publics validés pour les abonnements SaaS : Pro 29 € TTC et Business 79 € TTC.
 export const plans: Plan[] = [
   {
     key: 'starter',
@@ -25,7 +24,7 @@ export const plans: Plan[] = [
   {
     key: 'pro',
     name: 'Pro',
-    priceLabel: '29 €',
+    priceLabel: '29 € TTC',
     priceSuffix: '/mois',
     description: 'Pour les TPE et les particuliers exigeants.',
     features: ['Jusqu\'à 10 véhicules', 'Toutes les features Starter', 'Réservations marketplace', 'Support email 48h'],
@@ -36,7 +35,7 @@ export const plans: Plan[] = [
   {
     key: 'business',
     name: 'Business',
-    priceLabel: '79 €',
+    priceLabel: '79 € TTC',
     priceSuffix: '/mois',
     description: 'Pour les PME multi-conducteurs.',
     features: ['Jusqu\'à 50 véhicules', 'Multi-utilisateurs', 'Reporting avancé', 'Support prioritaire 24h'],

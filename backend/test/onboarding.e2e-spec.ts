@@ -9,12 +9,15 @@ import { Tenant } from '../src/entities/tenant.entity';
 import { Vehicle } from '../src/entities/vehicle.entity';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { EmailService } from '../src/modules/notifications/email.service';
+import { Subscription } from '../src/entities/subscription.entity';
 
 describe('Onboarding (e2e)', () => {
   let app: INestApplication;
   let usersRepository: Repository<User>;
   let tenantsRepository: Repository<Tenant>;
   let vehiclesRepository: Repository<Vehicle>;
+  let subscriptionsRepository: Repository<Subscription>;
   let jwtService: JwtService;
 
   // Arrays to track created entities for cleanup
@@ -22,6 +25,7 @@ describe('Onboarding (e2e)', () => {
   const createdUsers: User[] = [];
 
   // Counters for unique names
+  const testRunId = Date.now();
   let tenantCounter = 0;
   let companyCounter = 0;
 
@@ -29,10 +33,9 @@ describe('Onboarding (e2e)', () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider('EmailQueueService')
+      .overrideProvider(EmailService)
       .useValue({
-        queueWelcomeEmail: jest.fn().mockResolvedValue(undefined),
-        queuePasswordResetEmail: jest.fn().mockResolvedValue(undefined),
+        sendDriverWelcomeEmail: jest.fn().mockResolvedValue(undefined),
       })
       .compile();
 
@@ -46,6 +49,9 @@ describe('Onboarding (e2e)', () => {
     usersRepository = moduleFixture.get(getRepositoryToken(User));
     tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
     vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
+    subscriptionsRepository = moduleFixture.get(
+      getRepositoryToken(Subscription),
+    );
     jwtService = moduleFixture.get(JwtService);
 
     // Clean up ALL test data from previous runs
@@ -61,16 +67,24 @@ describe('Onboarding (e2e)', () => {
     }
 
     const allUsers = await usersRepository.find();
-    const testUserIds: string[] = [];
     const testTenantIds: Set<number> = new Set();
 
     for (const user of allUsers) {
       if (user.email.includes('test.com') || user.email.includes('@test')) {
-        testUserIds.push(user.id);
         if (user.tenantId) {
           testTenantIds.add(user.tenantId);
         }
       }
+    }
+
+    // Les essais précédents ont parfois supprimé un utilisateur sans son tenant.
+    // Inclure aussi les tenants synthétiques orphelins pour nettoyer ces restes.
+    const syntheticTenants = await tenantsRepository
+      .createQueryBuilder('tenant')
+      .where('tenant.email LIKE :email', { email: '%@test.com' })
+      .getMany();
+    for (const tenant of syntheticTenants) {
+      testTenantIds.add(tenant.id);
     }
 
     // Delete ALL users from test tenants first
@@ -83,6 +97,7 @@ describe('Onboarding (e2e)', () => {
 
     // Then delete tenants
     for (const tenantId of testTenantIds) {
+      await subscriptionsRepository.delete({ tenantId });
       await tenantsRepository.delete(tenantId);
     }
   });
@@ -91,9 +106,12 @@ describe('Onboarding (e2e)', () => {
     // Cleanup after each test to prevent conflicts
     for (const user of createdUsers) {
       await vehiclesRepository.delete({ tenantId: user.tenantId });
-      await usersRepository.delete({ id: user.id });
     }
     for (const tenant of createdTenants) {
+      // L'onboarding peut créer des comptes conducteurs non présents dans
+      // createdUsers. Les supprimer aussi avant le tenant évite une FK restante.
+      await usersRepository.delete({ tenantId: tenant.id });
+      await subscriptionsRepository.delete({ tenantId: tenant.id });
       await tenantsRepository.delete(tenant.id);
     }
     // Clear arrays for next test
@@ -111,7 +129,7 @@ describe('Onboarding (e2e)', () => {
     userEmail?: string,
   ) {
     tenantCounter++;
-    const uniqueTenantName = `${tenantName}-${tenantCounter}`;
+    const uniqueTenantName = `${tenantName}-${testRunId}-${tenantCounter}`;
 
     // Generate truly unique ID with timestamp + counter + random
     const uniqueId = `${Date.now()}-${tenantCounter}-${Math.random().toString(36).substring(2, 15)}`;
@@ -188,6 +206,7 @@ describe('Onboarding (e2e)', () => {
     it('should return 401 without JWT token', () => {
       return request(app.getHttpServer())
         .post('/api/onboarding/complete')
+        .set('X-Tenant-ID', '1')
         .send({
           profile: {
             companyName: uniqueCompanyName('Test Company'),

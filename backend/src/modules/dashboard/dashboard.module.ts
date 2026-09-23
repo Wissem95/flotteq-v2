@@ -8,9 +8,11 @@ import { Maintenance } from '../maintenance/entities/maintenance.entity';
 import { Tenant } from '../../entities/tenant.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
+import { DocumentsModule } from '../../documents/documents.module';
 
 @Module({
   imports: [
+    DocumentsModule,
     TypeOrmModule.forFeature([
       Vehicle,
       Driver,

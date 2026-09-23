@@ -6,6 +6,21 @@ export class CreateUserRolesAndPermissions1759326291782
   name = 'CreateUserRolesAndPermissions1759326291782';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
+      DO $$
+      BEGIN
+        CREATE TYPE "users_role_enum" AS ENUM (
+          'super_admin', 'support', 'tenant_admin', 'manager', 'driver', 'viewer'
+        );
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+    `);
+    await queryRunner.query(`
+      ALTER TABLE "users"
+      ADD COLUMN IF NOT EXISTS "role" "users_role_enum" NOT NULL DEFAULT 'viewer'
+    `);
+
     // Add new columns to users table
     await queryRunner.query(`
             ALTER TABLE "users"
@@ -57,5 +72,7 @@ export class CreateUserRolesAndPermissions1759326291782
             DROP COLUMN IF EXISTS "reset_password_token",
             DROP COLUMN IF EXISTS "reset_password_expires"
         `);
+    await queryRunner.query('ALTER TABLE "users" DROP COLUMN IF EXISTS "role"');
+    await queryRunner.query('DROP TYPE IF EXISTS "users_role_enum"');
   }
 }

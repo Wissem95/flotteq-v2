@@ -157,7 +157,8 @@ export class DriversService {
     tenantId?: number | null,
   ): Promise<{ data: Driver[]; total: number; page: number; limit: number }> {
     // Utiliser le tenantId passé en paramètre si fourni, sinon getTenantId()
-    const effectiveTenantId = tenantId !== undefined ? tenantId : this.getTenantId();
+    const effectiveTenantId =
+      tenantId !== undefined ? tenantId : this.getTenantId();
     const skip = (page - 1) * limit;
 
     const where: any = {};

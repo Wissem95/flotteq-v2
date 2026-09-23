@@ -1,11 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a3a6c"/>
-      <stop offset="50%" stop-color="#2463b0"/>
-      <stop offset="100%" stop-color="#14b8a6"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="6" fill="url(#g)"/>
-  <text x="50%" y="58%" font-family="-apple-system,BlinkMacSystemFont,Inter,sans-serif" font-size="18" font-weight="800" text-anchor="middle" dominant-baseline="middle" fill="white">F</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">FlotteQ</title>
+  <desc id="desc">Icône FlotteQ issue du wordmark officiel.</desc>
+  <rect width="96" height="96" rx="20" fill="#ffffff"/>
+  <text x="48" y="59" font-family="Inter, Arial, Helvetica, sans-serif" font-size="30" font-weight="900" text-anchor="middle" letter-spacing="-2" fill="#1a3a6c">FQ</text>
+  <circle cx="73" cy="32" r="5" fill="#14b8a6"/>
 </svg>

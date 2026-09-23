@@ -6,6 +6,8 @@ import {
   UseGuards,
   Request,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -49,6 +51,7 @@ export class AuthController {
 
   @Public()
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 tentatives par minute
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'Login successful' })

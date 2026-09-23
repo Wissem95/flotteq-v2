@@ -20,6 +20,9 @@ import { PartnerService } from '../../entities/partner-service.entity';
 import { EmailQueueService } from '../notifications/email-queue.service';
 import { StripeService } from '../../stripe/stripe.service';
 import { CreatePartnerDto } from './dto/create-partner.dto';
+import { randomUUID } from 'crypto';
+import { rm } from 'fs/promises';
+import { resolve } from 'path';
 
 describe('PartnersService', () => {
   let service: PartnersService;
@@ -155,6 +158,89 @@ describe('PartnersService', () => {
       expect(result).toEqual(mockCreatedPartner);
       expect(queryRunner.commitTransaction).toHaveBeenCalled();
       expect(emailQueueService.queuePartnerWelcomeEmail).toHaveBeenCalled();
+    });
+
+    it('ne fait pas échouer une inscription déjà validée si la file email est indisponible', async () => {
+      partnerRepository.findOne.mockResolvedValue(null);
+      partnerUserRepository.findOne.mockResolvedValue(null);
+      const mockCreatedPartner = { ...mockPartner, id: 'new-id' };
+      (queryRunner.manager.create as jest.Mock)
+        .mockReturnValueOnce(mockCreatedPartner as any)
+        .mockReturnValueOnce({} as any);
+      (queryRunner.manager.save as jest.Mock)
+        .mockResolvedValueOnce(mockCreatedPartner)
+        .mockResolvedValueOnce({});
+      emailQueueService.queuePartnerWelcomeEmail.mockRejectedValue(
+        new Error('queue indisponible'),
+      );
+
+      await expect(service.create(mockCreatePartnerDto)).resolves.toEqual(
+        mockCreatedPartner,
+      );
+      expect(queryRunner.commitTransaction).toHaveBeenCalled();
+      expect(queryRunner.rollbackTransaction).not.toHaveBeenCalled();
+    });
+
+    it('enregistre les justificatifs d’inscription au nom du partenaire en attente', async () => {
+      partnerRepository.findOne.mockResolvedValue(null);
+      partnerUserRepository.findOne.mockResolvedValue(null);
+
+      const partnerId = randomUUID();
+      const mockCreatedPartner = { ...mockPartner, id: partnerId };
+      const mockOwner = { id: randomUUID(), partnerId };
+      const pdf = Buffer.from('%PDF-1.4 synthetic proof');
+      const file = {
+        originalname: 'siret.pdf',
+        mimetype: 'application/pdf',
+        size: pdf.length,
+        buffer: pdf,
+      } as Express.Multer.File;
+      (queryRunner.manager.create as jest.Mock)
+        .mockReturnValueOnce(mockCreatedPartner as any)
+        .mockReturnValueOnce(mockOwner as any)
+        .mockReturnValueOnce({
+          partnerId,
+          uploadedByPartnerUserId: mockOwner.id,
+          fileName: 'siret.pdf',
+          documentType: 'siret',
+          verificationStatus: 'pending',
+        } as any);
+      (queryRunner.manager.save as jest.Mock)
+        .mockResolvedValueOnce(mockCreatedPartner)
+        .mockResolvedValueOnce(mockOwner)
+        .mockResolvedValueOnce({ id: 'document-id' });
+
+      const createWithDocuments = service.create as unknown as (
+        dto: CreatePartnerDto,
+        files: Express.Multer.File[],
+        documentType: string,
+      ) => Promise<Partner>;
+
+      try {
+        await createWithDocuments.call(
+          service,
+          mockCreatePartnerDto,
+          [file],
+          'siret',
+        );
+
+        expect(queryRunner.manager.save).toHaveBeenCalledTimes(3);
+        expect(queryRunner.manager.create).toHaveBeenLastCalledWith(
+          expect.any(Function),
+          expect.objectContaining({
+            partnerId,
+            uploadedByPartnerUserId: mockOwner.id,
+            fileName: 'siret.pdf',
+            documentType: 'siret',
+            verificationStatus: 'pending',
+          }),
+        );
+      } finally {
+        await rm(resolve(process.cwd(), 'uploads', 'partners', partnerId), {
+          recursive: true,
+          force: true,
+        });
+      }
     });
 
     it('should throw ConflictException if partner email exists', async () => {

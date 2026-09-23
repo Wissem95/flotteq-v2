@@ -10,27 +10,38 @@ export const documentsApi = {
     entityType: string,
     entityId: string,
   ): Promise<PartnerDocument[]> => {
-    const response = await apiClient.get<PartnerDocument[]>(
-      '/documents/admin/by-entity',
-      { params: { entityType, entityId } },
-    );
+    const response = entityType === 'partner'
+      ? await apiClient.get<PartnerDocument[]>(`/partners/${entityId}/documents`)
+      : await apiClient.get<PartnerDocument[]>('/documents/admin/by-entity', {
+          params: { entityType, entityId },
+        });
     return response.data;
   },
 
   // Valide ou refuse un document
-  verify: async (id: string, data: VerifyDocumentDto): Promise<PartnerDocument> => {
+  verify: async (
+    partnerId: string,
+    id: string,
+    source: PartnerDocument['source'],
+    data: VerifyDocumentDto,
+  ): Promise<PartnerDocument> => {
     const response = await apiClient.patch<PartnerDocument>(
-      `/documents/${id}/verification`,
-      data,
+      `/partners/${partnerId}/documents/${id}/verification`,
+      { ...data, source },
     );
     return response.data;
   },
 
   // Télécharge le fichier (renvoie un blob)
-  download: async (id: string): Promise<Blob> => {
-    const response = await apiClient.get(`/documents/${id}/download`, {
-      responseType: 'blob',
-    });
+  download: async (
+    partnerId: string,
+    id: string,
+    source: PartnerDocument['source'],
+  ): Promise<Blob> => {
+    const response = await apiClient.get(
+      `/partners/${partnerId}/documents/${id}/download`,
+      { params: { source }, responseType: 'blob' },
+    );
     return response.data;
   },
 };

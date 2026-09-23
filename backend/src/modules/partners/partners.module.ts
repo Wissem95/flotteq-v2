@@ -6,6 +6,7 @@ import { PassportModule } from '@nestjs/passport';
 import { Partner } from '../../entities/partner.entity';
 import { PartnerUser } from '../../entities/partner-user.entity';
 import { PartnerService } from '../../entities/partner-service.entity';
+import { PartnerDocument } from '../../entities/partner-document.entity';
 import { PartnersService } from './partners.service';
 import { PartnerAuthService } from './partner-auth.service';
 import { SearchService } from './search.service';
@@ -17,10 +18,18 @@ import { AuditModule } from '../audit/audit.module';
 import { AvailabilitiesModule } from '../availabilities/availabilities.module';
 import { SimpleCacheService } from '../../common/cache/simple-cache.service';
 import { StripeModule } from '../../stripe/stripe.module';
+import { DocumentsModule } from '../../documents/documents.module';
+import { PartnerDocumentsController } from './partner-documents.controller';
+import { PartnerDocumentsService } from './partner-documents.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Partner, PartnerUser, PartnerService]),
+    TypeOrmModule.forFeature([
+      Partner,
+      PartnerUser,
+      PartnerService,
+      PartnerDocument,
+    ]),
     PassportModule.register({ defaultStrategy: 'partner-jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -36,14 +45,20 @@ import { StripeModule } from '../../stripe/stripe.module';
     AuditModule,
     AvailabilitiesModule,
     StripeModule,
+    DocumentsModule,
   ],
-  controllers: [PartnersController, PartnerAuthController],
+  controllers: [
+    PartnersController,
+    PartnerAuthController,
+    PartnerDocumentsController,
+  ],
   providers: [
     PartnersService,
     PartnerAuthService,
     SearchService,
     PartnerJwtStrategy,
     SimpleCacheService,
+    PartnerDocumentsService,
   ],
   exports: [PartnersService, PartnerAuthService],
 })

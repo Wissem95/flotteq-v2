@@ -17,7 +17,7 @@ export const faq: FAQEntry[] = [
   {
     question: 'Comment se connectent les partenaires (garages, assureurs) ?',
     answer:
-      "Les partenaires ont leur propre espace sur partner.flotteq.fr : ils gèrent leur agenda, reçoivent vos demandes de devis et sont payés via Stripe Connect.",
+      "Les partenaires ont leur propre espace sur partner.flotteq.fr : ils gèrent leur agenda et reçoivent les demandes de devis et de réservation. Le paiement des partenaires via FlotteQ n'est pas encore proposé.",
   },
   {
     question: 'La marketplace est-elle obligatoire ?',

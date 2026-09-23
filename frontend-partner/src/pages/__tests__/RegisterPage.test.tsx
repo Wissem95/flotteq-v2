@@ -8,6 +8,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import RegisterPage from '../RegisterPage';
 import { VALIDATION_RULES } from '../../config/constants';
+import axiosInstance from '../../lib/axios';
 
 // Mock axios
 vi.mock('../../lib/axios', () => ({
@@ -44,6 +45,20 @@ describe('RegisterPage', () => {
       renderComponent();
       expect(screen.getByRole('heading', { name: 'FlotteQ Partner' })).toBeInTheDocument();
       expect(screen.getByLabelText(/Nom de l'entreprise/i)).toBeInTheDocument();
+    });
+
+    it('propose uniquement des catégories acceptées par l’API partenaire', () => {
+      renderComponent();
+
+      const typeSelect = screen.getByLabelText('Type *') as HTMLSelectElement;
+      const submittedTypes = Array.from(typeSelect.options).map((option) => option.value);
+
+      expect(submittedTypes).toEqual([
+        'garage',
+        'ct_center',
+        'insurance',
+        'parts_supplier',
+      ]);
     });
 
     it('should not allow navigation to step 2 with invalid data', async () => {
@@ -327,14 +342,46 @@ describe('RegisterPage', () => {
   });
 
   describe('Document upload validation', () => {
-    it('should require at least one document', async () => {
+    it('transmet le justificatif sélectionné avec les données d’inscription', async () => {
       renderComponent();
 
-      // Navigate through all steps without uploading documents
-      // (Implementation would require full navigation flow)
+      const fill = (label: RegExp | string, value: string) =>
+        fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
-      // This test would verify that submission fails without documents
-      // and shows the appropriate error message
+      fill(/Nom de l'entreprise/i, 'Garage Test');
+      fill(/Email professionnel/i, 'test@garage.com');
+      fill(/Téléphone/i, '+33612345678');
+      fill(/SIRET/i, '12345678901234');
+      fireEvent.click(screen.getByRole('button', { name: /Suivant/i }));
+
+      await screen.findByLabelText(/Adresse/i);
+      fill(/Adresse/i, '1 rue du Test');
+      fill(/Ville/i, 'Paris');
+      fill(/Code postal/i, '75001');
+      fireEvent.click(screen.getByRole('button', { name: /Suivant/i }));
+
+      await screen.findByLabelText(/Prénom/i);
+      fill(/Prénom/i, 'Wissem');
+      fill(/^Nom \*/i, 'Test');
+      fill(/^Mot de passe \*/i, 'Password123!');
+      fill(/^Confirmer le mot de passe \*/i, 'Password123!');
+      fireEvent.click(screen.getByRole('button', { name: /Suivant/i }));
+
+      fireEvent.change(screen.getByLabelText(/Type de justificatif/i), {
+        target: { value: 'insurance_certificate' },
+      });
+      const file = new File(['justificatif'], 'siret.pdf', { type: 'application/pdf' });
+      const input = document.querySelector('input[type="file"]');
+      expect(input).not.toBeNull();
+      fireEvent.change(input!, { target: { files: [file] } });
+      expect(await screen.findByText('siret.pdf')).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /S'inscrire/i }));
+
+      await waitFor(() => expect(axiosInstance.post).toHaveBeenCalled());
+      const submittedBody = vi.mocked(axiosInstance.post).mock.calls[0][1];
+      expect(submittedBody).toBeInstanceOf(FormData);
+      expect((submittedBody as FormData).get('documents')).toBe(file);
+      expect((submittedBody as FormData).get('documentType')).toBe('insurance_certificate');
     });
   });
 });

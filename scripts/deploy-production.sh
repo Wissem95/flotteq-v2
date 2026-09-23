@@ -115,9 +115,20 @@ echo -e "${YELLOW}📥 Step 3/7: Pulling latest code${NC}"
 CURRENT_COMMIT=$(git rev-parse --short HEAD)
 echo "Current commit: $CURRENT_COMMIT"
 
-git pull origin main
+if [ -n "${DEPLOY_SHA:-}" ]; then
+  git fetch origin main
+  if ! git rev-parse --verify --quiet "${DEPLOY_SHA}^{commit}" > /dev/null; then
+    echo -e "${RED}❌ Commit demandé introuvable: $DEPLOY_SHA${NC}"
+    exit 1
+  fi
+  git checkout --detach "$DEPLOY_SHA"
+else
+  git checkout main
+  git pull --ff-only origin main
+fi
 
 NEW_COMMIT=$(git rev-parse --short HEAD)
+export BUILD_SHA=$(git rev-parse HEAD)
 echo "New commit: $NEW_COMMIT"
 
 if [ "$CURRENT_COMMIT" == "$NEW_COMMIT" ]; then
@@ -290,9 +301,9 @@ echo "📋 Services status:"
 docker compose -f docker-compose.production.yml ps
 echo ""
 echo "🌐 URLs:"
-echo "  - API: https://api.flotteq.com/api/health"
-echo "  - App: https://app.flotteq.com"
-echo "  - Partner: https://partner.flotteq.com"
-echo "  - Driver: https://driver.flotteq.com"
-echo "  - Admin: https://admin.flotteq.com"
+echo "  - API: https://api.flotteq.fr/api/health"
+echo "  - App: https://app.flotteq.fr"
+echo "  - Partner: https://partner.flotteq.fr"
+echo "  - Driver: https://driver.flotteq.fr"
+echo "  - Admin: https://admin.flotteq.fr"
 echo ""

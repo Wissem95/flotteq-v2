@@ -30,7 +30,14 @@ describe('authService', () => {
 
   describe('register', () => {
     it('should return checkout URL', async () => {
-      const mockResponse = { data: { checkoutUrl: 'https://stripe.com/checkout' } };
+      const mockResponse = {
+        data: {
+          user: { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'owner', tenantId: 1 },
+          access_token: 'access-token',
+          refresh_token: 'refresh-token',
+          checkoutUrl: 'https://stripe.com/checkout',
+        },
+      };
       vi.mocked(api.post).mockResolvedValueOnce(mockResponse);
 
       const registerData = {
@@ -44,8 +51,8 @@ describe('authService', () => {
 
       const result = await authService.register(registerData);
 
-      // checkoutUrl removed from AuthResponse type
       expect(result.access_token).toBeDefined();
+      expect(result.checkoutUrl).toBe('https://stripe.com/checkout');
       expect(api.post).toHaveBeenCalledWith('/auth/register', registerData);
     });
   });

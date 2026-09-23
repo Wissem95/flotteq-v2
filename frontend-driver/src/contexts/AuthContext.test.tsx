@@ -35,7 +35,7 @@ describe('AuthContext', () => {
   });
 
   it('should login and set user', async () => {
-    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'admin', tenantId: 1 };
+    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'driver', tenantId: 1 };
     const mockAuthResponse = {
       user: mockUser,
       access_token: 'token',
@@ -50,20 +50,21 @@ describe('AuthContext', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    await waitFor(async () => {
+    await act(async () => {
       await result.current.login({ email: 'test@test.com', password: 'pass' });
     });
 
     await waitFor(() => {
-      expect(localStorage.getItem('access_token')).toBe('token');
+      expect(sessionStorage.getItem('access_token')).toBe('token');
+      expect(localStorage.getItem('access_token')).toBeNull();
       expect(result.current.user).toEqual(mockUser);
       expect(result.current.isAuthenticated).toBe(true);
     });
   });
 
-  it.skip('should logout and clear user', async () => {
+  it('should logout and clear user', async () => {
     // First set up a logged in user
-    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'admin', tenantId: 1 };
+    const mockUser = { id: '1', email: 'test@test.com', firstName: 'John', lastName: 'Doe', role: 'driver', tenantId: 1 };
     const mockAuthResponse = {
       user: mockUser,
       access_token: 'token',
@@ -79,12 +80,14 @@ describe('AuthContext', () => {
     });
 
     // Login first
-    await result.current.login({ email: 'test@test.com', password: 'pass' });
+    await act(async () => {
+      await result.current.login({ email: 'test@test.com', password: 'pass' });
+    });
 
     // Verify logged in
     await waitFor(() => {
       expect(result.current.isAuthenticated).toBe(true);
-      expect(localStorage.getItem('access_token')).toBe('token');
+      expect(sessionStorage.getItem('access_token')).toBe('token');
     });
 
     // Now logout

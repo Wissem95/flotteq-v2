@@ -26,6 +26,15 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout code
@@ -42,39 +51,52 @@ jobs:
         working-directory: ./backend
         run: npm ci
 
-      - name: Lint code
-        working-directory: ./backend
-        run: npm run lint
-
-      # Temporarily disabled - tests need to be updated for new system architecture
-      # - name: Run unit tests
-      #   working-directory: ./backend
-      #   run: npm test
-      #   env:
-      #     DB_HOST: localhost
-      #     DB_PORT: 5432
-      #     DB_USER: postgres
-      #     DB_PASSWORD: test_password
-      #     DB_NAME: flotteq_test
-      #     JWT_ACCESS_SECRET: test_access_secret_min_32_chars_for_testing_only
-      #     JWT_REFRESH_SECRET: test_refresh_secret_min_32_chars_for_testing_only
-      #     JWT_PARTNER_SECRET: test_partner_secret_min_32_chars_for_testing_only
-      #     NODE_ENV: test
-
-      - name: Setup test database
+      - name: Verify database migrations from an empty PostgreSQL database
         working-directory: ./backend
         run: |
-          npx ts-node test/run-test-migrations.ts
-          npx ts-node test/seed-test-db.ts
+          createdb -h localhost -U postgres flotteq_migrations_test
+          npm run migration:run
+        env:
+          PGPASSWORD: test_password
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: test_password
+          DB_NAME: flotteq_migrations_test
+          NODE_ENV: test
+
+      - name: Lint code
+        working-directory: ./backend
+        run: npm run lint:check
+
+      - name: Run unit tests
+        working-directory: ./backend
+        run: npm test -- --runInBand
         env:
           DB_HOST: localhost
           DB_PORT: 5432
           DB_USER: postgres
           DB_PASSWORD: test_password
+          DB_NAME: flotteq_test
+          JWT_ACCESS_SECRET: test_access_secret_min_32_chars_for_testing_only
+          JWT_REFRESH_SECRET: test_refresh_secret_min_32_chars_for_testing_only
+          JWT_PARTNER_SECRET: test_partner_secret_min_32_chars_for_testing_only
+          NODE_ENV: test
+
+      - name: Setup test database from production migrations
+        working-directory: ./backend
+        run: npm run migration:run
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USER: postgres
+          DB_PASSWORD: test_password
+          DB_NAME: flotteq_test
+          NODE_ENV: test
 
       - name: Run E2E tests
         working-directory: ./backend
-        run: npm run test:e2e
+        run: npm run test:e2e -- --forceExit
         env:
           DB_HOST: localhost
           DB_PORT: 5432
@@ -86,6 +108,11 @@ jobs:
           JWT_PARTNER_SECRET: test_partner_secret_min_32_chars
           STRIPE_SECRET_KEY: sk_test_dummy_key_for_ci_tests_only
           STRIPE_WEBHOOK_SECRET: whsec_test_dummy_webhook_secret
+          REDIS_ENABLED: "true"
+          REDIS_HOST: localhost
+          REDIS_PORT: 6379
+          REDIS_PREFIX: ci-${{ github.run_id }}
+          NODE_ENV: test
 
       - name: Build backend
         working-directory: ./backend
@@ -120,18 +147,17 @@ jobs:
         working-directory: ./frontend-client
         run: npm run lint
 
-      # Temporarily disabled - tests need mocks updates for new API
-      # - name: Run tests
-      #   working-directory: ./frontend-client
-      #   run: npm test
-      #   env:
-      #     VITE_API_URL: http://localhost:3000/api
+      - name: Run tests
+        working-directory: ./frontend-client
+        run: npm test -- --run
+        env:
+          VITE_API_URL: http://localhost:3000/api
 
       - name: Build
         working-directory: ./frontend-client
         run: npm run build
         env:
-          VITE_API_URL: https://api.flotteq.com/api
+          VITE_API_BASE: https://api.flotteq.fr
           VITE_STRIPE_PUBLISHABLE_KEY: pk_test_dummy_for_build
 
       - name: Upload artifact
@@ -143,7 +169,7 @@ jobs:
 
   # Frontend Partner Build
   frontend-partner-build:
-    name: Frontend Partner - Build
+    name: Frontend Partner - Tests & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -158,15 +184,19 @@ jobs:
         working-directory: ./frontend-partner
         run: npm ci
 
+      - name: Run tests
+        working-directory: ./frontend-partner
+        run: npm test -- --run
+
       - name: Build
         working-directory: ./frontend-partner
-        run: npm run build
+        run: npm run build:check
         env:
-          VITE_API_URL: https://api.flotteq.com
+          VITE_API_BASE: https://api.flotteq.fr
 
   # Frontend Driver Build
   frontend-driver-build:
-    name: Frontend Driver - Build
+    name: Frontend Driver - Tests & Build
     runs-on: ubuntu-latest
 
     steps:
@@ -181,11 +211,15 @@ jobs:
         working-directory: ./frontend-driver
         run: npm ci
 
+      - name: Run tests
+        working-directory: ./frontend-driver
+        run: npm test -- --run
+
       - name: Build
         working-directory: ./frontend-driver
         run: npm run build
         env:
-          VITE_API_URL: https://api.flotteq.com/api
+          VITE_API_BASE: https://api.flotteq.fr
           VITE_STRIPE_PUBLISHABLE_KEY: pk_test_dummy_for_build
 
   # Frontend Internal Build
@@ -209,7 +243,43 @@ jobs:
         working-directory: ./frontend-internal
         run: npm run build
         env:
-          VITE_API_URL: https://api.flotteq.com
+          VITE_API_BASE: https://api.flotteq.fr
+
+  frontend-landing-build:
+    name: Frontend Landing - Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-landing/package-lock.json
+      - name: Install dependencies
+        working-directory: ./frontend-landing
+        run: npm ci
+      - name: Build
+        working-directory: ./frontend-landing
+        run: npm run build
+        env:
+          VITE_API_BASE: https://api.flotteq.fr
+
+  frontend-portal-build:
+    name: Frontend Portal - Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend-portal/package-lock.json
+      - name: Install dependencies
+        working-directory: ./frontend-portal
+        run: npm ci
+      - name: Build
+        working-directory: ./frontend-portal
+        run: npm run build
 
   # Docker Build Test
   docker-build-test:

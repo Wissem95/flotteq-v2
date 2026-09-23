@@ -8,6 +8,19 @@ import { User } from '../src/entities/user.entity';
 import { Tenant } from '../src/entities/tenant.entity';
 import { Vehicle } from '../src/entities/vehicle.entity';
 import { Maintenance } from '../src/modules/maintenance/entities/maintenance.entity';
+import { Subscription } from '../src/entities/subscription.entity';
+import { SubscriptionPlan } from '../src/entities/subscription-plan.entity';
+import { AuditLog } from '../src/entities/audit-log.entity';
+import { EmailQueueService } from '../src/modules/notifications/email-queue.service';
+import { createTestTenant, TestTenant } from './test-helpers';
+import { Reflector } from '@nestjs/core';
+import { AuditService } from '../src/modules/audit/audit.service';
+import { AuditInterceptor } from '../src/common/interceptors/audit.interceptor';
+import { MileageHistory } from '../src/entities/mileage-history.entity';
+import {
+  MaintenanceStatus,
+  MaintenanceType,
+} from '../src/modules/maintenance/entities/maintenance.entity';
 
 describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
   let app: INestApplication;
@@ -15,21 +28,27 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
   let tenantsRepository: Repository<Tenant>;
   let vehiclesRepository: Repository<Vehicle>;
   let maintenancesRepository: Repository<Maintenance>;
+  let subscriptionsRepository: Repository<Subscription>;
+  let plansRepository: Repository<SubscriptionPlan>;
+  let auditLogsRepository: Repository<AuditLog>;
+  let mileageHistoryRepository: Repository<MileageHistory>;
 
   let accessToken: string;
   let tenantId: number;
   let vehicleId: string;
   let userId: string;
   let maintenanceId: string;
+  let testTenantData: TestTenant;
 
   const uniqueEmail = `test-analytics-${Date.now()}@example.com`;
   const uniqueCompany = `AnalyticsTest-${Date.now()}`;
+  const runDate = new Date().toISOString().slice(0, 10);
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider('EmailQueueService')
+      .overrideProvider(EmailQueueService)
       .useValue({
         queueWelcomeEmail: jest.fn().mockResolvedValue(undefined),
         queuePasswordResetEmail: jest.fn().mockResolvedValue(undefined),
@@ -37,6 +56,12 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
       .compile();
 
     app = moduleFixture.createNestApplication();
+    app.useGlobalInterceptors(
+      new AuditInterceptor(
+        moduleFixture.get(Reflector),
+        moduleFixture.get(AuditService),
+      ),
+    );
     app.setGlobalPrefix('api');
     app.useGlobalPipes(
       new ValidationPipe({
@@ -51,26 +76,36 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     tenantsRepository = moduleFixture.get(getRepositoryToken(Tenant));
     vehiclesRepository = moduleFixture.get(getRepositoryToken(Vehicle));
     maintenancesRepository = moduleFixture.get(getRepositoryToken(Maintenance));
+    subscriptionsRepository = moduleFixture.get(getRepositoryToken(Subscription));
+    plansRepository = moduleFixture.get(getRepositoryToken(SubscriptionPlan));
+    auditLogsRepository = moduleFixture.get(getRepositoryToken(AuditLog));
+    mileageHistoryRepository = moduleFixture.get(
+      getRepositoryToken(MileageHistory),
+    );
 
-    // Setup : créer tenant + véhicule
-    const registerResponse = await request(app.getHttpServer())
-      .post('/api/onboarding/register')
-      .send({
-        email: uniqueEmail,
-        password: 'Test123!@#',
-        firstName: 'Test',
-        lastName: 'Analytics',
-        companyName: uniqueCompany,
-        planId: '16',
-      });
+    testTenantData = await createTestTenant(
+      tenantsRepository,
+      usersRepository,
+      subscriptionsRepository,
+      plansRepository,
+      {
+        tenantData: { name: uniqueCompany, email: uniqueEmail },
+        userData: { email: uniqueEmail },
+      },
+    );
+    tenantId = testTenantData.tenant.id;
+    userId = testTenantData.user.id;
 
-    accessToken = registerResponse.body.accessToken;
-    tenantId = registerResponse.body.tenant.id;
-    userId = registerResponse.body.user.id;
+    const login = await request(app.getHttpServer())
+      .post('/api/auth/login')
+      .send({ email: uniqueEmail, password: 'TestPassword123' })
+      .expect(200);
+    accessToken = login.body.access_token;
 
     const vehicleResponse = await request(app.getHttpServer())
       .post('/api/vehicles')
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         registration: `ANALYTICS-${Date.now()}`,
         brand: 'Toyota',
@@ -82,7 +117,8 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
         currentKm: 5000,
         purchasePrice: 20000,
         purchaseDate: '2023-01-15',
-      });
+      })
+      .expect(201);
 
     vehicleId = vehicleResponse.body.id;
   });
@@ -93,12 +129,18 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
       await maintenancesRepository.delete({ id: maintenanceId });
     }
     if (vehicleId) {
+      await mileageHistoryRepository.delete({ vehicleId, tenantId });
+      await auditLogsRepository.delete({ tenantId });
+    }
+    if (vehicleId) {
       await vehiclesRepository.delete({ id: vehicleId });
     }
     if (userId) {
       await usersRepository.delete({ id: userId });
     }
     if (tenantId) {
+      await subscriptionsRepository.delete({ tenantId });
+      await auditLogsRepository.delete({ tenantId });
       await tenantsRepository.delete({ id: tenantId });
     }
 
@@ -110,46 +152,64 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     const response = await request(app.getHttpServer())
       .post('/api/maintenance')
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         vehicleId,
-        type: 'oil_change',
+        type: MaintenanceType.OIL_CHANGE,
         description: 'Vidange régulière',
-        scheduledDate: '2025-10-15',
+        scheduledDate: runDate,
         estimatedCost: 150,
-        status: 'completed',
-        actualCost: 140,
       })
       .expect(201);
 
     expect(response.body).toHaveProperty('id');
     maintenanceId = response.body.id;
+
+    await request(app.getHttpServer())
+      .patch(`/api/maintenance/${maintenanceId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
+      .send({
+        status: MaintenanceStatus.COMPLETED,
+        completedDate: runDate,
+        actualCost: 140,
+      })
+      .expect(200);
   });
 
   // 2. Calculer le TCO (Total Cost of Ownership)
   it('should calculate TCO correctly', async () => {
     const response = await request(app.getHttpServer())
-      .get(`/api/vehicles/${vehicleId}/costs`)
+      .get(`/api/vehicles/${vehicleId}/tco`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(response.body).toMatchObject({
       vehicleId,
       purchasePrice: 20000,
-      totalMaintenanceCost: 140,
-      totalOwnershipCost: 20140,
-      totalMaintenanceCount: 1,
-      averageMaintenanceCost: 140,
+      totalMaintenanceCosts: 140,
+      totalTCO: 20140,
+      estimatedFuelCosts: 0,
     });
 
-    expect(response.body).toHaveProperty('costPerKm');
-    expect(typeof response.body.costPerKm).toBe('number');
+    expect(response.body).toHaveProperty('tcoPerKm');
+    expect(typeof response.body.tcoPerKm).toBe('number');
   });
 
   // 3. Récupérer l'historique du kilométrage
   it('should return mileage history', async () => {
+    await request(app.getHttpServer())
+      .patch(`/api/vehicles/${vehicleId}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
+      .send({ currentKm: 5100 })
+      .expect(200);
+
     const response = await request(app.getHttpServer())
       .get(`/api/vehicles/${vehicleId}/mileage-history`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(Array.isArray(response.body)).toBe(true);
@@ -157,15 +217,16 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
 
     // Vérifier la structure des données
     const firstEntry = response.body[0];
-    expect(firstEntry).toHaveProperty('date');
+    expect(firstEntry).toHaveProperty('recordedAt');
     expect(firstEntry).toHaveProperty('mileage');
     expect(firstEntry).toHaveProperty('source');
-    expect(firstEntry).toHaveProperty('change');
-    expect(firstEntry).toHaveProperty('description');
+    expect(firstEntry).toHaveProperty('difference');
+    expect(firstEntry).toHaveProperty('notes');
 
-    // Vérifier que le premier point est la création
-    expect(firstEntry.source).toBe('creation');
-    expect(firstEntry.mileage).toBe(5000);
+    // La création initialise le compteur mais ne crée pas d'historique.
+    // Un changement réel du compteur doit en créer un.
+    expect(firstEntry.source).toBe('manual');
+    expect(firstEntry.mileage).toBe(5100);
   });
 
   // 4. Marquer le véhicule comme vendu
@@ -173,15 +234,16 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     const response = await request(app.getHttpServer())
       .patch(`/api/vehicles/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .send({
         status: 'sold',
-        soldDate: '2025-10-10',
+        soldDate: runDate,
         currentValue: 18000,
       })
       .expect(200);
 
     expect(response.body.status).toBe('sold');
-    expect(response.body.currentValue).toBe(18000);
+    expect(Number(response.body.currentValue)).toBe(18000);
   });
 
   // 5. Récupérer le véhicule vendu avec ses nouvelles données
@@ -189,11 +251,12 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get(`/api/vehicles/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(response.body.status).toBe('sold');
-    expect(response.body.soldDate).toBe('2025-10-10');
-    expect(response.body.currentValue).toBe(18000);
+    expect(response.body.soldDate).toBe(runDate);
+    expect(Number(response.body.currentValue)).toBe(18000);
 
     // Vérifier dans la base de données
     const vehicle = await vehiclesRepository.findOne({
@@ -201,7 +264,7 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     });
     expect(vehicle).not.toBeNull();
     expect(vehicle!.status).toBe('sold');
-    expect(vehicle!.currentValue).toBe(18000);
+    expect(Number(vehicle!.currentValue)).toBe(18000);
     expect(vehicle!.soldDate).toBeDefined();
   });
 
@@ -213,6 +276,7 @@ describe('Vehicle Analytics: TCO & Mileage History (e2e)', () => {
     const response = await request(app.getHttpServer())
       .get(`/api/audit-logs/entity/Vehicle/${vehicleId}`)
       .set('Authorization', `Bearer ${accessToken}`)
+      .set('X-Tenant-ID', String(tenantId))
       .expect(200);
 
     expect(Array.isArray(response.body)).toBe(true);

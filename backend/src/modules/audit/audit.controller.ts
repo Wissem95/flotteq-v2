@@ -39,10 +39,7 @@ export class AuditController {
     description: "Logs d'audit récupérés avec succès.",
   })
   @ApiResponse({ status: 403, description: 'Accès refusé - Admin seulement.' })
-  async findAll(
-    @Req() req: any,
-    @Query() filters: AuditLogFilterDto,
-  ) {
+  async findAll(@Req() req: any, @Query() filters: AuditLogFilterDto) {
     const isSuperAdmin = req.isSuperAdmin === true;
     const tenantId = isSuperAdmin ? null : req.user?.tenantId;
     return this.auditService.findAll(tenantId, filters);

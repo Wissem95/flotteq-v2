@@ -12,11 +12,12 @@ import { SubscriptionPlan } from './subscription-plan.entity';
 import { Tenant } from './tenant.entity';
 
 export enum SubscriptionStatus {
-  INCOMPLETE = 'incomplete',
+  TRIALING = 'trialing',
   ACTIVE = 'active',
   PAST_DUE = 'past_due',
   CANCELED = 'canceled',
   UNPAID = 'unpaid',
+  INCOMPLETE = 'incomplete',
 }
 
 @Entity('subscriptions')
@@ -45,6 +46,9 @@ export class Subscription {
     default: SubscriptionStatus.ACTIVE,
   })
   status: SubscriptionStatus;
+
+  @Column({ type: 'date', nullable: true })
+  trialEnd: Date | null;
 
   @Column({ nullable: true })
   stripeSubscriptionId: string;

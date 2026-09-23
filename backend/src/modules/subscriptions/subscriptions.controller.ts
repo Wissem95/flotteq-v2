@@ -176,7 +176,10 @@ export class SubscriptionsController {
       );
     }
 
-    const frontendUrl = process.env.FRONTEND_CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000';
+    const frontendUrl =
+      process.env.FRONTEND_CLIENT_URL ||
+      process.env.FRONTEND_URL ||
+      'http://localhost:3000';
     const successUrl = dto.successUrl || `${frontendUrl}/billing/success`;
     const cancelUrl = dto.cancelUrl || `${frontendUrl}/billing`;
 

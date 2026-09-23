@@ -79,6 +79,28 @@ describe('EmailService', () => {
     expect(configService.get).toHaveBeenCalledWith('SMTP_PASSWORD');
   });
 
+  it('does not use a network transport in test mode', async () => {
+    const testConfig = {
+      get: jest.fn((key: string) => {
+        if (key === 'NODE_ENV') return 'test';
+        if (key === 'SMTP_HOST') return '127.0.0.1';
+        if (key === 'SMTP_PORT') return 1;
+        if (key === 'SMTP_SECURE') return 'false';
+        return undefined;
+      }),
+    } as unknown as ConfigService;
+    const testService = new EmailService(testConfig);
+
+    await expect(
+      testService.sendEmail({
+        to: 'synthetic@example.invalid',
+        subject: 'Isolation test',
+        template: 'welcome',
+        context: { firstName: 'Test', tenantName: 'Synthetic' },
+      }),
+    ).resolves.toBeUndefined();
+  });
+
   describe('sendEmail', () => {
     it('should throw error if template does not exist', async () => {
       const options = {

@@ -7,7 +7,8 @@ import { FileUpload } from '../components/FileUpload';
 import { VALIDATION_RULES } from '../config/constants';
 import { PasswordInput } from '../components/ui/PasswordInput';
 
-type PartnerType = 'garage' | 'car_wash' | 'body_shop' | 'tire_shop' | 'towing' | 'inspection' | 'rental' | 'other';
+type PartnerType = 'garage' | 'ct_center' | 'insurance' | 'parts_supplier';
+type PartnerDocumentType = 'siret' | 'insurance_certificate';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function RegisterPage() {
     confirmPassword: '',
   });
   const [documents, setDocuments] = useState<File[]>([]);
+  const [documentType, setDocumentType] = useState<PartnerDocumentType>('siret');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
@@ -158,9 +160,18 @@ export default function RegisterPage() {
         ownerPassword: formData.password,
       };
 
-      // TODO: Upload documents (nécessite endpoint backend pour upload)
-      // Pour le moment, on enregistre sans les documents
-      await axiosInstance.post(API_CONFIG.ENDPOINTS.PARTNER_REGISTER, registrationData);
+      const multipartData = new FormData();
+      Object.entries(registrationData).forEach(([key, value]) => {
+        multipartData.append(key, value);
+      });
+      multipartData.append('documentType', documentType);
+      documents.forEach((document) => multipartData.append('documents', document));
+
+      await axiosInstance.post(
+        API_CONFIG.ENDPOINTS.PARTNER_REGISTER,
+        multipartData,
+        { headers: { 'Content-Type': 'multipart/form-data' } },
+      );
 
       navigate('/pending-approval');
     } catch (err: any) {
@@ -275,13 +286,9 @@ export default function RegisterPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="garage">Garage</option>
-                <option value="car_wash">Station de lavage</option>
-                <option value="body_shop">Carrosserie</option>
-                <option value="tire_shop">Centre pneumatique</option>
-                <option value="towing">Dépannage</option>
-                <option value="inspection">Contrôle technique</option>
-                <option value="rental">Location</option>
-                <option value="other">Autre</option>
+                <option value="ct_center">Centre de contrôle technique</option>
+                <option value="insurance">Assurance</option>
+                <option value="parts_supplier">Fournisseur de pièces</option>
               </select>
             </div>
 
@@ -495,12 +502,25 @@ export default function RegisterPage() {
                 Documents requis *
               </label>
               <p className="text-sm text-gray-600 mb-4">
-                Veuillez télécharger votre extrait SIRET et/ou votre attestation d'assurance
-                professionnelle (format PDF ou image, max 5MB par fichier)
+                Veuillez télécharger un justificatif SIRET ou une attestation d'assurance
+                professionnelle (PDF, JPG ou PNG, 5 Mo maximum).
               </p>
+              <label htmlFor="documentType" className="block text-sm font-medium text-gray-700 mb-1">
+                Type de justificatif *
+              </label>
+              <select
+                id="documentType"
+                name="documentType"
+                value={documentType}
+                onChange={(event) => setDocumentType(event.target.value as PartnerDocumentType)}
+                className="mb-4 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="siret">Justificatif SIRET</option>
+                <option value="insurance_certificate">Attestation d’assurance</option>
+              </select>
               <FileUpload
                 onFilesSelected={setDocuments}
-                maxFiles={5}
+                maxFiles={1}
                 acceptedTypes={['application/pdf', 'image/jpeg', 'image/png']}
               />
               {validationErrors.documents && (

@@ -17,8 +17,11 @@ export const usePartnerDocuments = (partnerId: string, enabled = true) => {
 
   // Validation / refus d'un document
   const verifyMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: VerifyDocumentDto }) =>
-      documentsApi.verify(id, data),
+    mutationFn: ({ id, source, data }: {
+      id: string;
+      source: 'registration' | 'legacy';
+      data: VerifyDocumentDto;
+    }) => documentsApi.verify(partnerId, id, source, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey });
       toast({
@@ -36,9 +39,13 @@ export const usePartnerDocuments = (partnerId: string, enabled = true) => {
   });
 
   // Téléchargement d'un document via blob (ouvre le fichier dans un nouvel onglet)
-  const downloadDocument = async (id: string, fileName: string) => {
+  const downloadDocument = async (
+    id: string,
+    fileName: string,
+    source: 'registration' | 'legacy',
+  ) => {
     try {
-      const blob = await documentsApi.download(id);
+      const blob = await documentsApi.download(partnerId, id, source);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;

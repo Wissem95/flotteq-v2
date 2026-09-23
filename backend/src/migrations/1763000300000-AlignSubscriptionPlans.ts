@@ -20,9 +20,7 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
  * Ordre des renommages important ("name" est UNIQUE) : on renomme l'ancien "Starter"
  * en "Pro" AVANT de renommer "Freemium" en "Starter".
  */
-export class AlignSubscriptionPlans1763000300000
-  implements MigrationInterface
-{
+export class AlignSubscriptionPlans1763000300000 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     // 1) "Standard" (49.99€) : hors grille → désactivé (conservé pour les abonnements existants)
     await queryRunner.query(`

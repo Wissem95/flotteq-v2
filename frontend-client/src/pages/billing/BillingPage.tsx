@@ -14,6 +14,7 @@ export default function BillingPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     loadSubscriptionStats();
@@ -34,6 +35,15 @@ export default function BillingPage() {
   };
 
   const handleUpgrade = () => {
+    if (stats && stats.plan.price > 0) {
+      setActionError('');
+      billingService.openCustomerPortal().catch((err: any) => {
+        setActionError(
+          err.response?.data?.message || 'Impossible d’ouvrir la gestion de votre abonnement.',
+        );
+      });
+      return;
+    }
     setShowUpgradeModal(true);
   };
 
@@ -63,9 +73,6 @@ export default function BillingPage() {
     );
   }
 
-  const currentPlan = stats.plan;
-  const planId = currentPlan ? null : null; // We'd need to get this from stats if available
-
   return (
     <div className="container mx-auto px-4 py-6 sm:py-8">
       {/* Header */}
@@ -82,6 +89,12 @@ export default function BillingPage() {
           Gérez votre abonnement, consultez vos factures et mettez à jour vos informations de paiement
         </p>
       </div>
+
+      {actionError && (
+        <div role="alert" className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          {actionError}
+        </div>
+      )}
 
       {/* Usage Alert */}
       <UsageAlertBanner stats={stats} onUpgrade={handleUpgrade} />
@@ -163,7 +176,6 @@ export default function BillingPage() {
       <UpgradeModal
         isOpen={showUpgradeModal}
         onClose={() => setShowUpgradeModal(false)}
-        currentPlanId={planId || undefined}
       />
     </div>
   );

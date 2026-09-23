@@ -120,6 +120,13 @@ export class MaintenanceController {
     return this.maintenanceService.getCostSummaryByVehicle(vehicleId, tenantId);
   }
 
+  @Get('templates')
+  @ApiOperation({ summary: 'Get all maintenance templates' })
+  @ApiResponse({ status: 200, description: 'List of all templates' })
+  findAllTemplates(@TenantId() tenantId: number) {
+    return this.templateService.findAll(tenantId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Get a specific maintenance' })
   @ApiResponse({ status: 200, description: 'Maintenance details' })
@@ -189,13 +196,6 @@ export class MaintenanceController {
     @TenantId() tenantId: number,
   ) {
     return this.templateService.create(createTemplateDto, tenantId);
-  }
-
-  @Get('templates')
-  @ApiOperation({ summary: 'Get all maintenance templates' })
-  @ApiResponse({ status: 200, description: 'List of all templates' })
-  findAllTemplates(@TenantId() tenantId: number) {
-    return this.templateService.findAll(tenantId);
   }
 
   @Get('templates/:id')

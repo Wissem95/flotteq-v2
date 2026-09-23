@@ -77,11 +77,12 @@ export default function QuickCreateMaintenanceModal({
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="scheduledDate" className="block text-sm font-medium text-gray-700 mb-1">
               Date prévue
             </label>
             <input
               type="text"
+              id="scheduledDate"
               value={selectedDate.toLocaleDateString('fr-FR')}
               disabled
               className="w-full rounded-lg border-gray-300 bg-gray-50 text-gray-600"
@@ -89,10 +90,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="vehicleId" className="block text-sm font-medium text-gray-700 mb-1">
               Véhicule *
             </label>
             <select
+              id="vehicleId"
               value={formData.vehicleId}
               onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
               required
@@ -108,10 +110,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenanceType" className="block text-sm font-medium text-gray-700 mb-1">
               Type *
             </label>
             <select
+              id="maintenanceType"
               value={formData.type}
               onChange={(e) => setFormData({ ...formData, type: e.target.value as MaintenanceType })}
               required
@@ -126,10 +129,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="maintenanceDescription" className="block text-sm font-medium text-gray-700 mb-1">
               Description *
             </label>
             <textarea
+              id="maintenanceDescription"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               required
@@ -140,10 +144,11 @@ export default function QuickCreateMaintenanceModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="estimatedCost" className="block text-sm font-medium text-gray-700 mb-1">
               Coût estimé (€) *
             </label>
             <input
+              id="estimatedCost"
               type="number"
               step="0.01"
               value={formData.estimatedCost}

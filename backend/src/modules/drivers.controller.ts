@@ -59,7 +59,12 @@ export class DriversController {
     const parsedLimit = limit ? parseInt(limit, 10) : 10;
     const isSuperAdmin = req?.isSuperAdmin === true;
     const tenantId = isSuperAdmin ? null : req?.user?.tenantId;
-    return this.driversService.findAll(parsedPage, parsedLimit, status, tenantId);
+    return this.driversService.findAll(
+      parsedPage,
+      parsedLimit,
+      status,
+      tenantId,
+    );
   }
 
   @Get('available')

@@ -51,10 +51,10 @@ describe('LoginPage', () => {
     });
   });
 
-  it('should have links to register and forgot password', () => {
+  it('should show the driver identity and forgot-password link', () => {
     render(<LoginPage />, { wrapper });
 
-    expect(screen.getByText(/s'inscrire/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'FlotteQ Driver' })).toBeInTheDocument();
     expect(screen.getByText(/mot de passe oublié/i)).toBeInTheDocument();
   });
 });

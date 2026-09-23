@@ -16,6 +16,7 @@ import { Driver } from './driver.entity';
 import { SubscriptionPlan } from './subscription-plan.entity';
 
 export enum TenantStatus {
+  TRIAL = 'trial',
   ACTIVE = 'active',
   PAST_DUE = 'past_due',
   CANCELLED = 'cancelled',
@@ -57,6 +58,9 @@ export class Tenant {
   })
   status: TenantStatus;
 
+  @Column({ type: 'timestamp', nullable: true, name: 'trial_ends_at' })
+  trialEndsAt: Date | null;
+
   @Column({ nullable: true, name: 'stripe_customer_id' })
   stripeCustomerId: string;
 
@@ -65,7 +69,14 @@ export class Tenant {
 
   @Column({
     type: 'enum',
-    enum: ['active', 'past_due', 'cancelled', 'incomplete'],
+    enum: [
+      'trial',
+      'active',
+      'past_due',
+      'cancelled',
+      'incomplete',
+      'trialing',
+    ],
     default: 'active',
     name: 'subscription_status',
   })

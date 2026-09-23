@@ -113,7 +113,7 @@ describe('AuditService', () => {
         totalPages: 1,
       });
       expect(mockQueryBuilder.where).toHaveBeenCalledWith(
-        'audit.tenant_id = :tenantId',
+        'audit.tenantId = :tenantId',
         { tenantId },
       );
     });
@@ -131,7 +131,7 @@ describe('AuditService', () => {
       await service.findAll(tenantId, filters);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'audit.user_id = :userId',
+        'audit.userId = :userId',
         { userId: 'user-123' },
       );
     });
@@ -149,7 +149,7 @@ describe('AuditService', () => {
       await service.findAll(tenantId, filters);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'audit.entity_type = :entityType',
+        'audit.entityType = :entityType',
         {
           entityType: 'Vehicle',
         },
@@ -169,7 +169,7 @@ describe('AuditService', () => {
       await service.findAll(tenantId, filters);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'audit.entity_id = :entityId',
+        'audit.entityId = :entityId',
         {
           entityId: 'vehicle-123',
         },
@@ -208,7 +208,7 @@ describe('AuditService', () => {
       await service.findAll(tenantId, filters);
 
       expect(mockQueryBuilder.andWhere).toHaveBeenCalledWith(
-        'audit.created_at BETWEEN :startDate AND :endDate',
+        'audit.createdAt BETWEEN :startDate AND :endDate',
         {
           startDate: '2025-01-01',
           endDate: '2025-12-31',

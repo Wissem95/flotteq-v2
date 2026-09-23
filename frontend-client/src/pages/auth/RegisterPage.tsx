@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { authService, type RegisterDto } from '@/api/services/auth.service';
 import { subscriptionsService, type SubscriptionPlan } from '@/api/services/subscriptions.service';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 
 export default function RegisterPage() {
+  const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
@@ -19,15 +20,22 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
 
-  useEffect(() => {
-    loadPlans();
-  }, []);
-
-  const loadPlans = async () => {
+  const loadPlans = useCallback(async () => {
     try {
       const fetchedPlans = await subscriptionsService.getPlans();
       setPlans(fetchedPlans);
-      if (fetchedPlans.length > 0) {
+      const requestedPlan = searchParams.get('plan')?.trim().toLowerCase();
+      const requestedPlanMatch = requestedPlan
+        ? fetchedPlans.find(
+            (plan) =>
+              plan.name.trim().toLowerCase() === requestedPlan &&
+              !(Number(plan.price) === 0 && plan.maxVehicles === -1),
+          )
+        : undefined;
+      if (requestedPlanMatch) {
+        setSelectedPlan(requestedPlanMatch);
+        setStep(2);
+      } else if (fetchedPlans.length > 0) {
         setSelectedPlan(fetchedPlans[0]);
       }
     } catch (err) {
@@ -36,7 +44,11 @@ export default function RegisterPage() {
     } finally {
       setLoadingPlans(false);
     }
-  };
+  }, [searchParams]);
+
+  useEffect(() => {
+    void loadPlans();
+  }, [loadPlans]);
 
   const handlePlanSelect = (plan: SubscriptionPlan) => {
     setSelectedPlan(plan);
@@ -132,7 +144,7 @@ export default function RegisterPage() {
                     <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
                     <div className="mt-4 flex items-baseline">
                       <span className="text-4xl font-extrabold text-gray-900">
-                        {isQuoteOnlyPlan ? 'Sur devis' : `${Number(plan.price).toFixed(2)}€`}
+                        {isQuoteOnlyPlan ? 'Sur devis' : `${Number(plan.price).toFixed(2)}€ TTC`}
                       </span>
                       {!isQuoteOnlyPlan && <span className="ml-1 text-gray-500">/mois</span>}
                     </div>
@@ -241,7 +253,7 @@ export default function RegisterPage() {
             {selectedPlan && (
               <div className="mb-6 p-4 bg-gray-50 rounded-md">
                 <p className="text-sm text-gray-600">
-                  Plan sélectionné: <strong>{selectedPlan.name}</strong> - {Number(selectedPlan.price).toFixed(2)}€/mois
+                  Plan sélectionné: <strong>{selectedPlan.name}</strong> - {Number(selectedPlan.price).toFixed(2)}€/mois TTC
                 </p>
               </div>
             )}

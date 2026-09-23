@@ -1,17 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">FlotteQ — Pilotez vos véhicules sereinement</title>
+  <desc id="desc">Image de partage FlotteQ avec le wordmark officiel et la proposition de valeur.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#1a3a6c"/>
-      <stop offset="100%" stop-color="#0e2148"/>
+      <stop offset="0%" stop-color="#f8fbff"/>
+      <stop offset="100%" stop-color="#e9f7f6"/>
     </linearGradient>
-    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0%" stop-color="#2463b0"/>
+    <linearGradient id="wordmark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1a3a6c"/>
+      <stop offset="58%" stop-color="#2463b0"/>
       <stop offset="100%" stop-color="#14b8a6"/>
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="url(#bg)"/>
-  <text x="80" y="280" font-family="Inter,sans-serif" font-size="84" font-weight="800" fill="white">FlotteQ</text>
-  <text x="80" y="370" font-family="Inter,sans-serif" font-size="48" font-weight="700" fill="white" opacity="0.95">Pilotez vos véhicules</text>
-  <text x="80" y="430" font-family="Inter,sans-serif" font-size="48" font-weight="700" fill="url(#accent)">sereinement.</text>
-  <text x="80" y="540" font-family="Inter,sans-serif" font-size="24" font-weight="500" fill="white" opacity="0.7">flotteq.fr — Hébergé en France</text>
+  <rect x="72" y="68" width="1056" height="494" rx="36" fill="#ffffff" stroke="#d8e5ef"/>
+  <text x="126" y="174" font-family="Inter, Arial, Helvetica, sans-serif" font-size="68" font-weight="900" letter-spacing="-3" fill="url(#wordmark)">FlotteQ</text>
+  <circle cx="406" cy="136" r="7" fill="#14b8a6"/>
+  <text x="126" y="304" font-family="Inter, Arial, Helvetica, sans-serif" font-size="64" font-weight="850" letter-spacing="-2" fill="#1a3a6c">Pilotez vos véhicules</text>
+  <text x="126" y="384" font-family="Inter, Arial, Helvetica, sans-serif" font-size="64" font-weight="850" letter-spacing="-2" fill="#14b8a6">sereinement.</text>
+  <text x="126" y="472" font-family="Inter, Arial, Helvetica, sans-serif" font-size="28" font-weight="600" fill="#5b6b7d">Entretien · conducteurs · assurances · partenaires</text>
+  <text x="126" y="520" font-family="Inter, Arial, Helvetica, sans-serif" font-size="22" font-weight="600" fill="#7a8794">flotteq.fr</text>
 </svg>
