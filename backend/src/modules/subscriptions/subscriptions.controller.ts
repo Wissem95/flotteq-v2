@@ -108,9 +108,13 @@ export class SubscriptionsController {
   }
 
   @Patch('change-plan/:planId')
-  @ApiOperation({ summary: 'Change subscription plan' })
-  changePlan(@TenantId() tenantId: string, @Param('planId') planId: string) {
-    return this.subscriptionsService.changePlan(+tenantId, +planId);
+  @ApiOperation({
+    summary: 'Direct plan changes are managed by Stripe Billing Portal',
+  })
+  changePlan() {
+    throw new BadRequestException(
+      'Use the Stripe customer portal to change a paid subscription',
+    );
   }
 
   @Post('cancel')

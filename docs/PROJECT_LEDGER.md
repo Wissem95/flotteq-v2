@@ -83,3 +83,10 @@ Incident SMTP de test, résolu pour les validations suivantes : un E2E antérieu
 2. Obtenir l'autorisation de publier les changements pour que GitHub exécute une CI sur le diff actuel.
 3. Si déploiement autorisé, comparer les artefacts servis et les états de santé post-déploiement.
 4. Valider les contenus légaux avec le propriétaire. Aucun paiement réel sans accord distinct.
+
+## Actualisation facturation, 2026-09-23
+
+- PROUVÉ en production, sans carte ni encaissement : les prix Stripe live associés à Pro et Business ouvrent une session Checkout en mode abonnement, avec respectivement 2 900 et 7 900 centimes EUR. Chaque session de contrôle a été expirée immédiatement, avant création de client et paiement.
+- PROUVÉ dans le code : `PATCH /api/subscriptions/change-plan/:planId` modifiait localement un abonnement sans opération Stripe. Correctif local préparé : la route renvoie désormais vers le portail Stripe, et le webhook `customer.subscription.updated` synchronise le prix Stripe vers le plan et l'abonnement locaux.
+- PROUVÉ en configuration Stripe : un portail client live par défaut est actif, avec gestion du moyen de paiement, des factures, de la résiliation et l'option de changement de prix activée. La configuration conserve la proratisation immédiate des hausses et la planification à fin de période des baisses. La liste explicite des produits n'est pas renvoyée par cette version de l'API Stripe après mise à jour, donc la sélection visuelle d'une offre dans une session portail reste à observer avec un abonnement synthétique sans paiement.
+- Vérifications locales du correctif : nouveaux tests rouges observés puis 19/19 tests Stripe et abonnements ciblés verts. La suite backend complète est verte : 35 suites et 405 tests. Build backend vert et lint de contrôle vert.

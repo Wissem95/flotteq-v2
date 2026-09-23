@@ -11,7 +11,9 @@ describe('SubscriptionsController', () => {
   let controller: SubscriptionsController;
   let tenantRepository: Repository<Tenant>;
 
-  const mockSubscriptionsService = {};
+  const mockSubscriptionsService = {
+    changePlan: jest.fn(),
+  };
   const mockStripeService = {
     getInvoice: jest.fn(),
   };
@@ -92,6 +94,18 @@ describe('SubscriptionsController', () => {
           'Use the customer portal to change an existing subscription',
         ),
       );
+    });
+  });
+
+  describe('changePlan', () => {
+    it('refuse un changement de plan local sans passer par Stripe', async () => {
+      expect(() => controller.changePlan()).toThrow(
+        new BadRequestException(
+          'Use the Stripe customer portal to change a paid subscription',
+        ),
+      );
+
+      expect(mockSubscriptionsService.changePlan).not.toHaveBeenCalled();
     });
   });
 });

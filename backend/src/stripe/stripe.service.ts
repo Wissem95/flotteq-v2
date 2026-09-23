@@ -342,6 +342,34 @@ export class StripeService {
 
     tenant.subscriptionStatus = subscription.status as any;
 
+    const priceId = subscription.items.data[0]?.price?.id;
+    if (priceId) {
+      const plan = await this.subscriptionPlanRepository.findOne({
+        where: { stripePriceId: priceId },
+      });
+
+      if (plan) {
+        tenant.planId = plan.id;
+
+        const localSubscription = await this.subscriptionRepository.findOne({
+          where: { tenantId: tenant.id },
+        });
+
+        if (localSubscription) {
+          localSubscription.planId = plan.id;
+          await this.subscriptionRepository.save(localSubscription);
+        } else {
+          this.logger.warn(
+            `No local subscription found for tenant ${tenant.id} while synchronising plan`,
+          );
+        }
+      } else {
+        this.logger.warn(
+          `No plan found for Stripe price ${priceId} while synchronising tenant ${tenant.id}`,
+        );
+      }
+    }
+
     if (subscription.canceled_at) {
       tenant.subscriptionEndedAt = new Date(subscription.canceled_at * 1000);
     }

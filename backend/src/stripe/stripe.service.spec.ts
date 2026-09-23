@@ -12,6 +12,8 @@ import Stripe from 'stripe';
 describe('StripeService', () => {
   let service: StripeService;
   let tenantRepository: Repository<Tenant>;
+  let subscriptionPlanRepository: Repository<SubscriptionPlan>;
+  let subscriptionRepository: Repository<Subscription>;
   let stripeMock: any;
 
   const mockConfig = {
@@ -114,6 +116,12 @@ describe('StripeService', () => {
     service = module.get<StripeService>(StripeService);
     tenantRepository = module.get<Repository<Tenant>>(
       getRepositoryToken(Tenant),
+    );
+    subscriptionPlanRepository = module.get<Repository<SubscriptionPlan>>(
+      getRepositoryToken(SubscriptionPlan),
+    );
+    subscriptionRepository = module.get<Repository<Subscription>>(
+      getRepositoryToken(Subscription),
     );
 
     // Mock Stripe instance
@@ -340,7 +348,13 @@ describe('StripeService', () => {
       jest.spyOn(tenantRepository, 'save').mockResolvedValue(mockTenant);
     });
 
-    it('should handle customer.subscription.updated event', async () => {
+    it('synchronise le plan local lors d’un changement d’offre dans le portail Stripe', async () => {
+      const businessPlan = { id: 11, name: 'Business' } as SubscriptionPlan;
+      const localSubscription = {
+        id: 'local-subscription',
+        tenantId: 1,
+        planId: 10,
+      } as Subscription;
       const mockEvent: Stripe.Event = {
         id: 'evt_test_123',
         object: 'event',
@@ -352,6 +366,9 @@ describe('StripeService', () => {
             customer: 'cus_test_123',
             status: 'active',
             canceled_at: null,
+            items: {
+              data: [{ price: { id: 'price_business' } }],
+            },
           } as any,
         },
         livemode: false,
@@ -361,13 +378,30 @@ describe('StripeService', () => {
       };
 
       stripeMock.webhooks.constructEvent.mockReturnValue(mockEvent);
+      jest
+        .spyOn(subscriptionPlanRepository, 'findOne')
+        .mockResolvedValue(businessPlan);
+      jest
+        .spyOn(subscriptionRepository, 'findOne')
+        .mockResolvedValue(localSubscription);
+      jest
+        .spyOn(subscriptionRepository, 'save')
+        .mockResolvedValue(localSubscription);
 
       await service.handleWebhook(
         'test_signature',
         Buffer.from('test_payload'),
       );
 
-      expect(tenantRepository.save).toHaveBeenCalled();
+      expect(subscriptionPlanRepository.findOne).toHaveBeenCalledWith({
+        where: { stripePriceId: 'price_business' },
+      });
+      expect(subscriptionRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ planId: businessPlan.id }),
+      );
+      expect(tenantRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ planId: businessPlan.id }),
+      );
     });
 
     it('should handle invoice.payment_failed event', async () => {
