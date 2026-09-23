@@ -13,9 +13,24 @@ export class AlignCoreSchemaToEntities1763000800000
     await queryRunner.query(
       `ALTER TYPE "tenants_subscription_status_enum" ADD VALUE IF NOT EXISTS 'trialing'`,
     );
-    await queryRunner.query(
-      `ALTER TYPE "commission_status" ADD VALUE IF NOT EXISTS 'cancelled'`,
-    );
+    await queryRunner.query(`
+      DO $$
+      DECLARE commission_status_type text;
+      BEGIN
+        SELECT udt_name INTO commission_status_type
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'commissions'
+          AND column_name = 'status';
+
+        IF commission_status_type IS NOT NULL THEN
+          EXECUTE format(
+            'ALTER TYPE %I ADD VALUE IF NOT EXISTS ''cancelled''',
+            commission_status_type
+          );
+        END IF;
+      END $$;
+    `);
 
     await queryRunner.query(`
       ALTER TABLE "subscriptions"
