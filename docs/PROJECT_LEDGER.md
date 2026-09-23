@@ -97,3 +97,12 @@ Incident SMTP de test, résolu pour les validations suivantes : un E2E antérieu
 - CONTREDIT : ces webhooks ne pouvaient pas être traités jusqu'au bout. PostgreSQL de production ne contenait pas `tenants.trial_ends_at`, alors que l'entité Tenant la sélectionne, ce qui provoquait une réponse d'erreur webhook.
 - Correctif local préparé : migration additive `1763001200000-EnsureTenantTrialEndsAt`, sans suppression ni transformation de données. Elle a été exécutée avec succès sur une base PostgreSQL jetable qui simulait cette colonne absente.
 - Vérifications du correctif : 36 suites backend et 406 tests verts, lint et build backend verts. Publication et rejet d'un webhook réel restent à effectuer après cette actualisation.
+
+## Publication et contrôle Stripe, 2026-09-23
+
+- PROUVÉ : le commit `dafde78` est servi par `api.flotteq.fr`. Le healthcheck confirme PostgreSQL et Redis connectés, et les conteneurs applicatifs sont `healthy`.
+- PROUVÉ : la migration additive `EnsureTenantTrialEndsAt1763001200000` est enregistrée en production et la colonne `tenants.trial_ends_at` est présente en `timestamp without time zone`.
+- PROUVÉ : le portail Stripe live par défaut est actif. Le changement d'offre par prix, la résiliation, les moyens de paiement et l'historique des factures sont activés.
+- PROUVÉ : un webhook signé par le secret de production, envoyé à l'URL publique, reçoit `200 {\"received\":true}` et est traité sans erreur SQL. Le client et l'abonnement synthétiques utilisés, sans carte et en essai, ont été annulés puis supprimés.
+- CONTREDIT : une seconde route authentifiée, `POST /api/subscriptions`, permettait encore de créer localement un abonnement actif sans Checkout. Un test rouge l'a reproduite au niveau contrôleur. Le correctif interdit désormais cette route, sans modifier l'inscription ni Checkout.
+- NON VÉRIFIÉ : une livraison Stripe autonome post-correctif, visible dans le Dashboard, ainsi qu'un débit par carte réelle. Le premier nécessite seulement une lecture Dashboard, le second un accord explicite juste avant une transaction financière.

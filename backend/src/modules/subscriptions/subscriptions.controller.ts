@@ -99,12 +99,17 @@ export class SubscriptionsController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a subscription for current tenant' })
-  createSubscription(
-    @TenantId() tenantId: string,
-    @Body() dto: CreateSubscriptionDto,
+  @ApiOperation({
+    summary:
+      'Subscriptions are created through Stripe Checkout or registration',
+  })
+  async createSubscription(
+    @TenantId() _tenantId: string,
+    @Body() _dto: CreateSubscriptionDto,
   ) {
-    return this.subscriptionsService.createSubscription(+tenantId, dto.planId);
+    throw new BadRequestException(
+      'Use Stripe Checkout or the customer portal to manage subscriptions',
+    );
   }
 
   @Patch('change-plan/:planId')

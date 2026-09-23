@@ -12,6 +12,7 @@ describe('SubscriptionsController', () => {
   let tenantRepository: Repository<Tenant>;
 
   const mockSubscriptionsService = {
+    createSubscription: jest.fn(),
     changePlan: jest.fn(),
   };
   const mockStripeService = {
@@ -106,6 +107,20 @@ describe('SubscriptionsController', () => {
       );
 
       expect(mockSubscriptionsService.changePlan).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createSubscription', () => {
+    it('refuse la création locale d’un abonnement payant sans Checkout Stripe', async () => {
+      await expect(
+        controller.createSubscription('42', { planId: 12 }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          'Use Stripe Checkout or the customer portal to manage subscriptions',
+        ),
+      );
+
+      expect(mockSubscriptionsService.createSubscription).not.toHaveBeenCalled();
     });
   });
 });
