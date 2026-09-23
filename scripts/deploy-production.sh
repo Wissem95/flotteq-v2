@@ -1,11 +1,11 @@
 #!/bin/bash
-set -e
+set -Eeuo pipefail
 
 # ==========================================
 # Détection automatique du projet FlotteQ
 # ==========================================
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="${FLOTTEQ_PROJECT_ROOT:-$(dirname "$SCRIPT_DIR")}"
 
 # Couleurs pour les logs
 RED='\033[0;31m'
@@ -33,6 +33,9 @@ fi
 # Variables
 BACKUP_DIR="/var/backups/flotteq/pre-deploy"
 LOG_FILE="/var/log/flotteq/deploy-$(date +%Y%m%d_%H%M%S).log"
+PRE_DEPLOY_COMMIT="$(git rev-parse HEAD)"
+CODE_SWITCHED=0
+DATABASE_MAY_HAVE_CHANGED=0
 
 # Créer dossiers logs
 mkdir -p /var/log/flotteq
@@ -44,28 +47,43 @@ exec 2>&1
 
 # Fonction de rollback en cas d'erreur
 rollback() {
+  local exit_code="${1:-1}"
+  trap - ERR
+  set +e
+
   echo -e "${RED}❌ Deployment failed! Rolling back...${NC}"
 
-  # Restaurer backup DB (si existe)
-  if [ -f "$BACKUP_DIR/latest.sql.gz" ]; then
+  # Une restauration de données n'est nécessaire qu'après le démarrage du
+  # nouveau backend. Restaurer par-dessus le schéma existant corrompt le
+  # rollback, on repart donc d'un schéma public vide.
+  if [ "$DATABASE_MAY_HAVE_CHANGED" -eq 1 ] && [ -f "$BACKUP_DIR/latest.sql.gz" ]; then
     echo "Restoring database backup..."
+    docker compose -f docker-compose.production.yml exec -T postgres \
+      psql -v ON_ERROR_STOP=1 -U flotteq_prod -d flotteq_production <<'SQL'
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO flotteq_prod;
+SQL
     gunzip -c "$BACKUP_DIR/latest.sql.gz" | \
       docker compose -f docker-compose.production.yml exec -T postgres \
-      psql -U flotteq_prod -d flotteq_production
+      psql -v ON_ERROR_STOP=1 -U flotteq_prod -d flotteq_production
   fi
 
-  # Revenir au commit précédent
-  git reset --hard HEAD~1
+  # Ne revenir au commit de départ que si le checkout du candidat a réussi.
+  # Un échec de checkout ne doit jamais décaler le VPS d'un commit.
+  if [ "$CODE_SWITCHED" -eq 1 ]; then
+    git checkout --detach "$PRE_DEPLOY_COMMIT"
+  fi
 
   # Redémarrer les anciens containers
   docker compose -f docker-compose.production.yml up -d
 
   echo -e "${RED}❌ Rollback completed${NC}"
-  exit 1
+  exit "$exit_code"
 }
 
 # Trap errors
-trap rollback ERR
+trap 'rollback "$?"' ERR
 
 # ==========================================
 # ÉTAPE 1: PRE-DEPLOYMENT CHECKS
@@ -121,10 +139,24 @@ if [ -n "${DEPLOY_SHA:-}" ]; then
     echo -e "${RED}❌ Commit demandé introuvable: $DEPLOY_SHA${NC}"
     exit 1
   fi
+
+  # Sauvegarder, plutôt que supprimer, les seuls fichiers non suivis qui
+  # entreraient en collision avec le commit à déployer.
+  CONFLICT_BACKUP_DIR="$BACKUP_DIR/untracked-$(date +%Y%m%d_%H%M%S)"
+  while IFS= read -r -d '' untracked_file; do
+    if git cat-file -e "${DEPLOY_SHA}:${untracked_file}" 2>/dev/null; then
+      mkdir -p "$CONFLICT_BACKUP_DIR/$(dirname "$untracked_file")"
+      mv -- "$untracked_file" "$CONFLICT_BACKUP_DIR/$untracked_file"
+      echo "Fichier non suivi sauvegardé avant déploiement: $untracked_file"
+    fi
+  done < <(git ls-files --others --exclude-standard -z)
+
   git checkout --detach "$DEPLOY_SHA"
+  CODE_SWITCHED=1
 else
   git checkout main
   git pull --ff-only origin main
+  CODE_SWITCHED=1
 fi
 
 NEW_COMMIT=$(git rev-parse --short HEAD)
@@ -197,6 +229,7 @@ docker compose -f docker-compose.production.yml up -d redis
 
 # Backend (force recreate pour charger nouveau code)
 echo "Deploying backend..."
+DATABASE_MAY_HAVE_CHANGED=1
 docker compose -f docker-compose.production.yml up -d --force-recreate --no-deps backend
 
 # Attendre que le backend soit healthy

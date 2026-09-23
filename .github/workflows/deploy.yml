@@ -42,8 +42,16 @@ jobs:
             # Navigate to project (chemin réel du projet sur le VPS)
             cd /home/ubuntu/flotteq-v2
 
-            # Run deployment script
-            ./scripts/deploy-production.sh
+            # Exécuter le script du SHA validé, même si le checkout VPS est
+            # encore sur une version antérieure. Cela évite de dépendre d'un
+            # ancien script pour effectuer sa propre mise à jour.
+            git fetch origin main
+            DEPLOY_SCRIPT="$(mktemp /tmp/flotteq-deploy.XXXXXX)"
+            git show "$DEPLOY_SHA:scripts/deploy-production.sh" > "$DEPLOY_SCRIPT"
+            chmod 700 "$DEPLOY_SCRIPT"
+            FLOTTEQ_PROJECT_ROOT=/home/ubuntu/flotteq-v2 \
+              DEPLOY_SHA="$DEPLOY_SHA" bash "$DEPLOY_SCRIPT"
+            rm -f "$DEPLOY_SCRIPT"
 
             echo "✅ Deployment completed!"
           EOF
