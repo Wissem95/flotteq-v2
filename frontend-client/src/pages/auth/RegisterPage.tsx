@@ -4,18 +4,28 @@ import { authService, type RegisterDto } from '@/api/services/auth.service';
 import { subscriptionsService, type SubscriptionPlan } from '@/api/services/subscriptions.service';
 import { PasswordInput } from '@/components/ui/PasswordInput';
 
+type CustomerType = 'consumer' | 'professional';
+type RegistrationIdentity = Pick<
+  RegisterDto,
+  'email' | 'password' | 'firstName' | 'lastName' | 'companyName'
+>;
+
 export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const [step, setStep] = useState(1);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<SubscriptionPlan | null>(null);
-  const [formData, setFormData] = useState<Omit<RegisterDto, 'planId'>>({
+  const [formData, setFormData] = useState<RegistrationIdentity>({
     email: '',
     password: '',
     firstName: '',
     lastName: '',
     companyName: '',
   });
+  const [customerType, setCustomerType] = useState<CustomerType>('professional');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [acceptedPrivacyPolicy, setAcceptedPrivacyPolicy] = useState(false);
+  const [immediateServiceRequested, setImmediateServiceRequested] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingPlans, setLoadingPlans] = useState(true);
@@ -70,10 +80,31 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!acceptedTerms || !acceptedPrivacyPolicy) {
+      setError('Vous devez accepter les CGU, les CGV et prendre connaissance de la politique de confidentialité.');
+      setLoading(false);
+      return;
+    }
+
+    if (customerType === 'consumer' && !immediateServiceRequested) {
+      setError('Les particuliers doivent demander expressément l’accès immédiat au service.');
+      setLoading(false);
+      return;
+    }
+
     try {
+      const { companyName, ...identity } = formData;
       const registerData: RegisterDto = {
-        ...formData,
+        ...identity,
+        ...(customerType === 'professional'
+          ? { companyName: companyName?.trim() }
+          : {}),
         planId: selectedPlan.id.toString(),
+        customerType,
+        acceptedTerms,
+        acceptedPrivacyPolicy,
+        immediateServiceRequested:
+          customerType === 'consumer' && immediateServiceRequested,
       };
 
       const response = await authService.register(registerData);
@@ -265,6 +296,34 @@ export default function RegisterPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              <fieldset>
+                <legend className="block text-sm font-medium text-gray-700">
+                  Vous vous inscrivez en tant que
+                </legend>
+                <div className="mt-2 grid grid-cols-2 gap-3">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 p-3 text-sm text-gray-700 has-[:checked]:border-flotteq-blue has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value="professional"
+                      checked={customerType === 'professional'}
+                      onChange={() => setCustomerType('professional')}
+                    />
+                    Professionnel
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 p-3 text-sm text-gray-700 has-[:checked]:border-flotteq-blue has-[:checked]:bg-blue-50">
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value="consumer"
+                      checked={customerType === 'consumer'}
+                      onChange={() => setCustomerType('consumer')}
+                    />
+                    Particulier
+                  </label>
+                </div>
+              </fieldset>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
@@ -297,24 +356,26 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
-                  Nom de l'entreprise
-                </label>
-                <input
-                  type="text"
-                  name="companyName"
-                  id="companyName"
-                  required
-                  value={formData.companyName}
-                  onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"
-                />
-              </div>
+              {customerType === 'professional' && (
+                <div>
+                  <label htmlFor="companyName" className="block text-sm font-medium text-gray-700">
+                    Nom de l'entreprise
+                  </label>
+                  <input
+                    type="text"
+                    name="companyName"
+                    id="companyName"
+                    required
+                    value={formData.companyName}
+                    onChange={handleInputChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-flotteq-blue focus:border-flotteq-blue"
+                  />
+                </div>
+              )}
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                  Email professionnel
+                  {customerType === 'professional' ? 'Email professionnel' : 'Email'}
                 </label>
                 <input
                   type="email"
@@ -343,6 +404,47 @@ export default function RegisterPage() {
                 <p className="mt-1 text-xs text-gray-500">Minimum 8 caractères</p>
               </div>
 
+              <div className="space-y-3 rounded-md bg-slate-50 p-4 text-sm text-slate-700">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(event) => setAcceptedTerms(event.target.checked)}
+                    required
+                    className="mt-1"
+                  />
+                  <span>
+                    J’accepte les <a className="text-flotteq-blue underline" href="https://flotteq.fr/cgu">CGU</a> et les <a className="text-flotteq-blue underline" href="https://flotteq.fr/cgv">CGV</a>.
+                  </span>
+                </label>
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={acceptedPrivacyPolicy}
+                    onChange={(event) => setAcceptedPrivacyPolicy(event.target.checked)}
+                    required
+                    className="mt-1"
+                  />
+                  <span>
+                    J’ai lu la <a className="text-flotteq-blue underline" href="https://flotteq.fr/rgpd">politique de confidentialité</a>.
+                  </span>
+                </label>
+                {customerType === 'consumer' && (
+                  <label className="flex items-start gap-3">
+                    <input
+                      type="checkbox"
+                      checked={immediateServiceRequested}
+                      onChange={(event) => setImmediateServiceRequested(event.target.checked)}
+                      required
+                      className="mt-1"
+                    />
+                    <span>
+                      Je demande expressément l’accès immédiat à FlotteQ avant la fin du délai de rétractation.
+                    </span>
+                  </label>
+                )}
+              </div>
+
               <button
                 type="submit"
                 disabled={loading}
@@ -350,10 +452,6 @@ export default function RegisterPage() {
               >
                 {loading ? 'Création...' : 'Continuer vers le paiement'}
               </button>
-
-              <p className="text-xs text-gray-500 text-center">
-                En continuant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité
-              </p>
             </form>
 
             <div className="mt-6 text-center">

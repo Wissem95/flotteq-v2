@@ -46,6 +46,10 @@ describe('authService', () => {
         firstName: 'John',
         lastName: 'Doe',
         companyName: 'Acme',
+        customerType: 'professional' as const,
+        acceptedTerms: true,
+        acceptedPrivacyPolicy: true,
+        immediateServiceRequested: false,
         planId: '2',
       };
 

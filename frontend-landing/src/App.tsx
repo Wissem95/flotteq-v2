@@ -12,9 +12,16 @@ import { FAQ } from './components/FAQ';
 import { CTASection } from './components/CTASection';
 import { Footer } from './components/Footer';
 import { LoginOverlay } from './components/LoginOverlay';
+import { InformationPage } from './components/InformationPage';
+import { getInformationPage } from './data/informationPages';
 
 export default function App() {
+  const informationPage = getInformationPage(window.location.pathname);
   const [loginOpen, setLoginOpen] = useState(false);
+
+  if (informationPage) {
+    return <InformationPage page={informationPage} />;
+  }
 
   return (
     <main className="min-h-screen text-foreground">

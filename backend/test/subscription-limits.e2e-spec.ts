@@ -91,7 +91,12 @@ describe('Subscription Limits Enforcement (e2e)', () => {
         lastName: 'Limits',
         companyName: uniqueCompany,
         planId: String(starterPlanId),
-      });
+        customerType: 'professional',
+        acceptedTerms: true,
+        acceptedPrivacyPolicy: true,
+        immediateServiceRequested: false,
+      })
+      .expect(201);
 
     accessToken = registerResponse.body.access_token;
     tenantId = registerResponse.body.user.tenantId;

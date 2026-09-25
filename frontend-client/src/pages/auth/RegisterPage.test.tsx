@@ -3,10 +3,15 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { subscriptionsService } from '@/api/services/subscriptions.service';
+import { authService } from '@/api/services/auth.service';
 import RegisterPage from './RegisterPage';
 
 vi.mock('@/api/services/subscriptions.service', () => ({
   subscriptionsService: { getPlans: vi.fn() },
+}));
+
+vi.mock('@/api/services/auth.service', () => ({
+  authService: { register: vi.fn() },
 }));
 
 const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -95,6 +100,42 @@ describe('RegisterPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Erreur lors du chargement des plans')).toBeInTheDocument();
+    });
+  });
+
+  it('transmet le consentement d’accès immédiat pour un particulier', async () => {
+    const user = userEvent.setup();
+    vi.mocked(authService.register).mockResolvedValue({
+      user: { tenantId: 1 },
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+      checkoutUrl: 'https://checkout.stripe.com/c/pay/test',
+    } as never);
+
+    render(<RegisterPage />, { wrapper });
+    await user.click(await screen.findByRole('button', { name: 'Choisir Starter' }));
+    await user.click(screen.getByLabelText('Particulier'));
+    await user.type(screen.getByLabelText(/prénom/i), 'Jeanne');
+    await user.type(screen.getByLabelText(/^nom$/i), 'Durand');
+    await user.type(screen.getByLabelText(/^email$/i), 'jeanne@example.com');
+    await user.type(screen.getByLabelText(/^mot de passe$/i), 'Motdepasse1');
+    await user.click(screen.getByLabelText(/j’accepte les CGU et les CGV/i));
+    await user.click(screen.getByLabelText(/j’ai lu la politique de confidentialité/i));
+    await user.click(
+      screen.getByLabelText(/je demande expressément l’accès immédiat/i),
+    );
+    await user.click(screen.getByRole('button', { name: 'Continuer vers le paiement' }));
+
+    await waitFor(() => {
+      expect(authService.register).toHaveBeenCalledWith(
+        expect.objectContaining({
+          customerType: 'consumer',
+          acceptedTerms: true,
+          acceptedPrivacyPolicy: true,
+          immediateServiceRequested: true,
+          planId: '1',
+        }),
+      );
     });
   });
 });

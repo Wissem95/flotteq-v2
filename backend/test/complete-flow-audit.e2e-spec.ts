@@ -110,6 +110,10 @@ describe('Complete Flow: Registration → Vehicle → Audit (e2e)', () => {
         lastName: 'Flow',
         companyName: uniqueCompany,
         planId: String(starterPlanId),
+        customerType: 'professional',
+        acceptedTerms: true,
+        acceptedPrivacyPolicy: true,
+        immediateServiceRequested: false,
       })
       .expect(201);
 

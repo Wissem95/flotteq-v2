@@ -10,6 +10,10 @@ describe('AuthService Enterprise registration', () => {
     lastName: 'Doe',
     companyName: 'Entreprise test',
     planId: '4',
+    customerType: 'professional',
+    acceptedTerms: true,
+    acceptedPrivacyPolicy: true,
+    immediateServiceRequested: false,
   };
 
   it('refuse un plan sur devis avant toute recherche ou écriture utilisateur', async () => {

@@ -7,6 +7,7 @@ import { User } from '../../entities/user.entity';
 import { Tenant } from '../../entities/tenant.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { SubscriptionPlan } from '../../entities/subscription-plan.entity';
+import { LegalAcceptance } from '../../entities/legal-acceptance.entity';
 import { AuthService } from './services/auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -17,7 +18,13 @@ import { StripeModule } from '../../stripe/stripe.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Tenant, Subscription, SubscriptionPlan]),
+    TypeOrmModule.forFeature([
+      User,
+      Tenant,
+      Subscription,
+      SubscriptionPlan,
+      LegalAcceptance,
+    ]),
     ConfigModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({

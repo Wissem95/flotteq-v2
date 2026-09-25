@@ -4,8 +4,13 @@ import {
   MinLength,
   Matches,
   IsOptional,
+  IsBoolean,
+  IsIn,
 } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+
+export const CUSTOMER_TYPES = ['consumer', 'professional'] as const;
+export type CustomerType = (typeof CUSTOMER_TYPES)[number];
 
 export class RegisterDto {
   @IsEmail()
@@ -35,9 +40,33 @@ export class RegisterDto {
   @ApiProperty({ example: 'Doe', description: 'User last name' })
   lastName: string;
 
+  @IsOptional()
   @IsString()
   @ApiProperty({ example: 'My Company', description: 'Company name' })
-  companyName: string;
+  companyName?: string;
+
+  @IsIn(CUSTOMER_TYPES)
+  @ApiProperty({
+    example: 'professional',
+    enum: CUSTOMER_TYPES,
+    description: 'Registration profile',
+  })
+  customerType: CustomerType;
+
+  @IsBoolean()
+  @ApiProperty({ example: true, description: 'CGU and CGV acceptance' })
+  acceptedTerms: boolean;
+
+  @IsBoolean()
+  @ApiProperty({ example: true, description: 'Privacy policy acknowledgement' })
+  acceptedPrivacyPolicy: boolean;
+
+  @IsBoolean()
+  @ApiProperty({
+    example: true,
+    description: 'Express consumer request for immediate service access',
+  })
+  immediateServiceRequested: boolean;
 
   @IsString()
   @ApiProperty({ example: 'price_123456789', description: 'Stripe plan ID' })

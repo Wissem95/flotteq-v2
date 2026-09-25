@@ -17,6 +17,10 @@ import {
   SubscriptionStatus,
 } from '../../../entities/subscription.entity';
 import { SubscriptionPlan } from '../../../entities/subscription-plan.entity';
+import {
+  CURRENT_LEGAL_DOCUMENT_VERSION,
+  LegalAcceptance,
+} from '../../../entities/legal-acceptance.entity';
 import { RegisterDto } from '../dto/register.dto';
 import { LoginDto } from '../dto/login.dto';
 import { EmailQueueService } from '../../../modules/notifications/email-queue.service';
@@ -41,6 +45,20 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
+    if (!dto.acceptedTerms) {
+      throw new BadRequestException('Terms of service must be accepted');
+    }
+
+    if (!dto.acceptedPrivacyPolicy) {
+      throw new BadRequestException('Privacy policy must be acknowledged');
+    }
+
+    if (dto.customerType === 'consumer' && !dto.immediateServiceRequested) {
+      throw new BadRequestException(
+        'Immediate service access must be requested by consumers',
+      );
+    }
+
     // 1. Valider planId AVANT toute création en base
     const planId = parseInt(dto.planId, 10);
     if (isNaN(planId)) {
@@ -64,8 +82,8 @@ export class AuthService {
       throw new BadRequestException('This plan requires a custom quote');
     }
 
-    // 2. Valider companyName
-    if (!dto.companyName) {
+    // 2. Valider companyName pour les comptes professionnels.
+    if (dto.customerType === 'professional' && !dto.companyName?.trim()) {
       throw new BadRequestException(
         'Company name is required for registration',
       );
@@ -88,7 +106,10 @@ export class AuthService {
     try {
       // 4a. Créer tenant
       const tenant = queryRunner.manager.create(Tenant, {
-        name: dto.companyName,
+        name:
+          dto.customerType === 'professional'
+            ? dto.companyName!.trim()
+            : `${dto.firstName.trim()} ${dto.lastName.trim()}`,
         email: dto.email,
       });
       await queryRunner.manager.save(tenant);
@@ -117,6 +138,18 @@ export class AuthService {
         role: UserRole.TENANT_ADMIN,
       });
       await queryRunner.manager.save(user);
+
+      await queryRunner.manager.save(
+        queryRunner.manager.create(LegalAcceptance, {
+          tenantId: tenant.id,
+          userId: user.id,
+          customerType: dto.customerType,
+          termsVersion: CURRENT_LEGAL_DOCUMENT_VERSION,
+          privacyPolicyVersion: CURRENT_LEGAL_DOCUMENT_VERSION,
+          immediateServiceRequested:
+            dto.customerType === 'consumer' && dto.immediateServiceRequested,
+        }),
+      );
 
       // 4c. Créer subscription
       // Plan gratuit (price=0) → ACTIVE immédiat, sinon INCOMPLETE jusqu'au paiement Stripe

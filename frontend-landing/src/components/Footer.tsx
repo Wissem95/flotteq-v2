@@ -13,18 +13,19 @@ const COLUMNS = [
     title: 'Ressources',
     links: [
       { label: 'FAQ', href: '#faq' },
-      { label: 'Documentation', href: '#' },
-      { label: 'Sécurité', href: '#' },
-      { label: 'Statut', href: '#' },
+      { label: 'Documentation', href: '/documentation' },
+      { label: 'Sécurité', href: '/securite' },
+      { label: 'Statut', href: '/statut' },
     ],
   },
   {
     title: 'Légal',
     links: [
-      { label: 'Mentions légales', href: '#' },
-      { label: 'CGU', href: '#' },
-      { label: 'CGV', href: '#' },
-      { label: 'RGPD', href: '#' },
+      { label: 'Mentions légales', href: '/mentions-legales' },
+      { label: 'CGU', href: '/cgu' },
+      { label: 'CGV', href: '/cgv' },
+      { label: 'Politique de confidentialité', href: '/rgpd' },
+      { label: 'Cookies', href: '/cookies' },
     ],
   },
   {

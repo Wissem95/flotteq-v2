@@ -6,7 +6,11 @@ export interface RegisterDto {
   password: string;
   firstName: string;
   lastName: string;
-  companyName: string;
+  companyName?: string;
+  customerType: 'consumer' | 'professional';
+  acceptedTerms: boolean;
+  acceptedPrivacyPolicy: boolean;
+  immediateServiceRequested: boolean;
   planId: string; // Plan Stripe choisi
 }
 

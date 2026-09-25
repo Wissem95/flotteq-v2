@@ -26,6 +26,7 @@ describe('AuthService', () => {
   let jwtService: jest.Mocked<JwtService>;
   let configService: jest.Mocked<ConfigService>;
   let emailQueueService: jest.Mocked<EmailQueueService>;
+  let savedEntities: any[];
 
   const mockUser: User = {
     id: 'uuid-123',
@@ -60,6 +61,7 @@ describe('AuthService', () => {
   };
 
   beforeEach(async () => {
+    savedEntities = [];
     const queryRunner = {
       connect: jest.fn(),
       startTransaction: jest.fn(),
@@ -71,7 +73,10 @@ describe('AuthService', () => {
           ...values,
           id: entity === User ? 'new-uuid' : 1,
         })),
-        save: jest.fn(async (entity) => entity),
+        save: jest.fn(async (entity) => {
+          savedEntities.push(entity);
+          return entity;
+        }),
       },
     };
 
@@ -167,6 +172,10 @@ describe('AuthService', () => {
       firstName: 'Jane',
       lastName: 'Smith',
       companyName: 'Test Company',
+      customerType: 'professional',
+      acceptedTerms: true,
+      acceptedPrivacyPolicy: true,
+      immediateServiceRequested: false,
       planId: '1',
     };
 
@@ -213,6 +222,52 @@ describe('AuthService', () => {
         'Email already exists',
       );
       expect(userRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('refuse l’inscription d’un particulier qui n’accepte pas les CGU', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      jwtService.signAsync
+        .mockResolvedValueOnce(mockTokens.access_token)
+        .mockResolvedValueOnce(mockTokens.refresh_token);
+
+      const consumerRegistration = {
+        ...registerDto,
+        customerType: 'consumer',
+        acceptedTerms: false,
+        acceptedPrivacyPolicy: true,
+        immediateServiceRequested: true,
+      } as RegisterDto;
+
+      await expect(service.register(consumerRegistration)).rejects.toThrow(
+        'Terms of service must be accepted',
+      );
+    });
+
+    it('enregistre la preuve de consentement d’un particulier avant Checkout', async () => {
+      userRepository.findOne.mockResolvedValue(null);
+      jwtService.signAsync
+        .mockResolvedValueOnce(mockTokens.access_token)
+        .mockResolvedValueOnce(mockTokens.refresh_token);
+
+      await service.register({
+        ...registerDto,
+        companyName: undefined,
+        customerType: 'consumer',
+        acceptedTerms: true,
+        acceptedPrivacyPolicy: true,
+        immediateServiceRequested: true,
+      });
+
+      expect(savedEntities).toContainEqual(
+        expect.objectContaining({
+          tenantId: 1,
+          userId: 'new-uuid',
+          customerType: 'consumer',
+          termsVersion: '2026-09-25',
+          privacyPolicyVersion: '2026-09-25',
+          immediateServiceRequested: true,
+        }),
+      );
     });
 
     it('should hash password with bcrypt rounds=12', async () => {
