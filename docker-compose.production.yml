@@ -95,6 +95,9 @@ services:
       redis:
         condition: service_healthy
     environment:
+      UMAMI_INTERNAL_URL: ${UMAMI_INTERNAL_URL:-http://umami:3000}
+      UMAMI_ADMIN_PASSWORD: ${UMAMI_ADMIN_PASSWORD:?UMAMI_ADMIN_PASSWORD is required}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
       NODE_ENV: production
       PORT: 3000
       BUILD_SHA: ${BUILD_SHA:-unknown}

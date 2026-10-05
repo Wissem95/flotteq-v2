@@ -69,3 +69,19 @@ export class RecentTenantDto {
   usersCount: number;
   daysActive: number;
 }
+
+export class AnalyticsPointDto {
+  date: string;
+  pageviews: number;
+  sessions: number;
+}
+
+export class InternalAnalyticsDto {
+  periodDays: number;
+  pageviews: number;
+  visitors: number;
+  visits: number;
+  bounces: number;
+  bounceRate: number;
+  timeline: AnalyticsPointDto[];
+}

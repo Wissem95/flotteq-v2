@@ -13,6 +13,7 @@ import { Tenant } from '../../entities/tenant.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { User } from '../../entities/user.entity';
 import { DocumentsService } from '../../documents/documents.service';
+import { ServiceUnavailableException } from '@nestjs/common';
 
 describe('DashboardService', () => {
   let service: DashboardService;
@@ -106,6 +107,114 @@ describe('DashboardService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('getInternalAnalytics', () => {
+    const previousEnvironment = {
+      internalUrl: process.env.UMAMI_INTERNAL_URL,
+      adminPassword: process.env.UMAMI_ADMIN_PASSWORD,
+      websiteId: process.env.UMAMI_WEBSITE_ID,
+    };
+    const originalFetch = global.fetch;
+
+    beforeEach(() => {
+      process.env.UMAMI_INTERNAL_URL = 'http://umami:3000';
+      process.env.UMAMI_ADMIN_PASSWORD = 'secret-test';
+      process.env.UMAMI_WEBSITE_ID = 'website-test';
+    });
+
+    afterEach(() => {
+      global.fetch = originalFetch;
+
+      for (const [key, value] of Object.entries({
+        UMAMI_INTERNAL_URL: previousEnvironment.internalUrl,
+        UMAMI_ADMIN_PASSWORD: previousEnvironment.adminPassword,
+        UMAMI_WEBSITE_ID: previousEnvironment.websiteId,
+      })) {
+        if (value === undefined) {
+          delete process.env[key];
+        } else {
+          process.env[key] = value;
+        }
+      }
+    });
+
+    it('agrège les statistiques et la série quotidienne sans exposer les identifiants Umami', async () => {
+      const fetchMock = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({ token: 'token-test' }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            pageviews: { value: 12 },
+            visitors: { value: 8 },
+            visits: { value: 10 },
+            bounces: { value: 4 },
+          }),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: jest.fn().mockResolvedValue({
+            pageviews: [{ x: '2026-10-05T00:00:00Z', y: 12 }],
+            sessions: [{ x: '2026-10-05T00:00:00Z', y: 10 }],
+          }),
+        });
+      global.fetch = fetchMock as typeof fetch;
+
+      const result = await (service as any).getInternalAnalytics(30);
+
+      expect(result).toEqual({
+        periodDays: 30,
+        pageviews: 12,
+        visitors: 8,
+        visits: 10,
+        bounces: 4,
+        bounceRate: 40,
+        timeline: [
+          {
+            date: '2026-10-05T00:00:00Z',
+            pageviews: 12,
+            sessions: 10,
+          },
+        ],
+      });
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        1,
+        'http://umami:3000/api/auth/login',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            username: 'admin',
+            password: 'secret-test',
+          }),
+        }),
+      );
+      expect(JSON.stringify(result)).not.toContain('secret-test');
+      expect(JSON.stringify(result)).not.toContain('token-test');
+    });
+
+    it('refuse proprement une configuration Umami incomplète', async () => {
+      delete process.env.UMAMI_ADMIN_PASSWORD;
+
+      await expect(
+        (service as any).getInternalAnalytics(30),
+      ).rejects.toBeInstanceOf(ServiceUnavailableException);
+    });
+
+    it('normalise une indisponibilité Umami sans divulguer sa réponse', async () => {
+      global.fetch = jest.fn().mockResolvedValue({
+        ok: false,
+        status: 401,
+        json: jest.fn().mockResolvedValue({ error: 'secret upstream error' }),
+      }) as typeof fetch;
+
+      await expect(
+        (service as any).getInternalAnalytics(30),
+      ).rejects.toThrow('Analytics temporairement indisponible');
+    });
   });
 
   describe('getOverview', () => {

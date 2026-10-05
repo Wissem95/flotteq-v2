@@ -12,6 +12,7 @@ describe('DashboardController', () => {
     getInternalRevenue: jest.fn(),
     getInternalSubscriptions: jest.fn(),
     getInternalActivity: jest.fn(),
+    getInternalAnalytics: jest.fn(),
     getRecentTenants: jest.fn(),
     getOverview: jest.fn(),
     getFleetStatus: jest.fn(),
@@ -125,6 +126,24 @@ describe('DashboardController', () => {
 
       expect(result).toEqual(mockActivity);
       expect(service.getInternalActivity).toHaveBeenCalled();
+    });
+
+    it('retourne les statistiques Umami sur la période demandée', async () => {
+      const analytics = {
+        periodDays: 30,
+        pageviews: 12,
+        visitors: 8,
+        visits: 10,
+        bounces: 4,
+        bounceRate: 40,
+        timeline: [],
+      };
+      mockDashboardService.getInternalAnalytics.mockResolvedValue(analytics);
+
+      const result = await (controller as any).getInternalAnalytics(30);
+
+      expect(result).toEqual(analytics);
+      expect(service.getInternalAnalytics).toHaveBeenCalledWith(30);
     });
 
     it('should return recent tenants with limit', async () => {

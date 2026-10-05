@@ -17,6 +17,7 @@ import {
   InternalSubscriptionsDto,
   ActivityLogDto,
   RecentTenantDto,
+  InternalAnalyticsDto,
 } from './dto/internal-stats.dto';
 import { DashboardOverviewDto } from './dto/dashboard-overview.dto';
 import { FleetStatusDto } from './dto/fleet-status.dto';
@@ -42,6 +43,17 @@ export class DashboardController {
   })
   async getInternalStats(): Promise<InternalStatsDto> {
     return this.dashboardService.getInternalStats();
+  }
+
+  @Get('internal/analytics')
+  @UseGuards(JwtAuthGuard, SuperAdminGuard)
+  @ApiOperation({
+    summary: 'Get private Umami analytics (FlotteQ admin only)',
+  })
+  async getInternalAnalytics(
+    @Query('days', new DefaultValuePipe(30), ParseIntPipe) days: number,
+  ): Promise<InternalAnalyticsDto> {
+    return this.dashboardService.getInternalAnalytics(days);
   }
 
   @Get('internal/revenue')

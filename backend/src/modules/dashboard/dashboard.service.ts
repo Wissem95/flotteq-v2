@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, MoreThan } from 'typeorm';
 import { Vehicle, VehicleStatus } from '../../entities/vehicle.entity';
@@ -30,6 +30,7 @@ import {
   InternalSubscriptionsDto,
   ActivityLogDto,
   RecentTenantDto,
+  InternalAnalyticsDto,
 } from './dto/internal-stats.dto';
 import { SubscriptionUsageDto } from './dto/subscription-usage.dto';
 import { DocumentsService } from '../../documents/documents.service';
@@ -533,6 +534,112 @@ export class DashboardService {
   }
 
   // ============ INTERNAL (Admin FlotteQ) ============
+
+  async getInternalAnalytics(days: number): Promise<InternalAnalyticsDto> {
+    const internalUrl = process.env.UMAMI_INTERNAL_URL || 'http://umami:3000';
+    const adminPassword = process.env.UMAMI_ADMIN_PASSWORD;
+    const websiteId = process.env.UMAMI_WEBSITE_ID;
+
+    if (!adminPassword || !websiteId) {
+      throw new ServiceUnavailableException('Analytics Umami non configuré');
+    }
+
+    const periodDays = Math.min(Math.max(days, 1), 90);
+    const endAt = Date.now();
+    const startAt = endAt - periodDays * 24 * 60 * 60 * 1000;
+    const requestOptions = { signal: AbortSignal.timeout(5000) };
+
+    try {
+      const loginResponse = await fetch(`${internalUrl}/api/auth/login`, {
+        ...requestOptions,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'admin', password: adminPassword }),
+      });
+
+      if (!loginResponse.ok) {
+        throw new Error('Échec de l’authentification Umami');
+      }
+
+      const loginPayload = (await loginResponse.json()) as { token?: string };
+      if (!loginPayload.token) {
+        throw new Error('Jeton Umami absent');
+      }
+
+      const headers = { Authorization: `Bearer ${loginPayload.token}` };
+      const query = new URLSearchParams({
+        startAt: String(startAt),
+        endAt: String(endAt),
+      });
+      const pageviewsQuery = new URLSearchParams(query);
+      pageviewsQuery.set('unit', 'day');
+      pageviewsQuery.set('timezone', 'Europe/Paris');
+
+      const [statsResponse, pageviewsResponse] = await Promise.all([
+        fetch(
+          `${internalUrl}/api/websites/${websiteId}/stats?${query.toString()}`,
+          { ...requestOptions, headers },
+        ),
+        fetch(
+          `${internalUrl}/api/websites/${websiteId}/pageviews?${pageviewsQuery.toString()}`,
+          { ...requestOptions, headers },
+        ),
+      ]);
+
+      if (!statsResponse.ok || !pageviewsResponse.ok) {
+        throw new Error('Échec de lecture des statistiques Umami');
+      }
+
+      const stats = (await statsResponse.json()) as Record<
+        string,
+        { value?: number }
+      >;
+      const series = (await pageviewsResponse.json()) as {
+        pageviews?: Array<{ x: string; y: number }>;
+        sessions?: Array<{ x: string; y: number }>;
+      };
+      const pageviews = stats.pageviews?.value ?? 0;
+      const visitors = stats.visitors?.value ?? 0;
+      const visits = stats.visits?.value ?? 0;
+      const bounces = stats.bounces?.value ?? 0;
+      const timeline = new Map<
+        string,
+        { date: string; pageviews: number; sessions: number }
+      >();
+
+      for (const point of series.pageviews ?? []) {
+        timeline.set(point.x, {
+          date: point.x,
+          pageviews: point.y,
+          sessions: 0,
+        });
+      }
+      for (const point of series.sessions ?? []) {
+        const current = timeline.get(point.x);
+        timeline.set(point.x, {
+          date: point.x,
+          pageviews: current?.pageviews ?? 0,
+          sessions: point.y,
+        });
+      }
+
+      return {
+        periodDays,
+        pageviews,
+        visitors,
+        visits,
+        bounces,
+        bounceRate: visits > 0 ? Math.round((bounces / visits) * 100) : 0,
+        timeline: Array.from(timeline.values()).sort((a, b) =>
+          a.date.localeCompare(b.date),
+        ),
+      };
+    } catch {
+      throw new ServiceUnavailableException(
+        'Analytics temporairement indisponible',
+      );
+    }
+  }
 
   async getInternalStats(): Promise<InternalStatsDto> {
     const [

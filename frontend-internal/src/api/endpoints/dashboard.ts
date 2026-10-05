@@ -51,7 +51,7 @@ export interface ActivityLogDto {
   tenantName: string;
   description: string;
   createdAt: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface RecentTenantDto {
@@ -67,6 +67,22 @@ export interface RecentTenantDto {
   vehiclesCount: number;
   usersCount: number;
   daysActive: number;
+}
+
+export interface AnalyticsPointDto {
+  date: string;
+  pageviews: number;
+  sessions: number;
+}
+
+export interface InternalAnalyticsDto {
+  periodDays: number;
+  pageviews: number;
+  visitors: number;
+  visits: number;
+  bounces: number;
+  bounceRate: number;
+  timeline: AnalyticsPointDto[];
 }
 
 // ========== API ENDPOINTS ==========
@@ -87,4 +103,7 @@ export const dashboardApi = {
 
   getRecentTenants: (limit = 5) =>
     apiClient.get<RecentTenantDto[]>(`/dashboard/internal/tenants/recent?limit=${limit}`),
+
+  getInternalAnalytics: (days = 30) =>
+    apiClient.get<InternalAnalyticsDto>(`/dashboard/internal/analytics?days=${days}`),
 };
