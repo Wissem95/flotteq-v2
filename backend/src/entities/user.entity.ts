@@ -76,10 +76,10 @@ export class User {
   refreshToken: string | null;
 
   @Column({ nullable: true, name: 'reset_password_token' })
-  resetPasswordToken: string;
+  resetPasswordToken: string | null;
 
   @Column({ nullable: true, name: 'reset_password_expires' })
-  resetPasswordExpires: Date;
+  resetPasswordExpires: Date | null;
 
   @Column({
     type: 'varchar',

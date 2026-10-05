@@ -16,8 +16,14 @@ import {
   Subscription,
   SubscriptionStatus,
 } from '../entities/subscription.entity';
+import {
+  assertSeedingAllowed,
+  requireSeedPassword,
+} from '../database/seeders/seed-security';
 
 async function seed() {
+  assertSeedingAllowed();
+  const demoPassword = requireSeedPassword('SEED_DEMO_PASSWORD');
   const app = await NestFactory.create(AppModule);
   const dataSource = app.get(DataSource);
 
@@ -40,7 +46,7 @@ async function seed() {
   await createSubscriptionPlans(dataSource, tenants);
 
   // Create users for different tenants
-  const users = await createUsers(dataSource, tenants);
+  const users = await createUsers(dataSource, tenants, demoPassword);
   console.log(`✅ Created ${users.length} users`);
 
   // Update users with roles
@@ -62,9 +68,13 @@ async function seed() {
   await app.close();
 }
 
-async function createUsers(dataSource: DataSource, tenants: Tenant[]) {
+async function createUsers(
+  dataSource: DataSource,
+  tenants: Tenant[],
+  demoPassword: string,
+) {
   const userRepo = dataSource.getRepository(User);
-  const password = await bcrypt.hash('Test12345', 12);
+  const password = await bcrypt.hash(demoPassword, 12);
 
   const usersData = [
     // Tenant 1 - FlotteQ Demo

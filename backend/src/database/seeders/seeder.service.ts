@@ -33,6 +33,7 @@ import {
   DRIVERS_TRANSPORT_EXPRESS,
   DRIVERS_LOGISTRANS,
 } from './data/drivers.data';
+import { getSeedCredentials, SeedCredentials } from './seed-security';
 
 @Injectable()
 export class SeederService {
@@ -51,16 +52,12 @@ export class SeederService {
   async seedAll(): Promise<void> {
     console.log('🌱 Starting database seeding...\n');
 
-    // Check if running in production
-    if (process.env.NODE_ENV === 'production') {
-      console.error('❌ Seeding is disabled in production environment!');
-      throw new Error('Cannot seed database in production');
-    }
+    const credentials = getSeedCredentials();
 
     await this.cleanDatabase();
-    await this.seedFlotteqTenant();
-    await this.seedTransportExpress();
-    await this.seedLogistrans();
+    await this.seedFlotteqTenant(credentials);
+    await this.seedTransportExpress(credentials.demoPassword);
+    await this.seedLogistrans(credentials.demoPassword);
 
     console.log('\n✅ Database seeding completed successfully!');
   }
@@ -88,7 +85,7 @@ export class SeederService {
     }
   }
 
-  private async seedFlotteqTenant(): Promise<void> {
+  private async seedFlotteqTenant(credentials: SeedCredentials): Promise<void> {
     console.log('📦 Seeding FlotteQ tenant...');
 
     // Create FlotteQ tenant
@@ -99,10 +96,12 @@ export class SeederService {
     const wissem = UserFactory.create({
       ...USER_WISSEM,
       tenantId: flotteq.id,
+      password: credentials.superAdminPassword,
     });
     const support = UserFactory.create({
       ...USER_SUPPORT,
       tenantId: flotteq.id,
+      password: credentials.demoPassword,
     });
 
     await this.userRepo.save([wissem, support]);
@@ -113,7 +112,7 @@ export class SeederService {
     console.log(`  - Support: ${support.email}`);
   }
 
-  private async seedTransportExpress(): Promise<void> {
+  private async seedTransportExpress(password: string): Promise<void> {
     console.log('\n📦 Seeding Transport Express...');
 
     // Create tenant
@@ -124,18 +123,22 @@ export class SeederService {
     const admin = UserFactory.create({
       ...USER_TE_ADMIN,
       tenantId: tenant.id,
+      password,
     });
     const manager = UserFactory.create({
       ...USER_TE_MANAGER,
       tenantId: tenant.id,
+      password,
     });
     const driver1 = UserFactory.create({
       ...USER_TE_DRIVER1,
       tenantId: tenant.id,
+      password,
     });
     const driver2 = UserFactory.create({
       ...USER_TE_DRIVER2,
       tenantId: tenant.id,
+      password,
     });
 
     await this.userRepo.save([admin, manager, driver1, driver2]);
@@ -159,7 +162,7 @@ export class SeederService {
     console.log(`  - Drivers: ${drivers.length}`);
   }
 
-  private async seedLogistrans(): Promise<void> {
+  private async seedLogistrans(password: string): Promise<void> {
     console.log('\n📦 Seeding LogisTrans...');
 
     // Create tenant
@@ -170,14 +173,17 @@ export class SeederService {
     const admin = UserFactory.create({
       ...USER_LT_ADMIN,
       tenantId: tenant.id,
+      password,
     });
     const viewer = UserFactory.create({
       ...USER_LT_VIEWER,
       tenantId: tenant.id,
+      password,
     });
     const driver = UserFactory.create({
       ...USER_LT_DRIVER,
       tenantId: tenant.id,
+      password,
     });
 
     await this.userRepo.save([admin, viewer, driver]);

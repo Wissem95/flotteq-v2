@@ -2,9 +2,12 @@ import { User, UserRole } from '../../../entities/user.entity';
 
 export class UserFactory {
   static create(data: Partial<User> = {}): User {
+    if (!data.password) {
+      throw new Error('Un mot de passe de seed explicite est requis');
+    }
     const user = new User();
     user.email = data.email || `user${Math.random()}@example.com`;
-    user.password = data.password || 'Test123!';
+    user.password = data.password;
     user.firstName = data.firstName || 'John';
     user.lastName = data.lastName || 'Doe';
     user.role = data.role || UserRole.VIEWER;

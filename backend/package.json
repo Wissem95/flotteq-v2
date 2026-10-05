@@ -27,7 +27,8 @@
     "migration:show": "npm run typeorm -- migration:show -d src/config/migration.config.ts",
     "migration:drop": "npm run typeorm -- schema:drop -d src/config/migration.config.ts",
     "seed": "ts-node -r tsconfig-paths/register src/database/seeders/seeder.ts",
-    "seed:refresh": "npm run migration:revert && npm run migration:run && npm run seed"
+    "seed:refresh": "npm run migration:revert && npm run migration:run && npm run seed",
+    "security:rotate-super-admin": "ts-node -r tsconfig-paths/register src/security/rotate-super-admin-password.ts"
   },
   "dependencies": {
     "@nestjs/bull": "^11.0.3",

@@ -20,7 +20,8 @@ const loginSchema = z.object({
 type LoginForm = z.infer<typeof loginSchema>;
 
 export const LoginPage = () => {
-  const { login, isAuthenticated, isLoginLoading, loginError, isLoginError } = useAuth();
+  const { login, isAuthenticated, isLoginLoading, loginError, isLoginError } =
+    useAuth();
   const navigate = useNavigate();
   const {
     register,
@@ -114,7 +115,7 @@ export const LoginPage = () => {
         <div className="mt-6 text-center text-sm text-muted-foreground">
           <p>Version 2.0 - Architecture Multi-Tenant</p>
           <p className="mt-2 text-xs">
-            Test: wissem@flotteq.com / Admin123!
+            Accès réservé aux administrateurs autorisés.
           </p>
         </div>
       </Card>

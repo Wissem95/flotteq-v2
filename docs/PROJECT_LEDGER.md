@@ -169,3 +169,14 @@ Incident SMTP de test, résolu pour les validations suivantes : un E2E antérieu
 - PROUVÉ par les dépôts officiels GitHub : les références CI ont été alignées sur `actions/checkout@v7`, `actions/setup-node@v7`, `docker/setup-buildx-action@v4`, `docker/build-push-action@v7` et `webfactory/ssh-agent@v0.10.0`. Les jobs Node utilisent Node.js 24 et les deux workflows restent valides en YAML.
 - NON VÉRIFIÉ en production lors de ce relevé pré-publication : la route analytique intégrée et l'interface enrichie ne sont pas encore servies publiquement.
 - Le fichier personnel `.claude/settings.local.json` est resté inchangé par ce lot et doit rester hors commit.
+
+## Lot sécurité et responsive, 2026-10-05
+
+- PROUVÉ en production avant correction : la page publique `admin.flotteq.fr/login` affichait un identifiant et un mot de passe de démonstration. Ces informations ouvraient réellement une session `super_admin` sur la production servie par le build `1851b2b`.
+- PROUVÉ localement par cycle rouge puis vert : la page de connexion n'affiche plus d'identifiant de démonstration. Les données de seed ne contiennent plus de mot de passe fixe, la factory refuse un mot de passe implicite et les seeders exigent des secrets robustes avant toute suppression de données. Le seed reste interdit en production.
+- PROUVÉ localement par cycle rouge puis vert : un outil de rotation ciblé refuse les secrets faibles, ne sélectionne qu'un `super_admin` actif, hache le nouveau mot de passe, supprime le jeton de rafraîchissement et les jetons de réinitialisation, et ne renvoie jamais le secret. Un jeton d'accès déjà émis peut rester valable jusqu'à son expiration, configurée à 15 minutes par défaut.
+- PROUVÉ localement par cycle rouge puis vert : l'administration possède maintenant une barre mobile et un panneau de navigation nommé. La sidebar de 256 px est masquée sous le breakpoint `md`, le contenu principal peut se réduire et ses marges sont adaptées aux petits écrans.
+- PROUVÉ localement par cycle rouge puis vert : le menu mobile de la vitrine fournit un titre et une description accessibles à Radix, supprimant les deux erreurs observées dans la console du navigateur.
+- Vérifications fraîches : backend 39 suites et 417 tests, build et lint de contrôle verts; administration 3 fichiers et 4 tests, build et lint ciblé verts; vitrine 3 fichiers et 5 tests, lint et build verts. Le bundle Administration conserve l'avertissement connu supérieur à 500 kB.
+- NON VÉRIFIÉ en production lors de ce relevé pré-publication : retrait effectif des identifiants publics et rendu responsive après déploiement. La rotation réelle du mot de passe n'est pas incluse : elle exige le nouveau secret choisi par le propriétaire et une vérification contrôlée de l'ancien et du nouveau mot de passe.
+- Le fichier personnel `.claude/settings.local.json` reste exclu du lot.

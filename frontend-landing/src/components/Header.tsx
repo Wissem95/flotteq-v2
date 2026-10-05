@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -23,7 +30,9 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
     <header
       className={cn(
         'fixed top-0 inset-x-0 z-40 transition-all',
-        scrolled ? 'bg-white/90 backdrop-blur border-b border-slate-100' : 'bg-transparent'
+        scrolled
+          ? 'bg-white/90 backdrop-blur border-b border-slate-100'
+          : 'bg-transparent',
       )}
     >
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
@@ -31,7 +40,7 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
           href="/"
           className={cn(
             'text-xl font-extrabold tracking-tight transition-colors',
-            scrolled ? 'flotteq-gradient-text' : 'text-white'
+            scrolled ? 'flotteq-gradient-text' : 'text-white',
           )}
         >
           FlotteQ
@@ -40,7 +49,7 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
         <nav
           className={cn(
             'hidden md:flex items-center gap-6 text-sm font-medium transition-colors',
-            scrolled ? 'text-slate-700' : 'text-white/90'
+            scrolled ? 'text-slate-700' : 'text-white/90',
           )}
         >
           {NAV_ITEMS.map((item) => (
@@ -49,7 +58,7 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
               href={item.href}
               className={cn(
                 'transition-colors',
-                scrolled ? 'hover:text-flotteq-blue' : 'hover:text-white'
+                scrolled ? 'hover:text-flotteq-blue' : 'hover:text-white',
               )}
             >
               {item.label}
@@ -62,7 +71,7 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
             variant="ghost"
             onClick={onLoginClick}
             className={cn(
-              !scrolled && 'text-white hover:bg-white/10 hover:text-white'
+              !scrolled && 'text-white hover:bg-white/10 hover:text-white',
             )}
           >
             Connexion
@@ -72,7 +81,7 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
             className={cn(
               scrolled
                 ? 'bg-flotteq-blue hover:bg-flotteq-navy text-white'
-                : 'bg-white text-flotteq-navy hover:bg-slate-100'
+                : 'bg-white text-flotteq-navy hover:bg-slate-100',
             )}
           >
             <a href="https://app.flotteq.fr/register">Essai gratuit</a>
@@ -86,9 +95,18 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
               variant="ghost"
               size="icon"
               aria-label="Ouvrir le menu"
-              className={cn(!scrolled && 'text-white hover:bg-white/10 hover:text-white')}
+              className={cn(
+                !scrolled && 'text-white hover:bg-white/10 hover:text-white',
+              )}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <line x1="4" y1="6" x2="20" y2="6" />
                 <line x1="4" y1="12" x2="20" y2="12" />
                 <line x1="4" y1="18" x2="20" y2="18" />
@@ -96,15 +114,30 @@ export function Header({ onLoginClick }: { onLoginClick: () => void }) {
             </Button>
           </SheetTrigger>
           <SheetContent>
+            <SheetHeader className="sr-only">
+              <SheetTitle>Navigation principale</SheetTitle>
+              <SheetDescription>
+                Accédez aux sections publiques et aux espaces FlotteQ.
+              </SheetDescription>
+            </SheetHeader>
             <div className="flex flex-col gap-4 mt-8">
               {NAV_ITEMS.map((item) => (
-                <a key={item.href} href={item.href} className="text-lg font-medium text-slate-700">
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className="text-lg font-medium text-slate-700"
+                >
                   {item.label}
                 </a>
               ))}
               <hr className="my-4" />
-              <Button variant="outline" onClick={onLoginClick}>Connexion</Button>
-              <Button asChild className="bg-flotteq-blue text-white hover:bg-flotteq-navy">
+              <Button variant="outline" onClick={onLoginClick}>
+                Connexion
+              </Button>
+              <Button
+                asChild
+                className="bg-flotteq-blue text-white hover:bg-flotteq-navy"
+              >
                 <a href="https://app.flotteq.fr/register">Essai gratuit</a>
               </Button>
             </div>
