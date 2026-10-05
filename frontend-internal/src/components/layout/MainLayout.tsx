@@ -16,6 +16,7 @@ import {
   DollarSign,
   Settings,
   ShieldCheck,
+  BarChart3,
 } from 'lucide-react';
 
 export const MainLayout = () => {
@@ -74,6 +75,11 @@ export const MainLayout = () => {
       icon: DollarSign,
       label: 'Commissions',
       path: '/commissions',
+    },
+    {
+      icon: BarChart3,
+      label: 'Analytics',
+      path: '/analytics',
     },
     {
       icon: Settings,

@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Arguments de build pour variables VITE (injectées au build-time)
 ARG VITE_API_BASE
+ARG VITE_UMAMI_DASHBOARD_URL
 
 # Copier package.json
 COPY package*.json ./
@@ -17,6 +18,7 @@ COPY . .
 
 # Build production avec variables VITE
 ENV VITE_API_BASE=$VITE_API_BASE
+ENV VITE_UMAMI_DASHBOARD_URL=$VITE_UMAMI_DASHBOARD_URL
 
 RUN npm run build
 

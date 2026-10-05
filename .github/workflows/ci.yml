@@ -239,11 +239,16 @@ jobs:
         working-directory: ./frontend-internal
         run: npm ci
 
+      - name: Run tests
+        working-directory: ./frontend-internal
+        run: npm test -- --run
+
       - name: Build
         working-directory: ./frontend-internal
         run: npm run build
         env:
           VITE_API_BASE: https://api.flotteq.fr
+          VITE_UMAMI_DASHBOARD_URL: https://analytics.flotteq.fr
 
   frontend-landing-build:
     name: Frontend Landing - Build
@@ -258,11 +263,16 @@ jobs:
       - name: Install dependencies
         working-directory: ./frontend-landing
         run: npm ci
+      - name: Run tests
+        working-directory: ./frontend-landing
+        run: npm test -- --run
       - name: Build
         working-directory: ./frontend-landing
         run: npm run build
         env:
           VITE_API_BASE: https://api.flotteq.fr
+          VITE_UMAMI_HOST_URL: https://analytics.flotteq.fr
+          VITE_UMAMI_WEBSITE_ID: 11111111-2222-3333-4444-555555555555
 
   frontend-portal-build:
     name: Frontend Portal - Build
@@ -290,8 +300,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Node.js 22 for deployment tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Test Umami bootstrap
+        run: node --test scripts/bootstrap-umami.test.mjs
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
+      - name: Validate production compose file
+        env:
+          UMAMI_DB_PASSWORD: test_umami_db_password
+          UMAMI_APP_SECRET: test_umami_app_secret
+          UMAMI_TWO_FACTOR_ENCRYPTION_KEY: 1111111122222222333333334444444455555555666666667777777788888888
+        run: docker compose -f docker-compose.production.yml config --quiet
 
       - name: Build backend image
         uses: docker/build-push-action@v5

@@ -39,6 +39,49 @@ services:
       timeout: 3s
       retries: 5
 
+  # Umami Analytics - base isolée des données métier FlotteQ
+  umami-db:
+    image: postgres:15-alpine
+    container_name: flotteq_umami_db_prod
+    restart: always
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?UMAMI_DB_PASSWORD is required}
+    volumes:
+      - umami_postgres_data:/var/lib/postgresql/data
+    networks:
+      - flotteq_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.0
+    container_name: flotteq_umami_prod
+    restart: always
+    init: true
+    depends_on:
+      umami-db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?UMAMI_DB_PASSWORD is required}@umami-db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?UMAMI_APP_SECRET is required}
+      TWO_FACTOR_ENCRYPTION_KEY: ${UMAMI_TWO_FACTOR_ENCRYPTION_KEY:?UMAMI_TWO_FACTOR_ENCRYPTION_KEY is required}
+      CLIENT_IP_HEADER: CF-Connecting-IP
+      DISABLE_TELEMETRY: "1"
+      TRACKER_SCRIPT_NAME: ${UMAMI_TRACKER_SCRIPT_NAME:-script.js}
+    networks:
+      - flotteq_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:3000/api/heartbeat || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
   # Backend NestJS API
   backend:
     build:
@@ -162,6 +205,7 @@ services:
       dockerfile: Dockerfile
       args:
         VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.fr}
+        VITE_UMAMI_DASHBOARD_URL: ${VITE_UMAMI_DASHBOARD_URL:-https://analytics.flotteq.fr}
     container_name: flotteq_frontend_internal_prod
     restart: always
     networks:
@@ -180,6 +224,8 @@ services:
       args:
         VITE_API_BASE: ${VITE_API_BASE:-https://api.flotteq.fr}
         VITE_PUBLIC_URL: https://flotteq.fr
+        VITE_UMAMI_HOST_URL: ${VITE_UMAMI_HOST_URL:-https://analytics.flotteq.fr}
+        VITE_UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
     container_name: flotteq_frontend_landing_prod
     restart: always
     networks:
@@ -226,6 +272,7 @@ services:
       - frontend-internal
       - frontend-landing
       - frontend-portal
+      - umami
     networks:
       - flotteq_network
     healthcheck:
@@ -261,6 +308,8 @@ volumes:
   redis_data:
     driver: local
   uploads_data:
+    driver: local
+  umami_postgres_data:
     driver: local
 
 networks:

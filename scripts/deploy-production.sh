@@ -30,6 +30,18 @@ if [ ! -f "docker-compose.production.yml" ]; then
   exit 1
 fi
 
+# Docker Compose lit déjà ce fichier automatiquement. Le script n'en extrait
+# que le mot de passe nécessaire au bootstrap sécurisé du compte Umami.
+ENV_FILE=".env"
+if [ -z "${UMAMI_ADMIN_PASSWORD:-}" ] && [ -f "$ENV_FILE" ]; then
+  UMAMI_ADMIN_PASSWORD="$(sed -n 's/^UMAMI_ADMIN_PASSWORD=//p' "$ENV_FILE" | tail -1)"
+fi
+
+if [ -z "${UMAMI_ADMIN_PASSWORD:-}" ] || [ "${#UMAMI_ADMIN_PASSWORD}" -lt 20 ]; then
+  echo -e "${RED}❌ UMAMI_ADMIN_PASSWORD absent ou inférieur à 20 caractères dans .env${NC}"
+  exit 1
+fi
+
 # Variables
 BACKUP_DIR="/var/backups/flotteq/pre-deploy"
 LOG_FILE="/var/log/flotteq/deploy-$(date +%Y%m%d_%H%M%S).log"
@@ -179,7 +191,7 @@ echo -e "${YELLOW}🏗️  Step 4/7: Building Docker images${NC}"
 # Le build parallèle des 7 images (--no-cache) sature le réseau du VPS et provoque
 # des "npm ERR! ECONNRESET" qui font échouer le déploiement. On builde un service à
 # la fois, avec plusieurs tentatives, pour fiabiliser.
-BUILD_SERVICES="backend frontend-client frontend-partner frontend-driver frontend-internal frontend-landing frontend-portal"
+BUILD_SERVICES="backend frontend-client frontend-partner frontend-driver frontend-internal frontend-portal"
 for svc in $BUILD_SERVICES; do
   built=0
   for attempt in 1 2 3 4; do
@@ -226,6 +238,63 @@ echo -e "${YELLOW}🚀 Step 6/7: Deploying services${NC}"
 
 # Démarrer Redis si pas actif
 docker compose -f docker-compose.production.yml up -d redis
+
+# Umami Analytics et sa base dédiée
+echo "Deploying Umami analytics..."
+docker compose -f docker-compose.production.yml up -d umami-db umami
+
+echo "Waiting for Umami health check..."
+UMAMI_HEALTH="starting"
+for attempt in 1 2 3 4 5 6 7 8 9 10 11 12; do
+  UMAMI_HEALTH=$(docker inspect flotteq_umami_prod --format='{{.State.Health.Status}}' 2>/dev/null || echo "unknown")
+  if [ "$UMAMI_HEALTH" = "healthy" ]; then
+    break
+  fi
+  echo "  Umami health attempt $attempt: $UMAMI_HEALTH"
+  sleep 10
+done
+
+if [ "$UMAMI_HEALTH" != "healthy" ]; then
+  echo -e "${RED}❌ Umami health check failed: $UMAMI_HEALTH${NC}"
+  docker logs --tail 200 flotteq_umami_prod || true
+  exit 1
+fi
+
+echo "Securing Umami admin and preparing the FlotteQ website..."
+UMAMI_WEBSITE_ID="$(
+  docker exec -i \
+    -e UMAMI_BOOTSTRAP_RUN=1 \
+    -e UMAMI_ADMIN_PASSWORD="$UMAMI_ADMIN_PASSWORD" \
+    flotteq_umami_prod node --input-type=module - < scripts/bootstrap-umami.mjs
+)"
+
+if [[ ! "$UMAMI_WEBSITE_ID" =~ ^[0-9a-fA-F-]{36}$ ]]; then
+  echo -e "${RED}❌ Invalid Umami website identifier${NC}"
+  exit 1
+fi
+
+if grep -q '^UMAMI_WEBSITE_ID=' "$ENV_FILE"; then
+  sed -i "s/^UMAMI_WEBSITE_ID=.*/UMAMI_WEBSITE_ID=$UMAMI_WEBSITE_ID/" "$ENV_FILE"
+else
+  printf '\nUMAMI_WEBSITE_ID=%s\n' "$UMAMI_WEBSITE_ID" >> "$ENV_FILE"
+fi
+export UMAMI_WEBSITE_ID
+
+echo "Building frontend-landing with the verified Umami website identifier..."
+landing_built=0
+for attempt in 1 2 3 4; do
+  if docker compose -f docker-compose.production.yml build --no-cache frontend-landing; then
+    landing_built=1
+    break
+  fi
+  echo "  ⚠️  échec build frontend-landing, nouvelle tentative dans 10s..."
+  sleep 10
+done
+
+if [ "$landing_built" -ne 1 ]; then
+  echo -e "${RED}❌ Build définitivement échoué: frontend-landing${NC}"
+  exit 1
+fi
 
 # Backend (force recreate pour charger nouveau code)
 echo "Deploying backend..."
@@ -347,4 +416,5 @@ echo "  - App: https://app.flotteq.fr"
 echo "  - Partner: https://partner.flotteq.fr"
 echo "  - Driver: https://driver.flotteq.fr"
 echo "  - Admin: https://admin.flotteq.fr"
+echo "  - Analytics: https://analytics.flotteq.fr"
 echo ""
