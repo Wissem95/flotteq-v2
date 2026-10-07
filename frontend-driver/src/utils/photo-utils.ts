@@ -1,3 +1,5 @@
+import api from '@/config/api';
+
 /**
  * Compresse une image
  */
@@ -65,28 +67,17 @@ export async function uploadPhoto(file: File | Blob): Promise<string> {
   const formData = new FormData();
   formData.append('photo', file);
 
-  // Utiliser l'endpoint dédié pour uploader une seule photo
-  const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token');
-  const tenantId = localStorage.getItem('tenant_id') || sessionStorage.getItem('tenant_id');
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+  const response = await api.post<{ photoUrl: string }>(
+    '/driver/photos/single',
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  );
 
-  const response = await fetch(`${API_URL}/driver/photos/single`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'X-Tenant-ID': tenantId || '',
-    },
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || 'Failed to upload photo');
+  if (!response.data.photoUrl) {
+    throw new Error('Failed to upload photo');
   }
 
-  const data = await response.json();
-  // Retourner l'URL de la photo uploadée
-  return data.photoUrl || '';
+  return response.data.photoUrl;
 }
 
 /**

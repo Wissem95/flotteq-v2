@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Download } from 'lucide-react';
 import type { Document } from '../../types/document.types';
+import { documentsApi } from '@/api/services/documents.service';
+import { resolveBackendUrl } from '@/config/urls';
 
 interface DocumentPreviewModalProps {
   document: Document;
@@ -22,35 +24,30 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   // Charger le PDF avec authentification
   useEffect(() => {
     if (isPDF) {
+      let objectUrl: string | null = null;
+      let cancelled = false;
       const loadPDF = async () => {
         try {
-          const token = localStorage.getItem('access_token');
-          const tenantId = localStorage.getItem('tenant_id');
-
-          const response = await fetch(`http://localhost:3000/api/documents/${document.id}/download`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'X-Tenant-ID': tenantId || '1',
-            },
-          });
-
-          if (!response.ok) throw new Error('Failed to load PDF');
-
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          setPdfUrl(url);
-          setLoading(false);
+          const blob = await documentsApi.download(document.id);
+          objectUrl = URL.createObjectURL(blob);
+          if (!cancelled) {
+            setPdfUrl(objectUrl);
+            setLoading(false);
+          }
         } catch (error) {
           console.error('Error loading PDF:', error);
-          setLoading(false);
+          if (!cancelled) {
+            setLoading(false);
+          }
         }
       };
 
       loadPDF();
 
       return () => {
-        if (pdfUrl) {
-          URL.revokeObjectURL(pdfUrl);
+        cancelled = true;
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
         }
       };
     }
@@ -111,7 +108,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             )
           ) : isImage ? (
             <img
-              src={document.fileUrl}
+              src={resolveBackendUrl(document.fileUrl)}
               alt={document.fileName}
               className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
             />

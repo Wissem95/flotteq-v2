@@ -4,21 +4,17 @@ import { User, Mail, Phone, MapPin, Users, Camera, Trash2, Save, Calendar, Arrow
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/config/api';
 import { toast } from 'sonner';
+import { resolveBackendUrl } from '@/config/urls';
+import { buildProfileUpdatePayload, type ProfileData } from './profile.utils';
+import { isAxiosError } from 'axios';
 
-interface ProfileData {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  address?: string;
-  city?: string;
-  postalCode?: string;
-  emergencyContact?: string;
-  emergencyPhone?: string;
-  birthDate?: string;
-  profilePhotoUrl?: string | null;
-  profilePhotoThumbnail?: string | null;
-}
+const getApiErrorMessage = (error: unknown, fallback: string): string => {
+  if (isAxiosError<{ message?: string }>(error)) {
+    return error.response?.data?.message || fallback;
+  }
+
+  return fallback;
+};
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -78,22 +74,12 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       setSaving(true);
-      await api.patch('/driver/profile', {
-        firstName: profile.firstName,
-        lastName: profile.lastName,
-        phone: profile.phone,
-        address: profile.address,
-        city: profile.city,
-        postalCode: profile.postalCode,
-        emergencyContact: profile.emergencyContact,
-        emergencyPhone: profile.emergencyPhone,
-        birthDate: profile.birthDate,
-      });
+      await api.patch('/driver/profile', buildProfileUpdatePayload(profile));
       toast.success('Profil mis à jour avec succès');
       loadProfile();
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving profile:', error);
-      toast.error(error.response?.data?.message || 'Erreur lors de la sauvegarde');
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la sauvegarde'));
     } finally {
       setSaving(false);
     }
@@ -131,9 +117,9 @@ export default function ProfilePage() {
       }));
 
       toast.success('Photo de profil mise à jour');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error uploading photo:', error);
-      toast.error(error.response?.data?.message || 'Erreur lors de l\'upload');
+      toast.error(getApiErrorMessage(error, 'Erreur lors de l\'upload'));
     } finally {
       setUploading(false);
     }
@@ -151,9 +137,9 @@ export default function ProfilePage() {
         profilePhotoThumbnail: null,
       }));
       toast.success('Photo de profil supprimée');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error deleting photo:', error);
-      toast.error(error.response?.data?.message || 'Erreur lors de la suppression');
+      toast.error(getApiErrorMessage(error, 'Erreur lors de la suppression'));
     } finally {
       setUploading(false);
     }
@@ -168,7 +154,7 @@ export default function ProfilePage() {
   }
 
   const photoUrl = profile.profilePhotoUrl
-    ? `${import.meta.env.VITE_API_URL}${profile.profilePhotoUrl}`
+    ? resolveBackendUrl(profile.profilePhotoUrl)
     : null;
 
   return (

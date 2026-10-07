@@ -8,6 +8,7 @@ import {
   REPORT_STATUS_COLORS,
   ReportStatus,
 } from '../../types/report.types';
+import { resolveBackendUrl } from '@/config/urls';
 
 export const MyReportsPage: React.FC = () => {
   const { reports, loading, error, refetch } = useDriverReports();
@@ -152,13 +153,13 @@ export const MyReportsPage: React.FC = () => {
                       {report.photos.map((photoUrl, index) => (
                         <a
                           key={index}
-                          href={`${import.meta.env.VITE_API_URL}${photoUrl}`}
+                          href={resolveBackendUrl(photoUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="group relative overflow-hidden rounded-lg border border-gray-200 hover:border-blue-400 transition-colors"
                         >
                           <img
-                            src={`${import.meta.env.VITE_API_URL}${photoUrl}`}
+                            src={resolveBackendUrl(photoUrl)}
                             alt={`Photo ${index + 1}`}
                             className="w-full h-32 object-cover group-hover:scale-105 transition-transform"
                           />

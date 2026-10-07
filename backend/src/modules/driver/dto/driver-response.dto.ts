@@ -49,6 +49,30 @@ export class DriverResponseDto {
   @ApiProperty()
   phone: string;
 
+  @ApiPropertyOptional()
+  address: string | null;
+
+  @ApiPropertyOptional()
+  city: string | null;
+
+  @ApiPropertyOptional()
+  postalCode: string | null;
+
+  @ApiPropertyOptional()
+  emergencyContact: string | null;
+
+  @ApiPropertyOptional()
+  emergencyPhone: string | null;
+
+  @ApiPropertyOptional()
+  birthDate: Date | null;
+
+  @ApiPropertyOptional()
+  profilePhotoUrl: string | null;
+
+  @ApiPropertyOptional()
+  profilePhotoThumbnail: string | null;
+
   @ApiProperty()
   licenseNumber: string;
 

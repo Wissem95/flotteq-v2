@@ -1,3 +1,5 @@
+import { API_BASE_URL } from './urls';
+
 /**
  * Application-wide constants
  */
@@ -16,6 +18,6 @@ export const FILE_UPLOAD = {
 } as const;
 
 export const API = {
-  BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  BASE_URL: API_BASE_URL,
   TIMEOUT: 30000, // 30 seconds
 } as const;

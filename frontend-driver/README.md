@@ -22,7 +22,7 @@ npm install
 Créer `.env` :
 
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_BASE=http://localhost:3000
 ```
 
 ## Développement

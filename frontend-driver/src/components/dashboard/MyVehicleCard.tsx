@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Car, Gauge, Calendar, Wrench, AlertCircle, Edit, History } from 'lucide-react';
 import UpdateMileageModal from '../mileage/UpdateMileageModal';
+import { resolveBackendUrl } from '@/config/urls';
 
 interface MyVehicleCardProps {
   vehicle: {
@@ -103,7 +104,7 @@ export default function MyVehicleCard({ vehicle }: MyVehicleCardProps) {
         <div className="space-y-4">
           {vehicle.photos && vehicle.photos.length > 0 ? (
             <img
-              src={`${import.meta.env.VITE_API_URL?.replace('/api', '') || 'http://localhost:3000'}${vehicle.photos[0]}`}
+              src={resolveBackendUrl(vehicle.photos[0])}
               alt={`${vehicle.brand} ${vehicle.model}`}
               className="w-full h-48 object-cover rounded-lg border border-gray-200"
             />
